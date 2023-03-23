@@ -1,0 +1,11 @@
+{
+	"database": {
+		"rules": "database.rules.json"
+	},
+	"emulators": {
+		"database": {
+			"host": "localhost",
+			"port": 9000
+		}
+	}
+}

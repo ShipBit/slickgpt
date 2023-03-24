@@ -42,6 +42,7 @@
     <li><a href="#features">Features</a></li>
     <li><a href="#comparison-with-chatgpt">Comparison with ChatGPT</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#development">Development</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
@@ -151,7 +152,7 @@ As you can see, SlickGPT includes several additional features that cater to a br
 - [x] Add light/dark mode switch
 - [ ] Add theme switcher
 - [ ] Editable messages and branching chat history
-- [ ] Stop generating
+- [ ] Stop completion generation
 - [ ] More documentation
 - [ ] i18n
   - [ ] English
@@ -161,7 +162,52 @@ See the [open issues](https://github.com/ShipBit/slickgpt/issues) for a full lis
 
 <p align="right">[ <a href="#readme-top">back to top</a> ]</p>
 
-## Contribution Guidelines
+## Development
+
+SlickGPT uses [Svelte](https://svelte.dev/), [SvelteKit](https://kit.svelte.dev/) and [Skeleton UI](https://www.skeleton.dev/) as frontend foundation.
+
+The secret sauce of SlickGPT is that almost everything is stored in the `localStorage` of the browser. One case where it leaves this boundary is, of course, when a user communicates with the [OpenAI API](https://platform.openai.com/). While questions are simple POST requests, responses are sent back to the client using the native [EventSource API](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) and rendered as a "live stream" just like the ChatGPT client does.
+
+The other case is when users share their chats with others using the "userless share" feature. Then SlickGPT dumps the appropriate `localStorage` object in a simple [Firebase Realtime Database](https://firebase.google.com/docs/database) and tags it with a random `updateToken`. A serverless (Edge) function sends this token back to the client where it is stored in the `localStorage` next to the original chat. The token can be used later to update or unshare chats.
+
+SlickGPT uses Svelte endpoints as "proxy" between the client and the external APIs. This way, the client does not need to know any Firebase secrets at all and you have a great starting point to implement more complex "backend" logic if needed.
+
+### Set environment Variables
+
+Copy the content of `.env.example` to a new file called `.env` and populate the variables with your Firebase data. You can get this `firebaseConfig` from your project settings in the Firebase console.
+
+While developing, Vite will be your "server" and run the endpoints functions on your local machine. It has access to your environment variables utilizing SvelteKits `$env/static/private` import.
+
+For a production environment, the endpoints are preconfigured to run as edge functions on Vercel. For this to work, you simply have to provide Vercel with the required environment variables once you go live with your instance. You can paste the content of your `.env` file when you import your project to Vercel or afterwards in the project settings or using the Vercel CLI.
+
+### Start the client
+
+Once cloned, run the usual SvelteKit commands in your root directory:
+
+```bash
+npm i # or yarn, pnpm etc.
+npm run dev -- --open
+```
+
+That's it! You should now be able to develop with all the hot reloading goodness you know and love from Svelte / Vite.
+
+### Can I run this without Firebase?
+
+Certainly. The quickest and easiest way would be to disable the "Share Chat" feature in SlickGPT in case you don't need it. We have an [open issue](https://github.com/ShipBit/slickgpt/issues/6) for that with good starting points.
+
+The other (and better) way would be to use any other database where you can dump SlickGPTs serialized [Chat](https://github.com/ShipBit/slickgpt/blob/d7af3abb6eb9be8e6bb68c0f36334bb0448505ae/src/misc/shared.ts) objects. This should be an easy task because the client never directly talks to Firebase as described above. SlickGPT doesn't utilize any Firebase-specific features. As long as your database can somehow save and load a chat based using a slug as key, you should be fine. The only file you'd have to edit is the [share endpoint](https://github.com/ShipBit/slickgpt/blob/d7af3abb6eb9be8e6bb68c0f36334bb0448505ae/src/routes/api/share/+server.ts).
+
+### Can I host this on other providers than Vercel?
+
+There's an [open issue](https://github.com/ShipBit/slickgpt/issues/7) for that with some additionale infos regarding Netlify. We haven't tested other providers yet but it should be fine as long as your provider can run SvelteKit apps and serverless functions. We already saw a fork utilizing [Railway](https://railway.app/).
+
+You could also let the client access the Firebase and OpenAI API directly to get rid of the serverless function requirement entirely.
+
+### How do I use another Skeleton Theme?
+
+Simply follow the instructions in the official [Skeleton UI documentation](https://www.skeleton.dev/docs/get-started#themes). The code you have to change is in SlickGPTs [+layout.svelte](https://github.com/ShipBit/slickgpt/blob/d7af3abb6eb9be8e6bb68c0f36334bb0448505ae/src/routes/+layout.svelte) file.
+
+### Contribution Guidelines
 
 Contributions are always welcome! Feel free to open a pull request, report bugs, or submit feature requests. Please follow the Code of Conduct and Contribution Guidelines when participating in this project.
 

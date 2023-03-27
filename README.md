@@ -52,7 +52,7 @@
 
 ![SlickGPT][slickgpt-screenshot]
 
-SlickGPT is a light-weight "use-your-own-API-key" web client for the OpenAI API written in Svelte. Users bring their own OpenAI API keys. SlickGPT offers them a very fancy user interface with a rich feature set like managing a local chat history (in the localStorage), a userless "Share" function for chats, a prominent context editor, and token cost calculation and distribution. You can the client locally, host it yourself or use our public instance.
+SlickGPT is a light-weight "use-your-own-API-key" web client for the OpenAI API written in Svelte. Users bring their own OpenAI API keys. SlickGPT offers them a very fancy user interface with a rich feature set like managing a local chat history (in the localStorage), a userless "Share" function for chats, a prominent context editor, and token cost calculation and distribution. You can run the client locally, host it yourself or use our public instance.
 
 ## Feature Overview
 

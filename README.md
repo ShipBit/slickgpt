@@ -67,6 +67,10 @@ SlickGPT is a light-weight "use-your-own-API-key" web client for the OpenAI API 
 - **Use your own API Key** <br> Keep your API calls private and secure by using your own OpenAI API key.
 - **Host Yourself / Run Everywhere** <br> Run the instance locally on your machine or host it on your preferred cloud provider.
 
+See a **YouTube video** for more details: 
+
+[![YouTube video of SlickGPT](https://img.youtube.com/vi/rzpzKhe4v9s/0.jpg)](https://youtu.be/rzpzKhe4v9s)
+
 <p align="right">[ <a href="#readme-top">back to top</a> ]</p>
 
 ## In more detail

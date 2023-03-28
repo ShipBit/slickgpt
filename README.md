@@ -69,7 +69,7 @@ SlickGPT is a light-weight "use-your-own-API-key" web client for the OpenAI API 
 
 See a **YouTube video** for more details: 
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/rzpzKhe4v9s/0.jpg)](https://youtu.be/rzpzKhe4v9s)
+[![YouTube video of SlickGPT](https://img.youtube.com/vi/rzpzKhe4v9s/0.jpg)](https://youtu.be/rzpzKhe4v9s)
 
 <p align="right">[ <a href="#readme-top">back to top</a> ]</p>
 

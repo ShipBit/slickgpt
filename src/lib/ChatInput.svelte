@@ -186,7 +186,7 @@
 		<!-- Tokens -->
 		{#if input.length > 0}
 			<button
-				class="flex items-center text-xs text-slate-200 ml-4 space-x-1"
+				class="flex items-center text-xs text-slate-500 dark:text-slate-200 ml-4 space-x-1"
 				class:animate-pulse={!!debounceTimer}
 				on:click={openTokenCostDialog}
 			>

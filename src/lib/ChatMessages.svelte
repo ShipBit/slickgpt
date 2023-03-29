@@ -56,7 +56,7 @@
 
 		<!-- Live Message -->
 		{#if $isLoadingAnswerStore}
-			<div class="animate-pulse place-self-start">
+			<div class="place-self-start">
 				<div class="p-5 rounded-2xl variant-ghost-tertiary rounded-tl-none">
 					{@html snarkdown($liveAnswerStore.content)}
 				</div>

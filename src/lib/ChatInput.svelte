@@ -113,8 +113,8 @@
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
-		self.clearTimeout(debounceTimer);
-		debounceTimer = self.setTimeout(calculateMessageTokens, 750);
+		clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(calculateMessageTokens, 750);
 
 		if ($isLoadingAnswerStore) {
 			return;
@@ -127,7 +127,7 @@
 
 	function calculateMessageTokens() {
 		messageTokens = countTokens(message);
-		self.clearTimeout(debounceTimer);
+		clearTimeout(debounceTimer);
 		debounceTimer = undefined;
 	}
 

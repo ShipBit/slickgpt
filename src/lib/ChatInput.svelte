@@ -11,9 +11,11 @@
 	export let slug: string;
 	export let chatCost: ChatCost | null;
 
+	let debounceTimer: number | undefined;
 	let input = '';
 	let inputCopy = '';
 	let textarea: HTMLTextAreaElement;
+	let messageTokens = 0;
 
 	$: message = {
 		role: 'user',
@@ -26,7 +28,6 @@
 			? chatCost.maxTokensForModel - (chatCost.tokensTotal + messageTokens)
 			: -1;
 	}
-	$: messageTokens = countTokens(message);
 	$: maxTokensCompletion = $chatStore[slug].settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
@@ -112,6 +113,9 @@
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
+		clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(calculateMessageTokens, 750);
+
 		if ($isLoadingAnswerStore) {
 			return;
 		}
@@ -119,6 +123,17 @@
 		if (event.key === 'Enter' && !event.shiftKey) {
 			handleSubmit();
 		}
+	}
+
+	function calculateMessageTokens() {
+		messageTokens = countTokens(message);
+		clearTimeout(debounceTimer);
+		debounceTimer = undefined;
+	}
+
+	function openTokenCostDialog() {
+		calculateMessageTokens();
+		showModalComponent('CostModal', { chatCost, maxTokensCompletion, messageTokens });
 	}
 
 	// see https://github.com/jesseskinner/svelte-autosize
@@ -172,8 +187,8 @@
 		{#if input.length > 0}
 			<button
 				class="flex items-center text-xs text-slate-200 ml-4 space-x-1"
-				on:click={() =>
-					showModalComponent('CostModal', { chatCost, maxTokensCompletion, messageTokens })}
+				class:animate-pulse={!!debounceTimer}
+				on:click={openTokenCostDialog}
 			>
 				<span>{tokensLeft} tokens left</span>
 

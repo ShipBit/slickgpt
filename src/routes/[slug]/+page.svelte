@@ -241,13 +241,15 @@
 						>
 							Edit
 						</button>
-						<button
-							class="btn self-center variant-filled-tertiary"
-							on:click={() =>
-								createNewChat({ context: chat.contextMessage.content, settings: chat.settings })}
-						>
-							New Chat
-						</button>
+						{#if hasContext}
+							<button
+								class="btn self-center variant-filled-tertiary"
+								on:click={() =>
+									createNewChat({ context: chat.contextMessage.content, settings: chat.settings })}
+							>
+								New Chat
+							</button>
+						{/if}
 					</div>
 				</svelte:fragment>
 			</HintMessage>

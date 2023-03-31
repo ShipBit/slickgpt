@@ -114,7 +114,7 @@
 
 	function handleKeyDown(event: KeyboardEvent) {
 		clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(calculateMessageTokens, 750);
+		debounceTimer = window.setTimeout(calculateMessageTokens, 750);
 
 		if ($isLoadingAnswerStore) {
 			return;

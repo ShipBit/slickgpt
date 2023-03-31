@@ -66,25 +66,36 @@
 				<input class="input" type="text" bind:value={title} />
 			</label>
 
+			<!-- Model -->
 			{#if $settingsStore.openAiApiKey}
-				<!-- Model -->
-				<label class="label">
-					<div class="flex justify-between space-x-12	">
-						<span>Model</span>
-						<a
-							target="_blank"
-							rel="noreferrer"
-							href="https://platform.openai.com/docs/api-reference/completions/create"
+				<div class="flex flex-col space-y-2">
+					<label class="label">
+						<div class="flex justify-between space-x-12	">
+							<span>Model</span>
+							<a
+								target="_blank"
+								rel="noreferrer"
+								href="https://platform.openai.com/docs/api-reference/completions/create"
+							>
+								See docs
+							</a>
+						</div>
+						<select class="select" bind:value={settings.model}>
+							{#each Object.values(OpenAiModel) as model}
+								<option value={model}>{model}</option>
+							{/each}
+						</select>
+					</label>
+					<!-- Set as default -->
+					{#if $settingsStore.defaultModel !== settings.model}
+						<button
+							class="btn btn-sm variant-ghost-secondary self-start"
+							on:click={() => ($settingsStore.defaultModel = settings.model)}
 						>
-							See docs
-						</a>
-					</div>
-					<select class="select" bind:value={settings.model}>
-						{#each Object.values(OpenAiModel) as model}
-							<option value={model}>{model}</option>
-						{/each}
-					</select>
-				</label>
+							Use as default
+						</button>
+					{/if}
+				</div>
 
 				<!-- Advanced Settings -->
 				<Accordion>

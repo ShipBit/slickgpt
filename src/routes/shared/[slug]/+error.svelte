@@ -10,7 +10,7 @@
 	</p>
 
 	<!-- Add button -->
-	<button class="card p-4 grid variant-ghost-primary" on:click={createNewChat}>
+	<button class="card p-4 grid variant-ghost-primary" on:click={() => createNewChat()}>
 		<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"

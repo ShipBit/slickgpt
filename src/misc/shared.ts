@@ -32,22 +32,27 @@ export interface ChatCost {
 	maxTokensForModel: number;
 }
 
-export function createNewChat() {
+export function createNewChat(template?: {
+	context?: string;
+	title?: string;
+	settings?: OpenAiSettings;
+	messages?: ChatCompletionRequestMessage[];
+}) {
 	const slug = generateSlug();
 	const chat: Chat = {
-		title: slug,
-		settings: { ...defaultOpenAiSettings },
+		title: template?.title || slug,
+		settings: { ...(template?.settings || defaultOpenAiSettings) },
 		contextMessage: {
 			role: 'system',
-			content: ''
+			content: template?.context || ''
 		},
-		messages: [],
+		messages: template?.messages || [],
 		created: new Date()
 	};
 
 	chatStore.updateChat(slug, chat);
 
-	goto(`/${slug}`);
+	goto(`/${slug}`, { invalidateAll: true });
 }
 
 export function showModalComponent(

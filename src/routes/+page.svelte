@@ -71,7 +71,7 @@
 		// update the local store
 		$chatStore = {};
 
-		goto('/', { replaceState: true });
+		goto('/');
 	}
 
 	$: sortedChats = Object.entries($chatStore).sort((a, b) => {
@@ -83,7 +83,7 @@
 	class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 px-4 md:px-8"
 >
 	<!-- Add button -->
-	<button class="card p-4 grid variant-ghost-primary" on:click={createNewChat}>
+	<button class="card p-4 grid variant-ghost-primary" on:click={() => createNewChat()}>
 		<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"

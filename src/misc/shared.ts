@@ -1,10 +1,11 @@
 import type { ChatCompletionRequestMessage } from 'openai';
-import { defaultOpenAiSettings, type OpenAiSettings } from './openai';
+import { get } from 'svelte/store';
+import { defaultOpenAiSettings, OpenAiModel, type OpenAiSettings } from './openai';
 import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
-import { chatStore } from './stores';
+import { chatStore, settingsStore } from './stores';
 
 export interface Chat {
 	title: string;
@@ -20,6 +21,7 @@ export interface Chat {
 export interface ClientSettings {
 	openAiApiKey?: string;
 	hideLanguageHint?: boolean;
+	defaultModel?: OpenAiModel;
 }
 
 export interface ChatCost {
@@ -38,10 +40,16 @@ export function createNewChat(template?: {
 	settings?: OpenAiSettings;
 	messages?: ChatCompletionRequestMessage[];
 }) {
+	const settings = { ...(template?.settings || defaultOpenAiSettings) };
+	const { defaultModel } = get(settingsStore);
+	if (defaultModel) {
+		settings.model = defaultModel;
+	}
+
 	const slug = generateSlug();
 	const chat: Chat = {
 		title: template?.title || slug,
-		settings: { ...(template?.settings || defaultOpenAiSettings) },
+		settings,
 		contextMessage: {
 			role: 'system',
 			content: template?.context || ''

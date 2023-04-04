@@ -10,15 +10,15 @@
 	} from '@skeletonlabs/skeleton';
 	import { goto } from '$app/navigation';
 	import { createNewChat } from '$misc/shared';
-	import { chatStore, isTimeagoInitialized } from '$misc/stores';
+	import { chatStore, isTimeagoInitializedStore } from '$misc/stores';
 
 	let timeAgo: TimeAgo;
 
 	onMount(() => {
-		if (!$isTimeagoInitialized) {
+		if (!$isTimeagoInitializedStore) {
 			// logs annoying console error if called more than once
 			TimeAgo.addDefaultLocale(en);
-			$isTimeagoInitialized = true;
+			$isTimeagoInitializedStore = true;
 		}
 		timeAgo = new TimeAgo('en-US');
 	});

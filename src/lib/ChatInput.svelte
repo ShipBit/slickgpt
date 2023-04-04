@@ -5,7 +5,13 @@
 	import { SSE } from 'sse.js';
 	import autosize from 'svelte-autosize';
 	import { focusTrap, toastStore, type ToastSettings } from '@skeletonlabs/skeleton';
-	import { chatStore, isLoadingAnswerStore, liveAnswerStore, settingsStore } from '$misc/stores';
+	import {
+		chatStore,
+		eventSourceStore,
+		isLoadingAnswerStore,
+		liveAnswerStore,
+		settingsStore
+	} from '$misc/stores';
 	import { countTokens } from '$misc/openai';
 
 	export let slug: string;
@@ -38,24 +44,15 @@
 
 		chatStore.addMessageToChat(slug, message);
 
-		const eventSource = new SSE('/api/ask', {
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			// send the entire message history to keep context
-			payload: JSON.stringify({
-				messages: $chatStore[slug].contextMessage.content // omit context if empty to save some tokens
-					? [$chatStore[slug].contextMessage, ...$chatStore[slug].messages]
-					: [...$chatStore[slug].messages],
-				settings: $chatStore[slug].settings,
-				openAiKey: $settingsStore.openAiApiKey
-			})
-		});
-		eventSource.addEventListener('message', handleAnswer);
-		eventSource.addEventListener('error', handleError);
+		const payload = {
+			messages: $chatStore[slug].contextMessage.content // omit context if empty to save some tokens
+				? [$chatStore[slug].contextMessage, ...$chatStore[slug].messages]
+				: [...$chatStore[slug].messages],
+			settings: $chatStore[slug].settings,
+			openAiKey: $settingsStore.openAiApiKey
+		};
 
-		eventSource.stream();
-
+		$eventSourceStore.start(payload, handleAnswer, handleError);
 		await resetTextArea();
 	}
 
@@ -82,6 +79,7 @@
 					return answer;
 				});
 				isLoadingAnswerStore.set(false);
+				$eventSourceStore.reset();
 			}
 		} catch (err) {
 			handleError(err);
@@ -89,6 +87,7 @@
 	}
 
 	function handleError(event: any) {
+		$eventSourceStore.reset();
 		isLoadingAnswerStore.set(false);
 
 		chatStore.removeLastUserMessage(slug);

@@ -1,7 +1,8 @@
 import type { Chat, ClientSettings } from './shared';
-import { writable, type Writable } from 'svelte/store';
+import { writable, type Readable, type Writable, readable } from 'svelte/store';
 import type { ChatCompletionRequestMessage } from 'openai';
 import { localStorageStore } from '@skeletonlabs/skeleton';
+import { EventSource } from './eventSource';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
 
@@ -12,7 +13,9 @@ export const liveAnswerStore: Writable<ChatCompletionRequestMessage> = writable(
 
 export const isLoadingAnswerStore: Writable<boolean> = writable(false);
 
-export const isTimeagoInitialized: Writable<boolean> = writable(false);
+export const isTimeagoInitializedStore: Writable<boolean> = writable(false);
+
+export const eventSourceStore: Readable<EventSource> = readable(new EventSource());
 
 // custom chat store
 

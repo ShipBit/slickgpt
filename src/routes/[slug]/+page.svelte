@@ -140,7 +140,8 @@
 				style={!$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
 			>
 				<button
-					disabled={!chat.messages || chat.messages.length < 2}
+					disabled={!chat.contextMessage.content?.length &&
+						(!chat.messages || chat.messages.length < 2)}
 					class="btn inline-flex variant-ghost-tertiary"
 					on:click={() => showModalComponent('ShareModal', { slug }, handleChatShared)}
 				>

@@ -175,7 +175,7 @@
 		</svelte:fragment>
 	</Toolbar>
 
-	<ChatMessages {chat}>
+	<ChatMessages {slug}>
 		<svelte:fragment slot="additional-content-top">
 			<!-- Language hint -->
 			{#if !$settingsStore.hideLanguageHint}
@@ -185,7 +185,7 @@
 						like.
 					</p>
 					<svelte:fragment slot="actions">
-						<button class="btn" on:click={() => ($settingsStore.hideLanguageHint = true)}>
+						<button class="btn btn-sm" on:click={() => ($settingsStore.hideLanguageHint = true)}>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="none"

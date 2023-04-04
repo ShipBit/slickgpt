@@ -20,6 +20,7 @@ export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	updateChat(slug: string, update: Partial<Chat>): void;
 	addMessageToChat(slug: string, message: ChatCompletionRequestMessage): void;
 	removeLastUserMessage(slug: string): void;
+	deleteMessage(slug: string, index: number): void;
 	deleteUpdateToken(slug: string): void;
 	deleteChat(slug: string): void;
 }
@@ -54,6 +55,20 @@ const removeLastUserMessage = (slug: string) => {
 	});
 };
 
+const deleteMessage = (slug: string, index: number) => {
+	_chatStore.update((store) => {
+		const messages = store[slug].messages;
+		const newMessages = [...messages.slice(0, index), ...messages.slice(index + 1)];
+		return {
+			...store,
+			[slug]: {
+				...store[slug],
+				messages: newMessages
+			}
+		};
+	});
+};
+
 const deleteUpdateToken = (slug: string) => {
 	_chatStore.update((store) => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -76,6 +91,7 @@ export const chatStore: ChatStore = {
 	update: _chatStore.update,
 	updateChat,
 	removeLastUserMessage,
+	deleteMessage,
 	addMessageToChat,
 	deleteUpdateToken,
 	deleteChat

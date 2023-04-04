@@ -116,7 +116,7 @@ export function track(action: string) {
 
 export function showToast(
 	message: string,
-	type: 'success' | 'error' = 'success',
+	type: 'primary' | 'secondary' | 'tertiary' | 'success' | 'warning' | 'error' = 'primary',
 	autohide = true,
 	timeout = 5000
 ) {

@@ -84,7 +84,7 @@
 	async function handleCloseChat() {
 		// untouched => discard
 		if (chat.title === slug && !chat.contextMessage?.content && chat.messages.length === 0) {
-			showToast('Empty chat was discarded automatically');
+			showToast('Empty chat was discarded automatically', 'secondary');
 			deleteChat(true);
 		}
 
@@ -99,7 +99,7 @@
 			if ($settingsStore.openAiApiKey) {
 				const title = await suggestChatTitle(chat, $settingsStore.openAiApiKey);
 				chatStore.updateChat(slug, { title });
-				showToast(`Chat title set to: '${title}'`);
+				showToast(`Chat title set to: '${title}'`, 'secondary');
 			}
 			goto('/');
 		} else {

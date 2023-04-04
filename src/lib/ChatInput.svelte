@@ -143,6 +143,13 @@
 		textarea.style.height = '';
 		autosize.update(textarea);
 	}
+
+	async function handleInsertCode() {
+		input += '\n```\n\n```';
+		await tick();
+		autosize.update(textarea);
+		calculateMessageTokens();
+	}
 </script>
 
 <footer
@@ -163,23 +170,47 @@
 						bind:value={input}
 						bind:this={textarea}
 					/>
-					<!-- Send button -->
-					<button type="submit" class="btn" disabled={$isLoadingAnswerStore}>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke-width="1.5"
-							stroke="currentColor"
-							class="w-6 h-6"
+					<div class="flex flex-col md:flex-row items-center justify-end md:items-end">
+						<!-- Insert Code button -->
+						<button
+							type="submit"
+							class="btn btn-sm ml-2"
+							disabled={$isLoadingAnswerStore}
+							on:click|preventDefault={handleInsertCode}
 						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
-							/>
-						</svg>
-					</button>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="w-6 h-6"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"
+								/>
+							</svg>
+						</button>
+						<!-- Send button -->
+						<button type="submit" class="btn btn-sm ml-2" disabled={$isLoadingAnswerStore}>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="w-6 h-6"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+								/>
+							</svg>
+						</button>
+					</div>
 				</div>
 			</form>
 		</div>

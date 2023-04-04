@@ -15,6 +15,7 @@
 		canSuggestTitle,
 		createNewChat,
 		showModalComponent,
+		showToast,
 		suggestChatTitle,
 		track
 	} from '$misc/shared';
@@ -83,6 +84,7 @@
 	async function handleCloseChat() {
 		// untouched => discard
 		if (chat.title === slug && !chat.contextMessage?.content && chat.messages.length === 0) {
+			showToast('Empty chat was discarded automatically');
 			deleteChat(true);
 		}
 
@@ -95,14 +97,16 @@
 		// has no title
 		if ($settingsStore.useTitleSuggestions) {
 			if ($settingsStore.openAiApiKey) {
-				chat.title = await suggestChatTitle(chat, $settingsStore.openAiApiKey);
+				const title = await suggestChatTitle(chat, $settingsStore.openAiApiKey);
+				chatStore.updateChat(slug, { title });
+				showToast(`Chat title set to: '${title}'`);
 			}
 			goto('/');
 		} else {
-			showModalComponent('SuggestTitleModal', { slug }, (closed: boolean) => {
-				if (closed) {
-					goto('/');
-				}
+			showModalComponent('SuggestTitleModal', { slug }, () => {
+				// see https://www.reddit.com/r/sveltejs/comments/10o7tpu/sveltekit_issue_goto_not_working_on_ios/
+				// await tick() doesn't fix it, hence setTimeout
+				setTimeout(() => goto('/'), 0);
 			});
 		}
 	}

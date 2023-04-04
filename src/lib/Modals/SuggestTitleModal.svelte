@@ -11,7 +11,8 @@
 			return;
 		}
 
-		$chatStore[slug].title = await suggestChatTitle($chatStore[slug], $settingsStore.openAiApiKey);
+		const title = await suggestChatTitle($chatStore[slug], $settingsStore.openAiApiKey);
+		chatStore.updateChat(slug, { title });
 	}
 
 	function handleSave() {

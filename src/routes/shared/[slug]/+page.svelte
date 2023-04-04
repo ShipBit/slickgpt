@@ -40,7 +40,7 @@
 	}
 </script>
 
-<Toolbar title={chat.title}>
+<Toolbar title={chat.title} on:closeChat={() => goto('/')}>
 	<svelte:fragment slot="actions">
 		<!-- Import -->
 		<button class="btn variant-ghost-warning" on:click={handleImportChat}>

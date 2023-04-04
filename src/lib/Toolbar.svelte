@@ -1,11 +1,9 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher();
 
 	export let title: string;
-
-	function handleClose() {
-		goto('/');
-	}
 </script>
 
 <header class="sticky top-0 z-10 badge-glass py-2 md:py-4 md:px-8 md:rounded-xl">
@@ -20,7 +18,7 @@
 			<slot name="actions" />
 
 			<!-- Close -->
-			<button class="btn" on:click={handleClose}>
+			<button class="btn" on:click={() => dispatch('closeChat')}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="none"

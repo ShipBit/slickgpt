@@ -71,10 +71,18 @@
 		track('deleteChat');
 		goto('/');
 	}
+
+	function handleCloseChat() {
+		if (slug === chat.title) {
+			showModalComponent('SuggestTitleModal', { slug }, () => {
+				goto('/');
+			});
+		}
+	}
 </script>
 
 {#if chat}
-	<Toolbar title={chat.title}>
+	<Toolbar title={chat.title} on:closeChat={handleCloseChat}>
 		<svelte:fragment slot="actions">
 			<!-- Delete -->
 			<button class="btn variant-ghost-error" on:click={showConfirmDeleteModal}>

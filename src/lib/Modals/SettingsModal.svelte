@@ -31,7 +31,20 @@
 		return Math.max(min, Math.min(value, max));
 	}
 
+	function maskString(input: string, maxTotalLength = 25, visibleChars = 4) {
+		if (!input || input.length < maxTotalLength) {
+			return input;
+		}
+
+		const maskedLength = maxTotalLength - visibleChars;
+		const visiblePart = input.slice(-visibleChars);
+		const maskedPart = Array(maskedLength).fill('x').join('');
+
+		return maskedPart + visiblePart;
+	}
+
 	let maxTokensForModel = 0;
+	let editApiKey = false;
 
 	$: {
 		maxTokensForModel = models[$chatStore[slug].settings.model].maxTokens;
@@ -51,13 +64,23 @@
 						Get yours
 					</a>
 				</div>
-				<input
-					required
-					class="input"
-					class:input-error={!$settingsStore.openAiApiKey}
-					type="text"
-					bind:value={$settingsStore.openAiApiKey}
-				/>
+				{#if editApiKey || !$settingsStore.openAiApiKey}
+					<input
+						required
+						class="input"
+						class:input-error={!$settingsStore.openAiApiKey}
+						type="text"
+						bind:value={$settingsStore.openAiApiKey}
+						on:blur={() => (editApiKey = false)}
+					/>
+				{:else}
+					<div class="flex justify-between items-center">
+						<span>{maskString($settingsStore.openAiApiKey)}</span>
+						<button class="btn btn-sm variant-ghost-secondary" on:click={() => (editApiKey = true)}
+							>Edit</button
+						>
+					</div>
+				{/if}
 			</label>
 
 			<!-- Chat Title -->
@@ -136,11 +159,7 @@
 					<button class="btn btn-sm" on:click={handleCloseSettings}>Close</button>
 					<button class="btn btn-sm" on:click={handleResetSettings}>Reset</button>
 				</div>
-				<button
-					class="btn variant-filled-primary"
-					disabled={!$settingsStore.openAiApiKey}
-					on:click={handleChangeSettings}>Save</button
-				>
+				<button class="btn variant-filled-primary" on:click={handleChangeSettings}>Save</button>
 			</div>
 		</div>
 	</form>

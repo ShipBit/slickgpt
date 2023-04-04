@@ -7,6 +7,7 @@
 		type ToastSettings
 	} from '@skeletonlabs/skeleton';
 	import { chatStore } from '$misc/stores';
+	import { track } from '$misc/shared';
 
 	let slug = $modalStore[0].meta?.slug || '';
 	$: chat = $chatStore[slug];
@@ -54,7 +55,7 @@
 		});
 
 		responseSlug = savedSlug;
-		window.plausible('shareChat');
+		track('shareChat');
 		if ($modalStore[0].response) {
 			$modalStore[0].response(responseSlug);
 		}

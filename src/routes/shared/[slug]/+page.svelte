@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { Chat } from '$misc/shared';
+	import { track, type Chat } from '$misc/shared';
 	import { generateSlug } from 'random-word-slugs';
 	import snarkdown from 'snarkdown';
 	import Toolbar from '$lib/Toolbar.svelte';
@@ -10,7 +10,7 @@
 	import HintMessage from '$lib/HintMessage.svelte';
 
 	export let data: PageData;
-	const { chat } = data;
+	const { slug, chat } = data;
 
 	function handleImportChat() {
 		if (!chat) return;
@@ -24,7 +24,7 @@
 
 		chatStore.updateChat(newSlug, newChat);
 
-		window.plausible('importChat');
+		track('importChat');
 		goto(`/${newSlug}`);
 	}
 </script>
@@ -51,7 +51,7 @@
 	</svelte:fragment>
 </Toolbar>
 
-<ChatMessages {chat}>
+<ChatMessages {slug} {chat}>
 	<svelte:fragment slot="additional-content-top">
 		{#if chat.contextMessage.content.length > 0}
 			<HintMessage title="Chat context" variantClass="variant-ghost-tertiary">

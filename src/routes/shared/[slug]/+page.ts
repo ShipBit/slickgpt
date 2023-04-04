@@ -13,6 +13,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 	}
 
 	return {
+		slug,
 		chat: result as Chat
 	};
 };

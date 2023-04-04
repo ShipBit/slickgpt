@@ -11,7 +11,13 @@
 	import HintMessage from '$lib/HintMessage.svelte';
 	import TokenCost from '$lib/TokenCost.svelte';
 	import { countTokens, estimateChatCost } from '$misc/openai';
-	import { createNewChat, showModalComponent, track } from '$misc/shared';
+	import {
+		canSuggestTitle,
+		createNewChat,
+		showModalComponent,
+		suggestChatTitle,
+		track
+	} from '$misc/shared';
 	import snarkdown from 'snarkdown';
 
 	export let data: PageData;
@@ -66,16 +72,37 @@
 		}
 	};
 
-	function deleteChat() {
+	function deleteChat(dontTrack = false) {
+		if (!dontTrack) {
+			track('deleteChat');
+		}
 		chatStore.deleteChat(slug);
-		track('deleteChat');
 		goto('/');
 	}
 
-	function handleCloseChat() {
-		if (slug === chat.title) {
-			showModalComponent('SuggestTitleModal', { slug }, () => {
-				goto('/');
+	async function handleCloseChat() {
+		// untouched => discard
+		if (chat.title === slug && !chat.contextMessage?.content && chat.messages.length === 0) {
+			deleteChat(true);
+		}
+
+		// already has a title
+		if (chat.title !== slug || !canSuggestTitle(chat)) {
+			goto('/');
+			return;
+		}
+
+		// has no title
+		if ($settingsStore.useTitleSuggestions) {
+			if ($settingsStore.openAiApiKey) {
+				chat.title = await suggestChatTitle(chat, $settingsStore.openAiApiKey);
+			}
+			goto('/');
+		} else {
+			showModalComponent('SuggestTitleModal', { slug }, (closed: boolean) => {
+				if (closed) {
+					goto('/');
+				}
 			});
 		}
 	}

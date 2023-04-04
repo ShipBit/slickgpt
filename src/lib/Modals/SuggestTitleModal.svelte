@@ -1,21 +1,17 @@
 <script lang="ts">
 	import { modalStore } from '@skeletonlabs/skeleton';
 	import { chatStore, settingsStore } from '$misc/stores';
+	import { canSuggestTitle, suggestChatTitle } from '$misc/shared';
 
 	let slug = $modalStore[0].meta?.slug || '';
+	$: showAiSuggestOptions = $settingsStore.openAiApiKey && canSuggestTitle($chatStore[slug]);
 
 	async function handleSuggestTitle() {
-		const response = await fetch('/api/suggest-title', {
-			method: 'POST',
-			body: JSON.stringify({
-				messages: $chatStore[slug].contextMessage.content // omit context if empty to save some tokens
-					? [$chatStore[slug].contextMessage, ...$chatStore[slug].messages]
-					: [...$chatStore[slug].messages],
-				openAiKey: $settingsStore.openAiApiKey
-			})
-		});
-		const { title }: { title: string } = await response.json();
-		$chatStore[slug].title = title;
+		if (!$settingsStore.openAiApiKey) {
+			return;
+		}
+
+		$chatStore[slug].title = await suggestChatTitle($chatStore[slug], $settingsStore.openAiApiKey);
 	}
 
 	function handleSave() {
@@ -35,21 +31,30 @@
 			<input type="text" class="input" bind:value={$chatStore[slug].title} />
 		</label>
 
-		<span class="self-center">OR:</span>
+		{#if showAiSuggestOptions}
+			<span class="self-center">OR:</span>
 
-		<button class="btn variant variant-filled-secondary" on:click={handleSuggestTitle}>
-			Let ChatGPT suggest a title
-		</button>
+			<button class="btn variant variant-filled-secondary" on:click={handleSuggestTitle}>
+				Let ChatGPT suggest a title
+			</button>
 
-		<span class="text-xs text-slate-400">
-			This action will consume a few tokens. The cheap gpt-3.5-turbo model will be used.
-		</span>
+			<span class="text-xs text-slate-400">
+				This action will consume a few tokens. The cheap gpt-3.5-turbo model will be used.
+			</span>
+		{/if}
 
 		<div class="flex flex-col md:flex-row space-y-4 justify-between items-center">
-			<label class="flex items-center space-x-2">
-				<input class="checkbox" type="checkbox" checked />
-				<p>Always set titles automagically</p>
-			</label>
+			{#if showAiSuggestOptions}
+				<label class="flex items-center space-x-2">
+					<input
+						class="checkbox"
+						type="checkbox"
+						bind:checked={$settingsStore.useTitleSuggestions}
+					/>
+					<p>Always set titles automagically</p>
+				</label>
+			{/if}
+
 			<button class="btn variant-filled-primary max-w-[100px] self-end" on:click={handleSave}>
 				Save
 			</button>

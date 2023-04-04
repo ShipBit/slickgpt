@@ -165,7 +165,7 @@
 	{#if $isLoadingAnswerStore}
 		<div class="flex items-center justify-center">
 			<button class="btn variant-ghost w-48 self-center" on:click={stopGenerating}>
-				Stop generating
+				Cancel generating
 			</button>
 		</div>
 	{:else}

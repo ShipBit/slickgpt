@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { onMount, tick } from 'svelte';
+	import hljs from 'highlight.js';
 	import { track, type Chat } from '$misc/shared';
 	import { generateSlug } from 'random-word-slugs';
 	import snarkdown from 'snarkdown';
@@ -11,6 +13,15 @@
 
 	export let data: PageData;
 	const { slug, chat } = data;
+
+	onMount(async () => {
+		await highlightCode();
+	});
+
+	async function highlightCode() {
+		await tick();
+		hljs.highlightAll();
+	}
 
 	function handleImportChat() {
 		if (!chat) return;

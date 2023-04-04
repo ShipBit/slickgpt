@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { ChatCompletionRequestMessage } from 'openai';
-	import { showModalComponent, track, type ChatCost } from '$misc/shared';
+	import { showModalComponent, showToast, track, type ChatCost } from '$misc/shared';
 	import { tick } from 'svelte';
 	import autosize from 'svelte-autosize';
-	import { focusTrap, toastStore, type ToastSettings } from '@skeletonlabs/skeleton';
+	import { focusTrap } from '@skeletonlabs/skeleton';
 	import {
 		chatStore,
 		eventSourceStore,
@@ -97,13 +97,8 @@
 		console.error(event);
 
 		const data = JSON.parse(event.data);
-		const toast: ToastSettings = {
-			message: data.message || 'An error occured.',
-			background: 'variant-filled-error',
-			autohide: true,
-			timeout: 5000
-		};
-		toastStore.trigger(toast);
+
+		showToast(data.message || 'An error occured.', 'error');
 
 		if (data.message.includes('API key')) {
 			showModalComponent('SettingsModal', { slug });

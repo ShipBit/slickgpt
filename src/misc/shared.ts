@@ -1,7 +1,12 @@
 import type { ChatCompletionRequestMessage } from 'openai';
 import { get } from 'svelte/store';
 import { defaultOpenAiSettings, OpenAiModel, type OpenAiSettings } from './openai';
-import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+import {
+	modalStore,
+	type ModalSettings,
+	type ToastSettings,
+	toastStore
+} from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
@@ -107,4 +112,19 @@ export function track(action: string) {
 	if (browser && window.plausible) {
 		window.plausible(action);
 	}
+}
+
+export function showToast(
+	message: string,
+	type: 'success' | 'error' = 'success',
+	autohide = true,
+	timeout = 5000
+) {
+	const toast: ToastSettings = {
+		background: `variant-filled-${type}`,
+		message,
+		autohide,
+		timeout
+	};
+	toastStore.trigger(toast);
 }

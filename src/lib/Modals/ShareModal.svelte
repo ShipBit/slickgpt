@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Accordion, AccordionItem, modalStore } from '@skeletonlabs/skeleton';
+	import { clickToCopyAction } from 'svelte-legos';
 	import { chatStore } from '$misc/stores';
 	import { showToast, track } from '$misc/shared';
 
@@ -72,14 +73,9 @@
 		acceptTos = false;
 	}
 
-	async function copyShareUrlToClipboard() {
-		try {
-			await navigator.clipboard.writeText(shareUrl);
-			modalStore.close();
-			showToast('Share URL copied to clipboard');
-		} catch (err) {
-			copyClipboardError = true;
-		}
+	function handleCopyDone() {
+		modalStore.close();
+		showToast('Share URL copied to clipboard');
 	}
 
 	function handleClose() {
@@ -169,7 +165,13 @@
 							<!-- Display Share URL -->
 							<input readonly={!copyClipboardError} class="input" type="text" value={shareUrl} />
 							<!-- Copy to clipboard -->
-							<button type="submit" class="btn" on:click={copyShareUrlToClipboard}>
+							<button
+								type="submit"
+								class="btn"
+								use:clickToCopyAction={shareUrl}
+								on:copy-done={() => handleCopyDone()}
+								on:copy-error={() => (copyClipboardError = true)}
+							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"

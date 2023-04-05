@@ -56,6 +56,7 @@
 		"random-word-slugs": "^0.1.6",
 		"snarkdown": "^2.0.0",
 		"sse.js": "^0.6.1",
-		"svelte-autosize": "^1.1.0"
+		"svelte-autosize": "^1.1.0",
+		"svelte-legos": "^0.1.7"
 	}
 }

@@ -18,7 +18,7 @@
 <header class="sticky top-0 z-10 badge-glass py-2 md:py-4 md:px-8 md:rounded-xl">
 	<div class="flex flex-col-reverse md:flex-row justify-center md:justify-between items-center">
 		<!-- Title -->
-		<div class="flex justify-center md:justify-start w-full px-4 md:px-0 mt-4 md:mt-0">
+		<div class="flex justify-center md:justify-start w-full px-4 md:px-0 mt-4 md:mt-0 max-w-[80%]">
 			<h2 class="unstyled truncate text-base md:text-2xl">
 				{title}
 			</h2>

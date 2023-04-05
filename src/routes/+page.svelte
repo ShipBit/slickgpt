@@ -20,6 +20,10 @@
 
 	let timeAgo: TimeAgo;
 
+	$: sortedChats = Object.entries($chatStore).sort((a, b) => {
+		return new Date(b[1].created).getTime() - new Date(a[1].created).getTime();
+	});
+
 	onMount(() => {
 		if (!$isTimeagoInitializedStore) {
 			// logs annoying console error if called more than once
@@ -73,10 +77,6 @@
 
 		goto('/');
 	}
-
-	$: sortedChats = Object.entries($chatStore).sort((a, b) => {
-		return new Date(b[1].created).getTime() - new Date(a[1].created).getTime();
-	});
 </script>
 
 <div
@@ -95,18 +95,20 @@
 		<a href={`/${slug}`} class="card p-4 flex flex-col variant-ghost-surface justify-end">
 			<div class="flex flex-col">
 				<div class="flex items-center space-x-2">
-					{#if chat.updateToken}
-						<!-- Shared -->
-						<Share class="w-10 h-10" />
-					{:else}
-						<!-- Local -->
-						<ChatBubbleLeftRight class="w-10 h-10" />
-					{/if}
-					<h2 class="unstyled text-lg">{chat.title}</h2>
+					<div>
+						{#if chat.updateToken}
+							<!-- Shared -->
+							<Share class="w-10 h-10" />
+						{:else}
+							<!-- Local -->
+							<ChatBubbleLeftRight class="w-10 h-10" />
+						{/if}
+					</div>
+					<h2 class="unstyled line-clamp-2 text-lg">{chat.title}</h2>
 				</div>
 			</div>
 			<hr class="my-4" />
-			<footer class="flex justify-evenly">
+			<footer class="flex justify-evenly space-x-2">
 				<div class="badge variant-filled-surface flex items-center space-x-1">
 					<ChatBubbleBottomCenter class="w-6 h-6" />
 					<span>{chat.messages.length}</span>

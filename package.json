@@ -48,6 +48,7 @@
 	"dependencies": {
 		"@floating-ui/dom": "^1.2.4",
 		"@inqling/svelte-icons": "^3.1.0",
+		"@tailwindcss/line-clamp": "^0.4.4",
 		"common-tags": "^1.8.2",
 		"firebase": "^9.17.2",
 		"gpt3-tokenizer": "^1.1.5",

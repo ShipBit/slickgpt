@@ -10,6 +10,9 @@ Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'
 - use [svelte-legos](https://sveltelegos.com/) to replace some (worse) custom logic
   - [textareaAutosizeAction](https://sveltelegos.com/guides/actions/textareaAutosizeAction/) instead of `svelte-autosize`
   - [clickToCopyAction](https://sveltelegos.com/guides/actions/clickToCopyAction/) instead of custom `navigator.clipboard` logic
+- long Chat titles no longer break the layout
+- use [@inqling/svelte-icons](https://github.com/Inqling/svelte-icons) instead of inline SVGs
+- added a little surprise. Can you spot it? 👀
 
 ## April 04, 2023
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Accordion, AccordionItem, modalStore } from '@skeletonlabs/skeleton';
-	import { clickToCopyAction } from 'svelte-legos';
+	import { clickToCopyAction, confettiAction } from 'svelte-legos';
 	import { DocumentDuplicate } from '@inqling/svelte-icons/heroicon-24-solid';
 	import { chatStore } from '$misc/stores';
 	import { showToast, track } from '$misc/shared';
@@ -152,6 +152,7 @@
 							disabled={!acceptTos}
 							class="btn variant-filled-primary"
 							on:click={handleShareChat}
+							use:confettiAction={{ type: 'school-pride' }}
 						>
 							{alreadyShared ? 'Update' : 'Share'}
 						</button>

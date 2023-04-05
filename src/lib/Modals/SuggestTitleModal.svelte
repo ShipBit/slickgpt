@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { modalStore, ProgressRadial } from '@skeletonlabs/skeleton';
+	import { confettiAction } from 'svelte-legos';
 	import { chatStore, settingsStore } from '$misc/stores';
 	import { canSuggestTitle, suggestChatTitle } from '$misc/shared';
 
@@ -60,13 +61,14 @@
 			</span>
 		{/if}
 
-		<div class="flex flex-col md:flex-row space-y-4 justify-between items-center">
+		<div class="flex flex-col md:flex-row space-y-4 md:space-y-0 justify-between items-center">
 			{#if showAiSuggestOptions}
 				<label class="flex items-center space-x-2">
 					<input
 						class="checkbox"
 						type="checkbox"
 						bind:checked={$settingsStore.useTitleSuggestions}
+						use:confettiAction={{ type: 'school-pride' }}
 					/>
 					<p>Always set titles automagically</p>
 				</label>

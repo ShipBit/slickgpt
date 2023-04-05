@@ -2,14 +2,9 @@
 	import { onMount } from 'svelte';
 	import TimeAgo from 'javascript-time-ago';
 	import en from 'javascript-time-ago/locale/en';
-	import {
-		modalStore,
-		toastStore,
-		type ModalSettings,
-		type ToastSettings
-	} from '@skeletonlabs/skeleton';
+	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { goto } from '$app/navigation';
-	import { createNewChat } from '$misc/shared';
+	import { createNewChat, showToast } from '$misc/shared';
 	import { chatStore, isTimeagoInitializedStore } from '$misc/stores';
 
 	let timeAgo: TimeAgo;
@@ -60,13 +55,7 @@
 			message += ` ${unshared.length} ${unshared.length === 1 ? 'chat' : 'chats'} unshared.`;
 		}
 
-		const toast: ToastSettings = {
-			message,
-			background: 'variant-filled-success',
-			autohide: true,
-			timeout: 5000
-		};
-		toastStore.trigger(toast);
+		showToast(message);
 
 		// update the local store
 		$chatStore = {};

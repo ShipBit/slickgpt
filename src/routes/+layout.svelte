@@ -25,6 +25,7 @@
 	import ContextModal from '$lib/Modals/ContextModal.svelte';
 	import ShareModal from '$lib/Modals/ShareModal.svelte';
 	import CostModal from '$lib/Modals/CostModal.svelte';
+	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
 
 	setupSkeleton();
 
@@ -33,7 +34,8 @@
 		SettingsModal: { ref: SettingsModal },
 		ContextModal: { ref: ContextModal },
 		ShareModal: { ref: ShareModal },
-		CostModal: { ref: CostModal }
+		CostModal: { ref: CostModal },
+		SuggestTitleModal: { ref: SuggestTitleModal }
 	};
 
 	const meta = {

@@ -11,7 +11,14 @@
 	import HintMessage from '$lib/HintMessage.svelte';
 	import TokenCost from '$lib/TokenCost.svelte';
 	import { countTokens, estimateChatCost } from '$misc/openai';
-	import { createNewChat, showModalComponent, track } from '$misc/shared';
+	import {
+		canSuggestTitle,
+		createNewChat,
+		showModalComponent,
+		showToast,
+		suggestChatTitle,
+		track
+	} from '$misc/shared';
 	import snarkdown from 'snarkdown';
 
 	export let data: PageData;
@@ -66,18 +73,59 @@
 		}
 	};
 
-	function deleteChat() {
+	function deleteChat(dontTrack = false) {
+		if (!dontTrack) {
+			track('deleteChat');
+		}
 		chatStore.deleteChat(slug);
-		track('deleteChat');
 		goto('/');
+	}
+
+	async function handleCloseChat() {
+		// untouched => discard
+		if (chat.title === slug && !chat.contextMessage?.content && chat.messages.length === 0) {
+			showToast('Empty chat was discarded automatically', 'secondary');
+			deleteChat(true);
+		}
+
+		// already has a title
+		if (chat.title !== slug || !canSuggestTitle(chat)) {
+			goto('/');
+			return;
+		}
+
+		// has no title
+		if ($settingsStore.useTitleSuggestions) {
+			if ($settingsStore.openAiApiKey) {
+				const title = await suggestChatTitle(chat, $settingsStore.openAiApiKey);
+				chatStore.updateChat(slug, { title });
+				showToast(`Chat title set to: '${title}'`, 'secondary');
+			}
+			goto('/');
+		} else {
+			showModalComponent('SuggestTitleModal', { slug }, () => {
+				// see https://www.reddit.com/r/sveltejs/comments/10o7tpu/sveltekit_issue_goto_not_working_on_ios/
+				// await tick() doesn't fix it, hence setTimeout
+				setTimeout(() => goto('/'), 0);
+			});
+		}
+	}
+
+	function handleRenameChat(event: CustomEvent<string>) {
+		chatStore.updateChat(slug, { title: event.detail });
 	}
 </script>
 
 {#if chat}
-	<Toolbar title={chat.title}>
+	<Toolbar
+		{slug}
+		title={chat.title}
+		on:closeChat={handleCloseChat}
+		on:renameChat={handleRenameChat}
+	>
 		<svelte:fragment slot="actions">
 			<!-- Delete -->
-			<button class="btn variant-ghost-error" on:click={showConfirmDeleteModal}>
+			<button class="btn btn-sm variant-ghost-error" on:click={showConfirmDeleteModal}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="none"
@@ -97,7 +145,7 @@
 			<!-- Settings -->
 			<span class="relative inline-flex">
 				<button
-					class="btn variant-ghost-warning"
+					class="btn btn-sm variant-ghost-warning"
 					on:click={() => showModalComponent('SettingsModal', { slug })}
 				>
 					<svg
@@ -142,7 +190,7 @@
 				<button
 					disabled={!chat.contextMessage.content?.length &&
 						(!chat.messages || chat.messages.length < 2)}
-					class="btn inline-flex variant-ghost-tertiary"
+					class="btn btn-sm inline-flex variant-ghost-tertiary"
 					on:click={() => showModalComponent('ShareModal', { slug }, handleChatShared)}
 				>
 					<svg

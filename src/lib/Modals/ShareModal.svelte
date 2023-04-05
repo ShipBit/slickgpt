@@ -1,13 +1,7 @@
 <script lang="ts">
-	import {
-		Accordion,
-		AccordionItem,
-		modalStore,
-		toastStore,
-		type ToastSettings
-	} from '@skeletonlabs/skeleton';
+	import { Accordion, AccordionItem, modalStore } from '@skeletonlabs/skeleton';
 	import { chatStore } from '$misc/stores';
-	import { track } from '$misc/shared';
+	import { showToast, track } from '$misc/shared';
 
 	let slug = $modalStore[0].meta?.slug || '';
 	$: chat = $chatStore[slug];
@@ -81,16 +75,8 @@
 	async function copyShareUrlToClipboard() {
 		try {
 			await navigator.clipboard.writeText(shareUrl);
-
 			modalStore.close();
-
-			const toast: ToastSettings = {
-				message: 'Share URL copied to clipboard',
-				background: 'variant-filled-success',
-				autohide: true,
-				timeout: 5000
-			};
-			toastStore.trigger(toast);
+			showToast('Share URL copied to clipboard');
 		} catch (err) {
 			copyClipboardError = true;
 		}

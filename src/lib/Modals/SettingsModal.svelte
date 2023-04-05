@@ -31,7 +31,7 @@
 		return Math.max(min, Math.min(value, max));
 	}
 
-	function maskString(input: string, maxTotalLength = 25, visibleChars = 4) {
+	function maskString(input: string, maxTotalLength = 20, visibleChars = 4) {
 		if (!input || input.length < maxTotalLength) {
 			return input;
 		}
@@ -57,14 +57,14 @@
 		<h3 class="mb-4">Settings</h3>
 		<div class="flex-row space-y-6">
 			<!-- API key -->
-			<label class="label">
-				<div class="flex justify-between space-x-12	">
-					<span>OpenAI API key</span>
-					<a target="_blank" rel="noreferrer" href="https://platform.openai.com/account/api-keys">
-						Get yours
-					</a>
-				</div>
-				{#if editApiKey || !$settingsStore.openAiApiKey}
+			{#if editApiKey || !$settingsStore.openAiApiKey}
+				<label class="label">
+					<div class="flex justify-between space-x-12	">
+						<span>OpenAI API key</span>
+						<a target="_blank" rel="noreferrer" href="https://platform.openai.com/account/api-keys">
+							Get yours
+						</a>
+					</div>
 					<input
 						required
 						class="input"
@@ -73,21 +73,20 @@
 						bind:value={$settingsStore.openAiApiKey}
 						on:blur={() => (editApiKey = false)}
 					/>
-				{:else}
-					<div class="flex justify-between items-center">
-						<span>{maskString($settingsStore.openAiApiKey)}</span>
-						<button class="btn btn-sm variant-ghost-secondary" on:click={() => (editApiKey = true)}
-							>Edit</button
-						>
-					</div>
-				{/if}
-			</label>
+				</label>
+			{:else}
+				<div class="flex flex-col space-x-2">
+					<span class="label">OpenAI API key</span>
 
-			<!-- Chat Title -->
-			<label class="label">
-				<span>Chat Title</span>
-				<input class="input" type="text" bind:value={title} />
-			</label>
+					<div class="flex justify-between items-center space-x-4">
+						<span>{maskString($settingsStore.openAiApiKey)}</span>
+
+						<button class="btn btn-sm variant-ghost-secondary" on:click={() => (editApiKey = true)}>
+							Edit
+						</button>
+					</div>
+				</div>
+			{/if}
 
 			<!-- Model -->
 			{#if $settingsStore.openAiApiKey}

@@ -7,10 +7,12 @@
 </script>
 
 <header class="sticky top-0 z-10 badge-glass py-2 md:py-4 md:px-8 md:rounded-xl">
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+	<div
+		class="flex flex-col md:flex-row justify-center md:justify-between items-center space-y-4 md:space-y-0"
+	>
 		<!-- Title -->
-		<div class="hidden md:block justify-self-center">
-			<h2 class="">{title}</h2>
+		<div class="justify-self-center">
+			<h2 class="unstyled text-base md:text-2xl">{title}</h2>
 		</div>
 
 		<div class="flex justify-self-center space-x-2">

@@ -116,7 +116,7 @@
 	<Toolbar title={chat.title} on:closeChat={handleCloseChat}>
 		<svelte:fragment slot="actions">
 			<!-- Delete -->
-			<button class="btn variant-ghost-error" on:click={showConfirmDeleteModal}>
+			<button class="btn btn-sm variant-ghost-error" on:click={showConfirmDeleteModal}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="none"
@@ -136,7 +136,7 @@
 			<!-- Settings -->
 			<span class="relative inline-flex">
 				<button
-					class="btn variant-ghost-warning"
+					class="btn btn-sm variant-ghost-warning"
 					on:click={() => showModalComponent('SettingsModal', { slug })}
 				>
 					<svg
@@ -181,7 +181,7 @@
 				<button
 					disabled={!chat.contextMessage.content?.length &&
 						(!chat.messages || chat.messages.length < 2)}
-					class="btn inline-flex variant-ghost-tertiary"
+					class="btn btn-sm inline-flex variant-ghost-tertiary"
 					on:click={() => showModalComponent('ShareModal', { slug }, handleChatShared)}
 				>
 					<svg

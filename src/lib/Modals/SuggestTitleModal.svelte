@@ -1,18 +1,21 @@
 <script lang="ts">
-	import { modalStore } from '@skeletonlabs/skeleton';
+	import { modalStore, ProgressRadial } from '@skeletonlabs/skeleton';
 	import { chatStore, settingsStore } from '$misc/stores';
 	import { canSuggestTitle, suggestChatTitle } from '$misc/shared';
 
 	let slug = $modalStore[0].meta?.slug || '';
+	let isLoading = false;
+
 	$: showAiSuggestOptions = $settingsStore.openAiApiKey && canSuggestTitle($chatStore[slug]);
 
 	async function handleSuggestTitle() {
 		if (!$settingsStore.openAiApiKey) {
 			return;
 		}
-
+		isLoading = true;
 		const title = await suggestChatTitle($chatStore[slug], $settingsStore.openAiApiKey);
 		chatStore.updateChat(slug, { title });
+		isLoading = false;
 	}
 
 	function handleSave() {
@@ -35,8 +38,21 @@
 		{#if showAiSuggestOptions}
 			<span class="self-center">OR:</span>
 
-			<button class="btn variant variant-filled-secondary" on:click={handleSuggestTitle}>
-				Let ChatGPT suggest a title
+			<button
+				class="btn variant variant-filled-secondary"
+				disabled={isLoading}
+				on:click={handleSuggestTitle}
+			>
+				{#if !isLoading}
+					Let ChatGPT suggest a new title
+				{:else}
+					<ProgressRadial
+						class="w-6"
+						stroke={120}
+						meter="stroke-tertiary-500"
+						track="stroke-tertiary-500/30"
+					/>
+				{/if}
 			</button>
 
 			<span class="text-xs text-slate-400">

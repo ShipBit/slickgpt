@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { ChatCompletionRequestMessage } from 'openai';
-	import { showModalComponent, showToast, track, type ChatCost } from '$misc/shared';
 	import { tick } from 'svelte';
-	import autosize from 'svelte-autosize';
+	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap } from '@skeletonlabs/skeleton';
+	import { showModalComponent, showToast, track, type ChatCost } from '$misc/shared';
 	import {
 		chatStore,
 		eventSourceStore,
@@ -36,7 +36,7 @@
 	$: maxTokensCompletion = $chatStore[slug].settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
-	async function handleSubmit() {
+	function handleSubmit() {
 		track('ask');
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
@@ -52,7 +52,7 @@
 		};
 
 		$eventSourceStore.start(payload, handleAnswer, handleError);
-		await resetTextArea();
+		input = '';
 	}
 
 	function handleAnswer(event: MessageEvent<any>) {
@@ -132,18 +132,13 @@
 		showModalComponent('CostModal', { chatCost, maxTokensCompletion, messageTokens });
 	}
 
-	// see https://github.com/jesseskinner/svelte-autosize
-	async function resetTextArea() {
-		input = '';
-		await tick();
-		textarea.style.height = '';
-		autosize.update(textarea);
-	}
-
 	async function handleInsertCode() {
 		input += '\n```\n\n```';
+
+		// tick is required for the action to resize the textarea
 		await tick();
-		autosize.update(textarea);
+		textareaAutosizeAction(textarea);
+
 		calculateMessageTokens();
 	}
 
@@ -170,10 +165,10 @@
 					<div class="grid grid-cols-[1fr_auto]">
 						<!-- Input -->
 						<textarea
-							class="textarea"
+							class="textarea overflow-hidden"
 							rows="1"
 							placeholder="Enter to send, Shift+Enter for newline"
-							use:autosize
+							use:textareaAutosizeAction
 							on:keydown={handleKeyDown}
 							bind:value={input}
 							bind:this={textarea}

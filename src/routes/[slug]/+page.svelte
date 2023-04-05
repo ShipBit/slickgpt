@@ -110,10 +110,19 @@
 			});
 		}
 	}
+
+	function handleRenameChat(event: CustomEvent<string>) {
+		chatStore.updateChat(slug, { title: event.detail });
+	}
 </script>
 
 {#if chat}
-	<Toolbar title={chat.title} on:closeChat={handleCloseChat}>
+	<Toolbar
+		{slug}
+		title={chat.title}
+		on:closeChat={handleCloseChat}
+		on:renameChat={handleRenameChat}
+	>
 		<svelte:fragment slot="actions">
 			<!-- Delete -->
 			<button class="btn btn-sm variant-ghost-error" on:click={showConfirmDeleteModal}>

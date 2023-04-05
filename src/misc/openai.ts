@@ -70,6 +70,7 @@ export function estimateChatCost(chat: Chat): ChatCost {
 	let tokensPrompt = 0;
 	let tokensCompletion = 0;
 
+	// TODO: Calculate cost only for the current chat branch
 	const messages = chat.contextMessage?.content
 		? [chat.contextMessage, ...chat.messages]
 		: chat.messages;

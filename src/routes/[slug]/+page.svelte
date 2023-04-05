@@ -158,6 +158,7 @@
 				class="relative inline-flex"
 				style={!$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
 			>
+				<!-- TODO: count messages horizontally in all chat branches -->
 				<button
 					disabled={!chat.contextMessage.content?.length &&
 						(!chat.messages || chat.messages.length < 2)}

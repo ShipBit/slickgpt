@@ -12,11 +12,17 @@ import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { chatStore, settingsStore } from './stores';
 
+export interface ChatMessage extends ChatCompletionRequestMessage {
+	// When we edit a message, we make all subsequent messages children of this one.
+	// We "split" the chat, keep the old history and create a new branch for the edited message.
+	children?: ChatMessage[];
+}
+
 export interface Chat {
 	title: string;
 	settings: OpenAiSettings;
 	contextMessage: ChatCompletionRequestMessage;
-	messages: ChatCompletionRequestMessage[];
+	messages: ChatMessage[];
 	created: Date;
 
 	isImported?: boolean;

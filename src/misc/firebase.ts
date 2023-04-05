@@ -1,4 +1,3 @@
-import type { ChatCompletionRequestMessage } from 'openai';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, get, ref } from 'firebase/database';
 import {
@@ -10,7 +9,7 @@ import {
 	FIREBASE_MESSAGINGSENDERID,
 	FIREBASE_APPID
 } from '$env/static/private';
-import type { Chat } from './shared';
+import type { Chat, ChatMessage } from './shared';
 
 /**
  * This can only be executed server-side!
@@ -49,9 +48,9 @@ export async function loadChatFromDb(slug: string) {
 
 	if (response?.messages) {
 		// firebase stores array as objects like { 0: whatever, 1: whateverelse }
-		const messages: ChatCompletionRequestMessage[] = [];
+		const messages: ChatMessage[] = [];
 		for (const message of Object.values(response.messages)) {
-			messages.push(message as ChatCompletionRequestMessage);
+			messages.push(message as ChatMessage);
 		}
 
 		return {

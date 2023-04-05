@@ -44,6 +44,7 @@
 
 		chatStore.addMessageToChat(slug, message);
 
+		// TODO: Send only the messages of the current chat "branch" to the server
 		const payload = {
 			messages: $chatStore[slug].contextMessage.content // omit context if empty to save some tokens
 				? [$chatStore[slug].contextMessage, ...$chatStore[slug].messages]

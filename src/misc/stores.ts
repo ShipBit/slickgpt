@@ -1,4 +1,4 @@
-import type { Chat, ClientSettings } from './shared';
+import type { Chat, ChatMessage, ClientSettings } from './shared';
 import { writable, type Readable, type Writable, readable } from 'svelte/store';
 import type { ChatCompletionRequestMessage } from 'openai';
 import { localStorageStore } from '@skeletonlabs/skeleton';
@@ -19,9 +19,11 @@ export const eventSourceStore: Readable<EventSource> = readable(new EventSource(
 
 // custom chat store
 
+// TODO: Rework for ChatMessage children array
+
 export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	updateChat(slug: string, update: Partial<Chat>): void;
-	addMessageToChat(slug: string, message: ChatCompletionRequestMessage): void;
+	addMessageToChat(slug: string, message: ChatMessage): void;
 	removeLastUserMessage(slug: string): void;
 	deleteMessage(slug: string, index: number): void;
 	deleteUpdateToken(slug: string): void;
@@ -36,7 +38,7 @@ const updateChat = (slug: string, update: Partial<Chat>) => {
 	});
 };
 
-const addMessageToChat = (slug: string, message: ChatCompletionRequestMessage) => {
+const addMessageToChat = (slug: string, message: ChatMessage) => {
 	_chatStore.update((store) => {
 		return { ...store, [slug]: { ...store[slug], messages: [...store[slug].messages, message] } };
 	});

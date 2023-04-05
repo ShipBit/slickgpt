@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createNewChat } from '$misc/shared';
+	import { PlusCircle } from '@inqling/svelte-icons/heroicon-24-solid';
 </script>
 
 <div class="flex flex-col justify-center items-center h-full space-y-4 text-center">
@@ -12,20 +13,7 @@
 	<!-- Add button -->
 	<button class="card p-4 grid variant-ghost-primary" on:click={() => createNewChat()}>
 		<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke-width="1.5"
-				stroke="currentColor"
-				class="w-6 h-6"
-			>
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-				/>
-			</svg>
+			<PlusCircle class="w-6 h-6" />
 			<span>Create your own</span>
 		</div>
 	</button>

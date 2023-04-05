@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { modalStore, ProgressRadial, type ModalSettings } from '@skeletonlabs/skeleton';
-	import type { Chat } from '$misc/shared';
-	import snarkdown from 'snarkdown';
-	import { chatStore, isLoadingAnswerStore, liveAnswerStore } from '$misc/stores';
 	import { onDestroy } from 'svelte';
+	import { modalStore, ProgressRadial, type ModalSettings } from '@skeletonlabs/skeleton';
+	import snarkdown from 'snarkdown';
+	import { XMark } from '@inqling/svelte-icons/heroicon-24-solid';
+	import type { Chat } from '$misc/shared';
+	import { chatStore, isLoadingAnswerStore, liveAnswerStore } from '$misc/stores';
 	import { countTokens } from '$misc/openai';
-	import TokenCost from './TokenCost.svelte';
 	import { scrollIntoView } from '$misc/actions';
+	import TokenCost from './TokenCost.svelte';
 
 	export let slug: string;
 	export let chat: Chat | undefined = undefined;
@@ -79,20 +80,7 @@
 								<!-- Delete message -->
 								{#if !!$chatStore[slug]}
 									<button class="btn btn-sm" on:click={() => modalConfirmDelete(index)}>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke-width="1.5"
-											stroke="currentColor"
-											class="w-6 h-6"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												d="M6 18L18 6M6 6l12 12"
-											/>
-										</svg>
+										<XMark class="w-6 h-6" />
 									</button>
 								{/if}
 							</div>

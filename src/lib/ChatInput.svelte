@@ -3,6 +3,7 @@
 	import { tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap } from '@skeletonlabs/skeleton';
+	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
 	import { showModalComponent, showToast, track, type ChatCost } from '$misc/shared';
 	import {
 		chatStore,
@@ -180,37 +181,11 @@
 								class="btn btn-sm ml-2"
 								on:click|preventDefault={handleInsertCode}
 							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke-width="1.5"
-									stroke="currentColor"
-									class="w-6 h-6"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"
-									/>
-								</svg>
+								<CodeBracket class="w-6 h-6" />
 							</button>
 							<!-- Send button -->
 							<button type="submit" class="btn btn-sm ml-2">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke-width="1.5"
-									stroke="currentColor"
-									class="w-6 h-6"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
-									/>
-								</svg>
+								<PaperAirplane class="w-6 h-6" />
 							</button>
 						</div>
 					</div>
@@ -224,21 +199,7 @@
 					on:click={openTokenCostDialog}
 				>
 					<span>{tokensLeft} tokens left</span>
-
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke-width="1.5"
-						stroke="currentColor"
-						class="w-5 h-5"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-						/>
-					</svg>
+					<CircleStack class="w-6 h-6" />
 				</button>
 			{/if}
 		</div>

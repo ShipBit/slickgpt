@@ -49,6 +49,7 @@
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
 
+		// TODO: add parent param! This is the last message of the current chat "branch"
 		chatStore.addMessageToChat(slug, message);
 		// message now has an id
 		lastUserMessage = message;
@@ -81,7 +82,7 @@
 			}
 			// streaming completed
 			else {
-				chatStore.addMessageToChat(slug, $liveAnswerStore);
+				chatStore.addMessageToChat(slug, $liveAnswerStore, lastUserMessage?.id);
 				isLoadingAnswerStore.set(false);
 
 				$eventSourceStore.reset();

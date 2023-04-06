@@ -9,7 +9,7 @@
 	import { chatStore, isLoadingAnswerStore, settingsStore } from '$misc/stores';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import ChatInput from '$lib/ChatInput.svelte';
-	import ChatMessages from '$lib/ChatMessages.svelte';
+	import Chat from '$lib/Chat.svelte';
 	import HintMessage from '$lib/HintMessage.svelte';
 	import TokenCost from '$lib/TokenCost.svelte';
 	import { countTokens, estimateChatCost } from '$misc/openai';
@@ -183,7 +183,7 @@
 		</svelte:fragment>
 	</Toolbar>
 
-	<ChatMessages {slug}>
+	<Chat {slug}>
 		<svelte:fragment slot="additional-content-top">
 			<!-- Language hint -->
 			{#if !$settingsStore.hideLanguageHint}
@@ -253,7 +253,7 @@
 				</svelte:fragment>
 			</HintMessage>
 		</svelte:fragment>
-	</ChatMessages>
+	</Chat>
 
 	<ChatInput {slug} chatCost={cost} />
 {/if}

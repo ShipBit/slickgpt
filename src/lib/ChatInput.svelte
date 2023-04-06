@@ -4,7 +4,13 @@
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap } from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
-	import { showModalComponent, showToast, track, type ChatCost } from '$misc/shared';
+	import {
+		showModalComponent,
+		showToast,
+		track,
+		type ChatCost,
+		type ChatMessage
+	} from '$misc/shared';
 	import {
 		chatStore,
 		eventSourceStore,
@@ -22,6 +28,7 @@
 	let inputCopy = '';
 	let textarea: HTMLTextAreaElement;
 	let messageTokens = 0;
+	let lastUserMessage: ChatMessage | null = null;
 
 	$: message = {
 		role: 'user',
@@ -43,6 +50,8 @@
 		inputCopy = input;
 
 		chatStore.addMessageToChat(slug, message);
+		// message now has an id
+		lastUserMessage = message;
 
 		// TODO: Send only the messages of the current chat "branch" to the server
 		const payload = {
@@ -73,9 +82,11 @@
 			// streaming completed
 			else {
 				chatStore.addMessageToChat(slug, $liveAnswerStore);
-				resetLiveAnswer();
 				isLoadingAnswerStore.set(false);
+
 				$eventSourceStore.reset();
+				resetLiveAnswer();
+				lastUserMessage = null;
 			}
 		} catch (err) {
 			handleError(err);
@@ -94,7 +105,10 @@
 		$eventSourceStore.reset();
 		isLoadingAnswerStore.set(false);
 
-		chatStore.removeLastUserMessage(slug);
+		// always true, check just for TypeScript
+		if (lastUserMessage?.id) {
+			chatStore.deleteMessage(slug, lastUserMessage.id);
+		}
 
 		console.error(event);
 

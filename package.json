@@ -27,6 +27,7 @@
 		"@tailwindcss/forms": "^0.5.3",
 		"@tailwindcss/typography": "^0.5.9",
 		"@types/common-tags": "^1.8.1",
+		"@types/uuid": "^9.0.1",
 		"@typescript-eslint/eslint-plugin": "^5.54.1",
 		"@typescript-eslint/parser": "^5.54.1",
 		"autoprefixer": "^10.4.14",
@@ -58,6 +59,7 @@
 		"random-word-slugs": "^0.1.6",
 		"snarkdown": "^2.0.0",
 		"sse.js": "^0.6.1",
-		"svelte-legos": "^0.1.7"
+		"svelte-legos": "^0.1.7",
+		"uuid": "^9.0.0"
 	}
 }

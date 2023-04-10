@@ -8,6 +8,7 @@
 	import TokenCost from './TokenCost.svelte';
 
 	export let slug: string;
+	export let siblingsCount: number;
 	export let message: ChatMessage;
 
 	async function modalConfirmDelete(id?: string) {
@@ -31,9 +32,11 @@
 	}
 </script>
 
-<div class={message.role === 'assistant' ? 'md:place-self-start' : 'md:place-self-end'}>
+{#if siblingsCount < 2 || message.isSelected}
 	<div
-		class="grid px-5 py-2 rounded-2xl"
+		class="grid px-5 py-2 rounded-2xl {message.role === 'assistant'
+			? 'md:place-self-start'
+			: 'md:place-self-end'}"
 		class:variant-ghost-surface={message.role === 'user'}
 		class:variant-ghost-secondary={message.role === 'assistant'}
 		class:rounded-tl-none={message.role === 'assistant'}
@@ -62,4 +65,10 @@
 			{@html snarkdown(message.content)}
 		</div>
 	</div>
-</div>
+
+	{#if message.messages}
+		{#each message.messages as childMessage}
+			<svelte:self {slug} message={childMessage} siblingsCount={message.messages.length} />
+		{/each}
+	{/if}
+{/if}

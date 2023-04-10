@@ -38,7 +38,7 @@
 		<div class="flex flex-col max-w-4xl md:mx-auto space-y-6 pt-6">
 			<!-- Message history -->
 			{#each chat.messages as message}
-				<ChatMessage {slug} {message} />
+				<ChatMessage {slug} {message} siblingsCount={chat.messages.length} />
 			{/each}
 
 			<!-- Live Message -->

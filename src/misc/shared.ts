@@ -15,6 +15,7 @@ import { chatStore, settingsStore } from './stores';
 export interface ChatMessage extends ChatCompletionRequestMessage {
 	id?: string;
 	messages?: ChatMessage[];
+	isSelected?: boolean;
 }
 
 export interface Chat {

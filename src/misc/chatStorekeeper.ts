@@ -90,4 +90,30 @@ export class ChatStorekeeper {
 			return message;
 		});
 	}
+
+	static getCurrentMessageBranch(chat: Chat): ChatMessage[] {
+		const result: ChatMessage[] = [];
+
+		function traverse(messages: ChatMessage[]): void {
+			if (messages.length === 1) {
+				result.push(messages[0]);
+				if (messages[0].messages) {
+					traverse(messages[0].messages);
+				}
+			} else {
+				for (const message of messages) {
+					if (message.isSelected) {
+						result.push(message);
+						if (message.messages) {
+							traverse(message.messages);
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		traverse(chat.messages);
+		return result;
+	}
 }

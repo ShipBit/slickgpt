@@ -41,7 +41,10 @@
 	} as ChatCompletionRequestMessage;
 
 	const unsubscribe = chatStore.subscribe((chats) => {
-		currentMessages = chatStore.getCurrentMessageBranch(chats[slug]);
+		const chat = chats[slug];
+		if (chat) {
+			currentMessages = chatStore.getCurrentMessageBranch(chat);
+		}
 	});
 
 	onDestroy(unsubscribe);

@@ -91,8 +91,9 @@ export class ChatStorekeeper {
 		});
 	}
 
-	static getCurrentMessageBranch(chat: Chat): ChatMessage[] {
-		const result: ChatMessage[] = [];
+	static getCurrentMessageBranch(chat: Chat, includeContext = true): ChatMessage[] {
+		const result: ChatMessage[] =
+			includeContext && chat.contextMessage.content ? [chat.contextMessage] : [];
 
 		function traverse(messages: ChatMessage[]): void {
 			if (messages.length === 1) {
@@ -115,5 +116,11 @@ export class ChatStorekeeper {
 
 		traverse(chat.messages);
 		return result;
+	}
+
+	static selectSibling(id: string, siblings: ChatMessage[]) {
+		for (const sibling of siblings) {
+			sibling.isSelected = sibling.id === id;
+		}
 	}
 }

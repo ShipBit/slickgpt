@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ChatCompletionRequestMessage } from 'openai';
-	import { tick } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap } from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
@@ -23,6 +23,8 @@
 	export let slug: string;
 	export let chatCost: ChatCost | null;
 
+	$: chat = $chatStore[slug];
+
 	let debounceTimer: number | undefined;
 	let input = '';
 	let inputCopy = '';
@@ -30,10 +32,18 @@
 	let messageTokens = 0;
 	let lastUserMessage: ChatMessage | null = null;
 
+	let currentMessages: ChatMessage[] | null = null;
+
 	$: message = {
 		role: 'user',
 		content: input.trim()
 	} as ChatCompletionRequestMessage;
+
+	const unsubscribe = chatStore.subscribe((chats) => {
+		currentMessages = chatStore.getCurrentMessageBranch(chats[slug]);
+	});
+
+	onDestroy(unsubscribe);
 
 	let tokensLeft = -1;
 	$: {
@@ -41,7 +51,7 @@
 			? chatCost.maxTokensForModel - (chatCost.tokensTotal + messageTokens)
 			: -1;
 	}
-	$: maxTokensCompletion = $chatStore[slug].settings.max_tokens;
+	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
 	function handleSubmit() {
@@ -49,17 +59,26 @@
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
 
-		// TODO: add parent param! This is the last message of the current chat "branch"
-		chatStore.addMessageToChat(slug, message);
+		let parent: ChatMessage | null = null;
+		if (currentMessages && currentMessages.length > 0) {
+			parent = chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat);
+		}
+
+		chatStore.addMessageToChat(slug, message, parent || undefined);
 		// message now has an id
 		lastUserMessage = message;
 
-		// TODO: Send only the messages of the current chat "branch" to the server
 		const payload = {
-			messages: $chatStore[slug].contextMessage.content // omit context if empty to save some tokens
-				? [$chatStore[slug].contextMessage, ...$chatStore[slug].messages]
-				: [...$chatStore[slug].messages],
-			settings: $chatStore[slug].settings,
+			// OpenAI API complains if we send additionale props
+			messages: currentMessages?.map(
+				(m) =>
+					({
+						role: m.role,
+						content: m.content,
+						name: m.name
+					} as ChatCompletionRequestMessage)
+			),
+			settings: chat.settings,
 			openAiKey: $settingsStore.openAiApiKey
 		};
 
@@ -82,7 +101,7 @@
 			}
 			// streaming completed
 			else {
-				chatStore.addMessageToChat(slug, $liveAnswerStore, lastUserMessage?.id);
+				chatStore.addMessageToChat(slug, $liveAnswerStore, lastUserMessage || undefined);
 				isLoadingAnswerStore.set(false);
 
 				$eventSourceStore.reset();

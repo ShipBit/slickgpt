@@ -1,5 +1,5 @@
 import type { Chat, ChatMessage, ClientSettings } from './shared';
-import { writable, type Readable, type Writable, readable, get } from 'svelte/store';
+import { writable, type Readable, type Writable, readable, get, derived } from 'svelte/store';
 import type { ChatCompletionRequestMessage } from 'openai';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,22 +27,22 @@ export const eventSourceStore: Readable<EventSource> = readable(new EventSource(
 
 export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	updateChat(slug: string, update: Partial<Chat>): void;
-	addMessageToChat(slug: string, message: ChatMessage, parentId?: string): void;
+	addMessageToChat(slug: string, message: ChatMessage, parent?: ChatMessage): void;
+	addAsSibling(slug: string, id: string, newMessage: Partial<ChatMessage>): void;
 	deleteMessage(slug: string, id: string): void;
 	deleteUpdateToken(slug: string): void;
 	deleteChat(slug: string): void;
 	isFlat(chat: Chat): boolean;
 	findParent(messageId: string, chat: Chat): { parent: ChatMessage; index: number } | null;
 	getMessageById(messageId: string, chat: Chat): ChatMessage | null;
+	getCurrentMessageBranch(chat: Chat): ChatMessage[] | null;
+	selectSibling(id: string, siblings: ChatMessage[]): void;
 }
 
 const _chatStore: Writable<{ [key: string]: Chat }> = localStorageStore('chatStore', {});
 
 /**
  * Be careful when updating nested objects - they are overwritten, not merged!
- *
- * @param slug the chat slug
- * @param update the update to apply to the chat
  */
 const updateChat = (slug: string, update: Partial<Chat>) => {
 	_chatStore.update((store) => {
@@ -50,14 +50,27 @@ const updateChat = (slug: string, update: Partial<Chat>) => {
 	});
 };
 
-const addMessageToChat = (slug: string, message: ChatMessage, parentId?: string) => {
+const addMessageToChat = (slug: string, message: ChatMessage, parent?: ChatMessage) => {
 	if (!message.id) {
 		message.id = uuidv4();
 	}
+
+	message.isSelected = true;
+
 	_chatStore.update((store) => {
-		const updatedMessages = parentId
-			? ChatStorekeeper.addMessageAsChild(store[slug].messages, parentId, message)
+		const updatedMessages = parent?.id
+			? ChatStorekeeper.addMessageAsChild(store[slug].messages, parent.id, message)
 			: [...store[slug].messages, message];
+
+		if (parent && parent.id) {
+			// auto-select new messages
+			const updatedParent = ChatStorekeeper.getById(parent.id, updatedMessages);
+			if (updatedParent && updatedParent.messages) {
+				for (const msg of updatedParent.messages) {
+					msg.isSelected = msg.id === message.id;
+				}
+			}
+		}
 
 		return {
 			...store,
@@ -67,6 +80,28 @@ const addMessageToChat = (slug: string, message: ChatMessage, parentId?: string)
 			}
 		};
 	});
+};
+
+const getCurrentMessageBranch = (chat: Chat): ChatMessage[] | null => {
+	return ChatStorekeeper.getCurrentMessageBranch(chat);
+};
+
+const addAsSibling = (
+	slug: string,
+	id: string,
+	message: ChatMessage,
+	removeChildren = true
+): void => {
+	const chat = { ...get(_chatStore)[slug] };
+	const parentData = ChatStorekeeper.findParent(id, chat.messages);
+	let newMessage = message;
+	if (removeChildren) {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { id, messages, ...rest } = message;
+		newMessage = rest;
+	}
+
+	addMessageToChat(slug, newMessage, parentData?.parent);
 };
 
 const deleteMessage = (slug: string, id: string) => {
@@ -144,9 +179,12 @@ export const chatStore: ChatStore = {
 	isFlat: ChatStorekeeper.isFlat,
 	findParent: (messageId, chat) => ChatStorekeeper.findParent(messageId, chat.messages),
 	getMessageById: (messageId, chat) => ChatStorekeeper.getById(messageId, chat.messages),
+	selectSibling: (id, siblings) => ChatStorekeeper.selectSibling(id, siblings),
 	updateChat,
 	deleteMessage,
 	addMessageToChat,
 	deleteUpdateToken,
-	deleteChat
+	deleteChat,
+	addAsSibling,
+	getCurrentMessageBranch
 };

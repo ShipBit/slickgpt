@@ -1,12 +1,12 @@
 import type { Chat, ChatMessage } from './shared';
 import { v4 as uuidv4 } from 'uuid';
 
-function hasMissingId(message: ChatMessage[]): boolean {
-	for (const msg of message) {
-		if (!msg.id) {
+function hasMissingId(messages: ChatMessage[]): boolean {
+	for (const message of messages) {
+		if (!message.id) {
 			return true;
 		}
-		if (msg.messages && hasMissingId(msg.messages)) {
+		if (message.messages && hasMissingId(message.messages)) {
 			return true;
 		}
 	}

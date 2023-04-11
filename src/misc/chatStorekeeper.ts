@@ -138,4 +138,27 @@ export class ChatStorekeeper {
 		}
 		return found;
 	}
+
+	static countAllMessages(chat: Chat): number {
+		function countMessages(messages: ChatMessage[]): number {
+			if (!messages || messages.length === 0) {
+				return 0;
+			}
+
+			let count = 0;
+			for (const message of messages) {
+				count += 1;
+				if (message.messages) {
+					count += countMessages(message.messages);
+				}
+			}
+			return count;
+		}
+
+		return countMessages(chat.messages);
+	}
+
+	static countMessagesInCurrentBranch(chat: Chat): number {
+		return ChatStorekeeper.getCurrentMessageBranch(chat, false).length;
+	}
 }

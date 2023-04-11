@@ -35,6 +35,8 @@ export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	getMessageById(messageId: string, chat: Chat): ChatMessage | null;
 	getCurrentMessageBranch(chat: Chat, includeContext?: boolean): ChatMessage[] | null;
 	selectSibling(slug: string, id: string): void;
+	countAllMessages(chat: Chat): number;
+	countMessagesInCurrentBranch(chat: Chat): number;
 }
 
 const _chatStore: Writable<{ [key: string]: Chat }> = localStorageStore('chatStore', {});
@@ -177,6 +179,8 @@ export const chatStore: ChatStore = {
 	set: _chatStore.set,
 	update: _chatStore.update,
 	isFlat: ChatStorekeeper.isFlat,
+	countAllMessages: ChatStorekeeper.countAllMessages,
+	countMessagesInCurrentBranch: ChatStorekeeper.countMessagesInCurrentBranch,
 	findParent: (messageId, chat) => ChatStorekeeper.findParent(messageId, chat.messages),
 	getMessageById: (messageId, chat) => ChatStorekeeper.getById(messageId, chat.messages),
 	updateChat,

@@ -110,7 +110,7 @@
 			}
 			// streaming completed
 			else {
-				chatStore.addMessageToChat(slug, $liveAnswerStore, lastUserMessage || undefined);
+				chatStore.addMessageToChat(slug, { ...$liveAnswerStore }, lastUserMessage || undefined);
 				isLoadingAnswerStore.set(false);
 
 				$eventSourceStore.reset();

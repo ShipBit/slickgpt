@@ -76,7 +76,7 @@ export function createNewChat(template?: {
 }
 
 export function canSuggestTitle(chat: Chat) {
-	return chat.contextMessage?.content || chat.messages?.length > 1;
+	return chat.contextMessage?.content || chat.messages?.length > 0;
 }
 
 export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promise<string> {
@@ -84,14 +84,26 @@ export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promis
 		return Promise.resolve(chat.title);
 	}
 
-	const messages = chat.contextMessage.content // omit context if empty to save some tokens
-		? [chat.contextMessage, ...chat.messages]
-		: [...chat.messages];
+	const messages =
+		chat.messages.length === 1
+			? chatStore.getCurrentMessageBranch(chat)
+			: chat.contextMessage?.content
+			? [chat.contextMessage, ...chat.messages]
+			: chat.messages;
+
+	const filteredMessages = messages?.slice(0, chat.contextMessage?.content ? 3 : 2).map(
+		(m) =>
+			({
+				role: m.role,
+				content: m.content,
+				name: m.name
+			} as ChatCompletionRequestMessage)
+	);
 
 	const response = await fetch('/api/suggest-title', {
 		method: 'POST',
 		body: JSON.stringify({
-			messages,
+			messages: filteredMessages,
 			openAiKey: openAiApiKey
 		})
 	});

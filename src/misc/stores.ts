@@ -33,7 +33,7 @@ export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	isFlat(chat: Chat): boolean;
 	findParent(messageId: string, chat: Chat): { parent: ChatMessage; index: number } | null;
 	getMessageById(messageId: string, chat: Chat): ChatMessage | null;
-	getCurrentMessageBranch(chat: Chat): ChatMessage[] | null;
+	getCurrentMessageBranch(chat: Chat, includeContext?: boolean): ChatMessage[] | null;
 	selectSibling(slug: string, id: string): void;
 }
 
@@ -71,8 +71,8 @@ const addMessageToChat = (slug: string, message: ChatMessage, parent?: ChatMessa
 	});
 };
 
-const getCurrentMessageBranch = (chat: Chat): ChatMessage[] | null => {
-	return ChatStorekeeper.getCurrentMessageBranch(chat);
+const getCurrentMessageBranch = (chat: Chat, includeContext = true): ChatMessage[] | null => {
+	return ChatStorekeeper.getCurrentMessageBranch(chat, includeContext);
 };
 
 const addAsSibling = (slug: string, originalMessageId: string, message: ChatMessage): void => {

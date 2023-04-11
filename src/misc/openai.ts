@@ -1,6 +1,7 @@
 import type { ChatCompletionRequestMessage } from 'openai';
 import type { Chat, ChatCost } from './shared';
 import GPT3Tokenizer from 'gpt3-tokenizer';
+import { ChatStorekeeper } from './chatStorekeeper';
 
 export enum OpenAiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
@@ -73,10 +74,7 @@ export function estimateChatCost(chat: Chat): ChatCost {
 	let tokensPrompt = 0;
 	let tokensCompletion = 0;
 
-	// TODO: Calculate cost only for the current chat branch
-	const messages = chat.contextMessage?.content
-		? [chat.contextMessage, ...chat.messages]
-		: chat.messages;
+	const messages = ChatStorekeeper.getCurrentMessageBranch(chat);
 
 	for (const message of messages) {
 		if (message.role === 'assistant') {

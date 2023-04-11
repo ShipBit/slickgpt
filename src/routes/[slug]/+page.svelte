@@ -165,10 +165,8 @@
 				class="relative inline-flex"
 				style={!$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
 			>
-				<!-- TODO: count messages horizontally in all chat branches -->
 				<button
-					disabled={!chat.contextMessage.content?.length &&
-						(!chat.messages || chat.messages.length < 2)}
+					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
 					class="btn btn-sm inline-flex variant-ghost-tertiary"
 					on:click={() => showModalComponent('ShareModal', { slug }, handleChatShared)}
 				>

@@ -5,7 +5,7 @@
 	import { chatStore } from '$misc/stores';
 	import { showToast, track } from '$misc/shared';
 
-	let slug = $modalStore[0].meta?.slug || '';
+	let slug: string = $modalStore[0].meta?.slug || '';
 	$: chat = $chatStore[slug];
 
 	let responseSlug = '';

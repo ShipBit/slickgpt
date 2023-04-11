@@ -1,12 +1,15 @@
 <script lang="ts">
+	import type { ChatMessage } from '$misc/shared';
+	import { createEventDispatcher } from 'svelte';
 	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import snarkdown from 'snarkdown';
 	import { XMark, PencilSquare } from '@inqling/svelte-icons/heroicon-24-solid';
-	import type { ChatMessage } from '$misc/shared';
 	import { chatStore } from '$misc/stores';
 	import { countTokens } from '$misc/openai';
 	import TokenCost from './TokenCost.svelte';
 	import ChatMessages from './ChatMessages.svelte';
+
+	const dispatch = createEventDispatcher();
 
 	export let slug: string;
 	export let message: ChatMessage;
@@ -31,14 +34,6 @@
 		};
 		modalStore.trigger(modal);
 	}
-
-	async function handleEdit(id?: string) {
-		if (!id) {
-			return;
-		}
-
-		chatStore.addAsSibling(slug, id, { ...message, content: 'EDITED' });
-	}
 </script>
 
 <div
@@ -62,9 +57,11 @@
 			{#if $chatStore[slug] && message.id}
 				<div class="flex space-x-0">
 					<!-- Edit Message / Branch chat -->
-					<button class="btn btn-sm" on:click={() => handleEdit(message.id)}>
-						<PencilSquare class="w-6 h-6" />
-					</button>
+					{#if message.role === 'user'}
+						<button class="btn btn-sm" on:click={() => dispatch('editMessage', message)}>
+							<PencilSquare class="w-6 h-6" />
+						</button>
+					{/if}
 					<!-- Delete message -->
 					<button class="btn btn-sm" on:click={() => modalConfirmDelete(message.id)}>
 						<XMark class="w-6 h-6" />
@@ -81,5 +78,6 @@
 </div>
 
 {#if renderChildren && message.messages}
-	<ChatMessages {slug} siblings={message.messages} />
+	<!-- This TypeScript error is nonsense... -->
+	<ChatMessages {slug} siblings={message.messages} on:editMessage />
 {/if}

@@ -21,30 +21,41 @@
 		e: CustomEvent<{ step: number; state: { current: number; total: number } }>
 	): void {
 		const id = siblings[e.detail.state.current].id!;
-		chatStore.selectSibling(id, siblings);
+		chatStore.selectSibling(slug, id);
 	}
 </script>
 
 {#if siblings.length === 1}
-	<ChatMessage {slug} message={siblings[0]} renderChildren />
+	<!-- This TypeScript error is nonsense... -->
+	<ChatMessage {slug} message={siblings[0]} renderChildren on:editMessage />
 {:else}
-	<Stepper
-		regionContent="px-2 md:px-6"
-		stepTerm="Message"
-		buttonBackLabel="← Previous"
-		buttonCompleteLabel="Next →"
-		buttonComplete="hidden"
-		start={getActiveIndex(siblings)}
-		on:step={handleStep}
-	>
-		{#each siblings as sibling, index}
-			<Step locked={index === siblings.length - 1}>
-				<svelte:fragment slot="header">
-					<!-- hide header and remove margins	 -->
-					<span class="hidden" />
-				</svelte:fragment>
-				<ChatMessage {slug} message={sibling} renderChildren={sibling.isSelected} />
-			</Step>
-		{/each}
-	</Stepper>
+	<!-- siblings are modified outside, so we need to trigger an update  -->
+	{#key siblings}
+		<Stepper
+			regionContent="px-2 md:px-6"
+			stepTerm="Message"
+			buttonBackLabel="← Previous"
+			buttonCompleteLabel="Next →"
+			buttonComplete="hidden"
+			start={getActiveIndex(siblings)}
+			on:step={handleStep}
+		>
+			{#each siblings as sibling, index}
+				<Step regionContent="flex flex-col" locked={index === siblings.length - 1}>
+					<svelte:fragment slot="header">
+						<!-- hide header and remove margins	 -->
+						<span class="hidden" />
+					</svelte:fragment>
+
+					<!-- This TypeScript error is nonsense... -->
+					<ChatMessage
+						{slug}
+						message={sibling}
+						renderChildren={sibling.isSelected}
+						on:editMessage
+					/>
+				</Step>
+			{/each}
+		</Stepper>
+	{/key}
 {/if}

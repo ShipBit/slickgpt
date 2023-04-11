@@ -23,12 +23,10 @@ export const eventSourceStore: Readable<EventSource> = readable(new EventSource(
  * Custom chat store
  **/
 
-// TODO: Rework for ChatMessage children array
-
 export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	updateChat(slug: string, update: Partial<Chat>): void;
 	addMessageToChat(slug: string, message: ChatMessage, parent?: ChatMessage): void;
-	addAsSibling(slug: string, id: string, newMessage: Partial<ChatMessage>): void;
+	addAsSibling(slug: string, originalMessageId: string, newMessage: Partial<ChatMessage>): void;
 	deleteMessage(slug: string, id: string): void;
 	deleteUpdateToken(slug: string): void;
 	deleteChat(slug: string): void;
@@ -36,7 +34,7 @@ export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	findParent(messageId: string, chat: Chat): { parent: ChatMessage; index: number } | null;
 	getMessageById(messageId: string, chat: Chat): ChatMessage | null;
 	getCurrentMessageBranch(chat: Chat): ChatMessage[] | null;
-	selectSibling(id: string, siblings: ChatMessage[]): void;
+	selectSibling(slug: string, id: string): void;
 }
 
 const _chatStore: Writable<{ [key: string]: Chat }> = localStorageStore('chatStore', {});
@@ -55,22 +53,13 @@ const addMessageToChat = (slug: string, message: ChatMessage, parent?: ChatMessa
 		message.id = uuidv4();
 	}
 
-	message.isSelected = true;
-
 	_chatStore.update((store) => {
 		const updatedMessages = parent?.id
 			? ChatStorekeeper.addMessageAsChild(store[slug].messages, parent.id, message)
 			: [...store[slug].messages, message];
 
-		if (parent && parent.id) {
-			// auto-select new messages
-			const updatedParent = ChatStorekeeper.getById(parent.id, updatedMessages);
-			if (updatedParent && updatedParent.messages) {
-				for (const msg of updatedParent.messages) {
-					msg.isSelected = msg.id === message.id;
-				}
-			}
-		}
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		ChatStorekeeper.selectSibling(message.id!, updatedMessages);
 
 		return {
 			...store,
@@ -86,22 +75,14 @@ const getCurrentMessageBranch = (chat: Chat): ChatMessage[] | null => {
 	return ChatStorekeeper.getCurrentMessageBranch(chat);
 };
 
-const addAsSibling = (
-	slug: string,
-	id: string,
-	message: ChatMessage,
-	removeChildren = true
-): void => {
+const addAsSibling = (slug: string, originalMessageId: string, message: ChatMessage): void => {
 	const chat = { ...get(_chatStore)[slug] };
-	const parentData = ChatStorekeeper.findParent(id, chat.messages);
-	let newMessage = message;
-	if (removeChildren) {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { id, messages, ...rest } = message;
-		newMessage = rest;
-	}
+	const parentData = ChatStorekeeper.findParent(originalMessageId, chat.messages);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	delete message.id;
+	delete message.messages;
 
-	addMessageToChat(slug, newMessage, parentData?.parent);
+	addMessageToChat(slug, message, parentData?.parent);
 };
 
 const deleteMessage = (slug: string, id: string) => {
@@ -124,6 +105,10 @@ const deleteMessage = (slug: string, id: string) => {
 		} else if (message.messages) {
 			// move the children of the message one level up
 			parentMessages.splice(index, 1, ...message.messages);
+		}
+		if (message.isSelected && parentMessages.length > 1) {
+			// select the next sibling
+			parentMessages[parentMessages.length - 1].isSelected = true;
 		}
 	};
 
@@ -172,6 +157,21 @@ const deleteChat = (slug: string) => {
 	});
 };
 
+const selectSibling = (slug: string, id: string) => {
+	_chatStore.update((store) => {
+		const chat = store[slug];
+		const found = ChatStorekeeper.selectSibling(id, chat.messages);
+		if (!found) {
+			throw new Error('Message not found in the chat.');
+		}
+
+		return {
+			...store,
+			[slug]: chat
+		};
+	});
+};
+
 export const chatStore: ChatStore = {
 	subscribe: _chatStore.subscribe,
 	set: _chatStore.set,
@@ -179,12 +179,12 @@ export const chatStore: ChatStore = {
 	isFlat: ChatStorekeeper.isFlat,
 	findParent: (messageId, chat) => ChatStorekeeper.findParent(messageId, chat.messages),
 	getMessageById: (messageId, chat) => ChatStorekeeper.getById(messageId, chat.messages),
-	selectSibling: (id, siblings) => ChatStorekeeper.selectSibling(id, siblings),
 	updateChat,
 	deleteMessage,
 	addMessageToChat,
 	deleteUpdateToken,
 	deleteChat,
 	addAsSibling,
-	getCurrentMessageBranch
+	getCurrentMessageBranch,
+	selectSibling
 };

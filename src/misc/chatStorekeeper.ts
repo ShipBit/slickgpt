@@ -118,9 +118,24 @@ export class ChatStorekeeper {
 		return result;
 	}
 
-	static selectSibling(id: string, siblings: ChatMessage[]) {
-		for (const sibling of siblings) {
-			sibling.isSelected = sibling.id === id;
+	static selectSibling(id: string, messages: ChatMessage[]): boolean {
+		let found = false;
+		for (const message of messages) {
+			if (found) break;
+
+			if (message.id === id) {
+				message.isSelected = true;
+				found = true;
+
+				for (const sibling of messages) {
+					if (sibling.id !== id) {
+						sibling.isSelected = false;
+					}
+				}
+			} else if (message.messages) {
+				found = ChatStorekeeper.selectSibling(id, message.messages);
+			}
 		}
+		return found;
 	}
 }

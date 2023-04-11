@@ -37,9 +37,7 @@
 
 		<div class="flex flex-col max-w-4xl md:mx-auto space-y-6 pt-6">
 			<!-- Message history -->
-			{#each chat.messages as message}
-				<ChatMessages {slug} siblings={chat.messages} />
-			{/each}
+			<ChatMessages {slug} siblings={chat.messages} on:editMessage />
 
 			<!-- Live Message -->
 			{#if $isLoadingAnswerStore}

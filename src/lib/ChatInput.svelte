@@ -5,11 +5,11 @@
 	import { focusTrap } from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
+		type ChatCost,
+		type ChatMessage,
 		showModalComponent,
 		showToast,
-		track,
-		type ChatCost,
-		type ChatMessage
+		track
 	} from '$misc/shared';
 	import {
 		chatStore,
@@ -23,17 +23,18 @@
 	export let slug: string;
 	export let chatCost: ChatCost | null;
 
-	$: chat = $chatStore[slug];
-
 	let debounceTimer: number | undefined;
 	let input = '';
 	let inputCopy = '';
 	let textarea: HTMLTextAreaElement;
 	let messageTokens = 0;
 	let lastUserMessage: ChatMessage | null = null;
-
 	let currentMessages: ChatMessage[] | null = null;
 
+	let isEditMode = false;
+	let originalMessage: ChatMessage | null = null;
+
+	$: chat = $chatStore[slug];
 	$: message = {
 		role: 'user',
 		content: input.trim()
@@ -64,7 +65,12 @@
 			parent = chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat);
 		}
 
-		chatStore.addMessageToChat(slug, message, parent || undefined);
+		if (!isEditMode) {
+			chatStore.addMessageToChat(slug, message, parent || undefined);
+		} else if (originalMessage && originalMessage.id) {
+			chatStore.addAsSibling(slug, originalMessage.id, message);
+		}
+
 		// message now has an id
 		lastUserMessage = message;
 
@@ -107,6 +113,7 @@
 				$eventSourceStore.reset();
 				resetLiveAnswer();
 				lastUserMessage = null;
+				cancelEditMessage();
 			}
 		} catch (err) {
 			handleError(err);
@@ -183,6 +190,18 @@
 		$isLoadingAnswerStore = false;
 		resetLiveAnswer();
 	}
+
+	export function editMessage(message: ChatMessage) {
+		originalMessage = message;
+		input = message.content;
+		isEditMode = true;
+	}
+
+	function cancelEditMessage() {
+		isEditMode = false;
+		originalMessage = null;
+		input = '';
+	}
 </script>
 
 <footer
@@ -196,6 +215,14 @@
 		</div>
 	{:else}
 		<div class="flex flex-col space-y-2 md:mx-auto md:w-3/4 px-2 md:px-8">
+			{#if isEditMode}
+				<div class="flex items-center justify-between">
+					<p>Editing creates a <span class="italic">chat branch</span>.</p>
+					<button class="btn btn-sm" on:click={cancelEditMessage}>
+						<span>Cancel</span>
+					</button>
+				</div>
+			{/if}
 			<div class="grid">
 				<form use:focusTrap={!$isLoadingAnswerStore} on:submit|preventDefault={handleSubmit}>
 					<div class="grid grid-cols-[1fr_auto]">

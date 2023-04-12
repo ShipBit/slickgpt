@@ -42,6 +42,7 @@
 		: 'md:place-self-end'}"
 	class:variant-ghost-surface={message.role === 'user'}
 	class:variant-ghost-secondary={message.role === 'assistant'}
+	class:variant-ghost-warning={message.isAborted}
 	class:rounded-tl-none={message.role === 'assistant'}
 	class:rounded-tr-none={message.role === 'user'}
 >

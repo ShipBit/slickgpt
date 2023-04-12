@@ -16,6 +16,7 @@ export interface ChatMessage extends ChatCompletionRequestMessage {
 	id?: string;
 	messages?: ChatMessage[];
 	isSelected?: boolean;
+	isAborted?: boolean;
 }
 
 export interface Chat {

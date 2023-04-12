@@ -92,7 +92,7 @@
 			openAiKey: $settingsStore.openAiApiKey
 		};
 
-		$eventSourceStore.start(payload, handleAnswer, handleError);
+		$eventSourceStore.start(payload, handleAnswer, handleError, handleAbort);
 		input = '';
 	}
 
@@ -111,30 +111,21 @@
 			}
 			// streaming completed
 			else {
-				chatStore.addMessageToChat(slug, { ...$liveAnswerStore }, lastUserMessage || undefined);
-				isLoadingAnswerStore.set(false);
-
-				$eventSourceStore.reset();
-				resetLiveAnswer();
-				lastUserMessage = null;
-				cancelEditMessage();
+				addCompletionToChat();
 			}
 		} catch (err) {
 			handleError(err);
 		}
 	}
 
-	function resetLiveAnswer() {
-		liveAnswerStore.update((store) => {
-			const answer = { ...store };
-			answer.content = '';
-			return answer;
-		});
+	function handleAbort(_event: MessageEvent<any>) {
+		// th message we're adding is incomplete, so HLJS probably can't highlight it correctly
+		addCompletionToChat(true);
 	}
 
 	function handleError(event: any) {
 		$eventSourceStore.reset();
-		isLoadingAnswerStore.set(false);
+		$isLoadingAnswerStore = false;
 
 		// always true, check just for TypeScript
 		if (lastUserMessage?.id) {
@@ -153,6 +144,28 @@
 
 		// restore last user prompt
 		input = inputCopy;
+	}
+
+	function addCompletionToChat(isAborted = false) {
+		const messageToAdd: ChatMessage = !isAborted
+			? { ...$liveAnswerStore }
+			: { ...$liveAnswerStore, isAborted: true };
+
+		chatStore.addMessageToChat(slug, messageToAdd, lastUserMessage || undefined);
+		$isLoadingAnswerStore = false;
+
+		$eventSourceStore.reset();
+		resetLiveAnswer();
+		lastUserMessage = null;
+		cancelEditMessage();
+	}
+
+	function resetLiveAnswer() {
+		liveAnswerStore.update((store) => {
+			const answer = { ...store };
+			answer.content = '';
+			return answer;
+		});
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
@@ -189,12 +202,6 @@
 		calculateMessageTokens();
 	}
 
-	function stopGenerating() {
-		$eventSourceStore.stop();
-		$isLoadingAnswerStore = false;
-		resetLiveAnswer();
-	}
-
 	export function editMessage(message: ChatMessage) {
 		originalMessage = message;
 		input = message.content;
@@ -213,7 +220,7 @@
 >
 	{#if $isLoadingAnswerStore}
 		<div class="flex items-center justify-center">
-			<button class="btn variant-ghost w-48 self-center" on:click={stopGenerating}>
+			<button class="btn variant-ghost w-48 self-center" on:click={() => $eventSourceStore.stop()}>
 				Cancel generating
 			</button>
 		</div>

@@ -2,7 +2,7 @@
 	import { modalStore, ProgressRadial } from '@skeletonlabs/skeleton';
 	import { confettiAction } from 'svelte-legos';
 	import { chatStore, settingsStore } from '$misc/stores';
-	import { canSuggestTitle, suggestChatTitle } from '$misc/shared';
+	import { canSuggestTitle, suggestChatTitle, track } from '$misc/shared';
 
 	let slug = $modalStore[0].meta?.slug || '';
 	let isLoading = false;
@@ -18,6 +18,7 @@
 		isLoading = true;
 		title = await suggestChatTitle($chatStore[slug], $settingsStore.openAiApiKey);
 		isLoading = false;
+		track('suggestTitleManually');
 	}
 
 	function handleSave() {

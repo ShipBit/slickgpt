@@ -59,7 +59,6 @@
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
 	function handleSubmit() {
-		track('ask');
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
 
@@ -70,8 +69,10 @@
 
 		if (!isEditMode) {
 			chatStore.addMessageToChat(slug, message, parent || undefined);
+			track('ask');
 		} else if (originalMessage && originalMessage.id) {
 			chatStore.addAsSibling(slug, originalMessage.id, message);
+			track('edit');
 		}
 
 		// message now has an id

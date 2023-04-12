@@ -5,6 +5,7 @@ Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'
 ## April 12, 2023
 
 - **Messages are now editable**. This creates a branch in the chat history and preserves your old prompts and completions. You can continue writing in any branch, just like you are used to from the OpenAI client. This change requires a (in-place, client-side) migration of the chat data structure, so you might have to wait a few seconds for each chat to load for the first time after the update.
+- cancelled completions are now added to the chat history as well. They might be malformatted or incomplete, but they are there.
 
 ## April 05, 2023
 

@@ -9,7 +9,7 @@
 	import { chatStore, isLoadingAnswerStore, settingsStore } from '$misc/stores';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import ChatInput from '$lib/ChatInput.svelte';
-	import ChatMessages from '$lib/ChatMessages.svelte';
+	import Chat from '$lib/Chat.svelte';
 	import HintMessage from '$lib/HintMessage.svelte';
 	import TokenCost from '$lib/TokenCost.svelte';
 	import { countTokens, estimateChatCost } from '$misc/openai';
@@ -19,17 +19,20 @@
 		showModalComponent,
 		showToast,
 		suggestChatTitle,
-		track
+		track,
+		type ChatMessage
 	} from '$misc/shared';
 	import snarkdown from 'snarkdown';
 
 	export let data: PageData;
-	$: ({ slug } = data);
 
+	$: ({ slug } = data);
 	$: chat = $chatStore[slug];
 	$: cost = chat ? estimateChatCost(chat) : null;
 	$: hasContext = chat?.contextMessage?.content?.length || false;
 	$: hasStopSequence = chat?.settings.stop?.length || false;
+
+	let chatInput: ChatInput;
 
 	onMount(async () => {
 		await highlightCode();
@@ -116,6 +119,10 @@
 	function handleRenameChat(event: CustomEvent<string>) {
 		chatStore.updateChat(slug, { title: event.detail });
 	}
+
+	function handleEditMessage(event: CustomEvent<ChatMessage>) {
+		chatInput.editMessage(event.detail);
+	}
 </script>
 
 {#if chat}
@@ -159,8 +166,7 @@
 				style={!$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
 			>
 				<button
-					disabled={!chat.contextMessage.content?.length &&
-						(!chat.messages || chat.messages.length < 2)}
+					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
 					class="btn btn-sm inline-flex variant-ghost-tertiary"
 					on:click={() => showModalComponent('ShareModal', { slug }, handleChatShared)}
 				>
@@ -182,7 +188,7 @@
 		</svelte:fragment>
 	</Toolbar>
 
-	<ChatMessages {slug}>
+	<Chat {slug} on:editMessage={handleEditMessage}>
 		<svelte:fragment slot="additional-content-top">
 			<!-- Language hint -->
 			{#if !$settingsStore.hideLanguageHint}
@@ -252,7 +258,7 @@
 				</svelte:fragment>
 			</HintMessage>
 		</svelte:fragment>
-	</ChatMessages>
+	</Chat>
 
-	<ChatInput {slug} chatCost={cost} />
+	<ChatInput {slug} chatCost={cost} bind:this={chatInput} />
 {/if}

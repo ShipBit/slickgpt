@@ -2,10 +2,12 @@
 	import { modalStore, ProgressRadial } from '@skeletonlabs/skeleton';
 	import { confettiAction } from 'svelte-legos';
 	import { chatStore, settingsStore } from '$misc/stores';
-	import { canSuggestTitle, suggestChatTitle } from '$misc/shared';
+	import { canSuggestTitle, suggestChatTitle, track } from '$misc/shared';
 
 	let slug = $modalStore[0].meta?.slug || '';
 	let isLoading = false;
+
+	let title = $chatStore[slug].title;
 
 	$: showAiSuggestOptions = $settingsStore.openAiApiKey && canSuggestTitle($chatStore[slug]);
 
@@ -14,12 +16,14 @@
 			return;
 		}
 		isLoading = true;
-		const title = await suggestChatTitle($chatStore[slug], $settingsStore.openAiApiKey);
-		chatStore.updateChat(slug, { title });
+		title = await suggestChatTitle($chatStore[slug], $settingsStore.openAiApiKey);
 		isLoading = false;
+		track('suggestTitleManually');
 	}
 
 	function handleSave() {
+		chatStore.updateChat(slug, { title });
+
 		if ($modalStore[0].response) {
 			$modalStore[0].response(true);
 		}
@@ -33,7 +37,7 @@
 	<form class="flex flex-col space-y-4">
 		<label class="label">
 			<span class="inline-block w-40">Set chat title</span>
-			<input type="text" class="input" bind:value={$chatStore[slug].title} />
+			<input type="text" class="input" bind:value={title} />
 		</label>
 
 		{#if showAiSuggestOptions}
@@ -42,6 +46,7 @@
 			<button
 				class="btn variant variant-filled-secondary"
 				disabled={isLoading}
+				use:confettiAction={{ type: 'school-pride' }}
 				on:click={handleSuggestTitle}
 			>
 				{#if !isLoading}
@@ -68,7 +73,6 @@
 						class="checkbox"
 						type="checkbox"
 						bind:checked={$settingsStore.useTitleSuggestions}
-						use:confettiAction={{ type: 'school-pride' }}
 					/>
 					<p>Always set titles automagically</p>
 				</label>

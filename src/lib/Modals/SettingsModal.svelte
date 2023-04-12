@@ -4,7 +4,7 @@
 	import { models, OpenAiModel } from '$misc/openai';
 	import { track } from '$misc/shared';
 
-	let slug = $modalStore[0].meta?.slug || '';
+	let slug: string = $modalStore[0].meta?.slug || '';
 	let title = $chatStore[slug].title;
 	let settings = $chatStore[slug].settings;
 	let savedSettings = { ...settings };

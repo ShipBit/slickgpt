@@ -1,10 +1,16 @@
 <script lang="ts">
 	import type { ChatCompletionRequestMessage } from 'openai';
-	import { tick } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap } from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
-	import { showModalComponent, showToast, track, type ChatCost } from '$misc/shared';
+	import {
+		type ChatCost,
+		type ChatMessage,
+		showModalComponent,
+		showToast,
+		track
+	} from '$misc/shared';
 	import {
 		chatStore,
 		eventSourceStore,
@@ -22,11 +28,26 @@
 	let inputCopy = '';
 	let textarea: HTMLTextAreaElement;
 	let messageTokens = 0;
+	let lastUserMessage: ChatMessage | null = null;
+	let currentMessages: ChatMessage[] | null = null;
 
+	let isEditMode = false;
+	let originalMessage: ChatMessage | null = null;
+
+	$: chat = $chatStore[slug];
 	$: message = {
 		role: 'user',
 		content: input.trim()
 	} as ChatCompletionRequestMessage;
+
+	const unsubscribe = chatStore.subscribe((chats) => {
+		const chat = chats[slug];
+		if (chat) {
+			currentMessages = chatStore.getCurrentMessageBranch(chat);
+		}
+	});
+
+	onDestroy(unsubscribe);
 
 	let tokensLeft = -1;
 	$: {
@@ -34,21 +55,40 @@
 			? chatCost.maxTokensForModel - (chatCost.tokensTotal + messageTokens)
 			: -1;
 	}
-	$: maxTokensCompletion = $chatStore[slug].settings.max_tokens;
+	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
 	function handleSubmit() {
-		track('ask');
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
 
-		chatStore.addMessageToChat(slug, message);
+		let parent: ChatMessage | null = null;
+		if (currentMessages && currentMessages.length > 0) {
+			parent = chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat);
+		}
+
+		if (!isEditMode) {
+			chatStore.addMessageToChat(slug, message, parent || undefined);
+			track('ask');
+		} else if (originalMessage && originalMessage.id) {
+			chatStore.addAsSibling(slug, originalMessage.id, message);
+			track('edit');
+		}
+
+		// message now has an id
+		lastUserMessage = message;
 
 		const payload = {
-			messages: $chatStore[slug].contextMessage.content // omit context if empty to save some tokens
-				? [$chatStore[slug].contextMessage, ...$chatStore[slug].messages]
-				: [...$chatStore[slug].messages],
-			settings: $chatStore[slug].settings,
+			// OpenAI API complains if we send additionale props
+			messages: currentMessages?.map(
+				(m) =>
+					({
+						role: m.role,
+						content: m.content,
+						name: m.name
+					} as ChatCompletionRequestMessage)
+			),
+			settings: chat.settings,
 			openAiKey: $settingsStore.openAiApiKey
 		};
 
@@ -71,10 +111,13 @@
 			}
 			// streaming completed
 			else {
-				chatStore.addMessageToChat(slug, $liveAnswerStore);
-				resetLiveAnswer();
+				chatStore.addMessageToChat(slug, { ...$liveAnswerStore }, lastUserMessage || undefined);
 				isLoadingAnswerStore.set(false);
+
 				$eventSourceStore.reset();
+				resetLiveAnswer();
+				lastUserMessage = null;
+				cancelEditMessage();
 			}
 		} catch (err) {
 			handleError(err);
@@ -93,7 +136,10 @@
 		$eventSourceStore.reset();
 		isLoadingAnswerStore.set(false);
 
-		chatStore.removeLastUserMessage(slug);
+		// always true, check just for TypeScript
+		if (lastUserMessage?.id) {
+			chatStore.deleteMessage(slug, lastUserMessage.id);
+		}
 
 		console.error(event);
 
@@ -148,6 +194,18 @@
 		$isLoadingAnswerStore = false;
 		resetLiveAnswer();
 	}
+
+	export function editMessage(message: ChatMessage) {
+		originalMessage = message;
+		input = message.content;
+		isEditMode = true;
+	}
+
+	function cancelEditMessage() {
+		isEditMode = false;
+		originalMessage = null;
+		input = '';
+	}
 </script>
 
 <footer
@@ -161,6 +219,14 @@
 		</div>
 	{:else}
 		<div class="flex flex-col space-y-2 md:mx-auto md:w-3/4 px-2 md:px-8">
+			{#if isEditMode}
+				<div class="flex items-center justify-between">
+					<p>Editing creates a <span class="italic">chat branch</span>.</p>
+					<button class="btn btn-sm" on:click={cancelEditMessage}>
+						<span>Cancel</span>
+					</button>
+				</div>
+			{/if}
 			<div class="grid">
 				<form use:focusTrap={!$isLoadingAnswerStore} on:submit|preventDefault={handleSubmit}>
 					<div class="grid grid-cols-[1fr_auto]">

@@ -1,6 +1,7 @@
 import type { ChatCompletionRequestMessage } from 'openai';
 import type { Chat, ChatCost } from './shared';
 import GPT3Tokenizer from 'gpt3-tokenizer';
+import { ChatStorekeeper } from './chatStorekeeper';
 
 export enum OpenAiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
@@ -56,6 +57,9 @@ export function countTokens(message: ChatCompletionRequestMessage): number {
 
 	let num_tokens = 4; // every message follows <im_start>{role/name}\n{content}<im_end>\n
 	for (const [key, value] of Object.entries(message)) {
+		if (key !== 'name' && key !== 'role' && key !== 'content') {
+			continue;
+		}
 		const encoded: { bpe: number[]; text: string[] } = tokenizer.encode(value);
 		num_tokens += encoded.text.length;
 		if (key === 'name') {
@@ -70,9 +74,7 @@ export function estimateChatCost(chat: Chat): ChatCost {
 	let tokensPrompt = 0;
 	let tokensCompletion = 0;
 
-	const messages = chat.contextMessage?.content
-		? [chat.contextMessage, ...chat.messages]
-		: chat.messages;
+	const messages = ChatStorekeeper.getCurrentMessageBranch(chat);
 
 	for (const message of messages) {
 		if (message.role === 'assistant') {

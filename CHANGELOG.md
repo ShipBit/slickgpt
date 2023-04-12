@@ -2,6 +2,10 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## April 12, 2023
+
+- **Messages are now editable**. This creates a branch in the chat history and preserves your old prompts and completions. You can continue writing in any branch, just like you are used to from the OpenAI client. This change requires a (in-place, client-side) migration of the chat data structure, so you might have to wait a few seconds for each chat to load for the first time after the update.
+
 ## April 05, 2023
 
 - Suggest Title button now shows a loading spinner and is disabled while loading

@@ -2,14 +2,14 @@
 	import type { PageData } from './$types';
 	import { onMount, tick } from 'svelte';
 	import hljs from 'highlight.js';
-	import { track, type Chat } from '$misc/shared';
+	import { track, type Chat as ChatModel } from '$misc/shared';
 	import { generateSlug } from 'random-word-slugs';
 	import snarkdown from 'snarkdown';
 	import { ArrowDownOnSquare } from '@inqling/svelte-icons/heroicon-24-outline';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import { chatStore } from '$misc/stores';
 	import { goto } from '$app/navigation';
-	import ChatMessages from '$lib/ChatMessages.svelte';
+	import Chat from '$lib/Chat.svelte';
 	import HintMessage from '$lib/HintMessage.svelte';
 
 	export let data: PageData;
@@ -28,7 +28,7 @@
 		if (!chat) return;
 
 		const newSlug = generateSlug();
-		const newChat: Chat = {
+		const newChat: ChatModel = {
 			...chat,
 			created: new Date(),
 			isImported: true
@@ -50,7 +50,7 @@
 	</svelte:fragment>
 </Toolbar>
 
-<ChatMessages {slug} {chat}>
+<Chat {slug} {chat}>
 	<svelte:fragment slot="additional-content-top">
 		{#if chat.contextMessage.content.length > 0}
 			<HintMessage title="Chat context" variantClass="variant-ghost-tertiary">
@@ -70,4 +70,4 @@
 			</p>
 		</HintMessage>
 	</svelte:fragment>
-</ChatMessages>
+</Chat>

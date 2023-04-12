@@ -111,7 +111,7 @@
 			<footer class="flex justify-evenly space-x-2">
 				<div class="badge variant-filled-surface flex items-center space-x-1">
 					<ChatBubbleBottomCenter class="w-6 h-6" />
-					<span>{chat.messages.length}</span>
+					<span>{chatStore.countAllMessages(chat)}</span>
 				</div>
 				<div class="badge variant-filled-surface flex items-center space-x-1">
 					<AcademicCap class="w-6 h-6" />

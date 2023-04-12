@@ -59,6 +59,8 @@ SlickGPT is a light-weight "use-your-own-API-key" web client for the OpenAI API 
 - **Fancy User Interface** <br> Interact with an elegant and cleanUI that makes chatting fun and explains a lot of the heavy stuff to users.
 - **Mobile first and fully responsive** <br> SlickGPT is always at your hand. Literally, on your phone.
 - **Local History** <br> Your chat history is stored in localStorage and never leaves your machine (until you actively decide to share chats).
+- **Delete and edit messages** <br> Just like you are used to from the OpenAI client.
+- **Auto-suggest chat titles** <br> SlickGPT can suggest a title for your chat based on the first message you send.
 - **Share Chats** <br> Generate shareable links for your chats with 3 clicks to collaborate and brainstorm ideas with your team or friends. Without any authentication.
 - **Set Context** <br> Provide your own context to guide the AI model while giving responses, ensuring relevant and focused outcomes.
 - **Cost Calculation** <br> Keep track of and control your API usage costs with an in-built token cost calculator for your chats.
@@ -67,7 +69,7 @@ SlickGPT is a light-weight "use-your-own-API-key" web client for the OpenAI API 
 - **Use your own API Key** <br> Keep your API calls private and secure by using your own OpenAI API key.
 - **Host Yourself / Run Everywhere** <br> Run the instance locally on your machine or host it on your preferred cloud provider.
 
-See a **YouTube video** for more details: 
+See a **YouTube video** for more details:
 
 [![YouTube video of SlickGPT](https://img.youtube.com/vi/rzpzKhe4v9s/0.jpg)](https://youtu.be/rzpzKhe4v9s)
 
@@ -135,6 +137,8 @@ While ChatGPT offers a great conversational AI experience, it lacks some feature
 | Chat history                | ✅       | ✅      |
 | Highlight / Format code     | ✅       | ✅      |
 | Use Your Own API Key        | ✅       | ✅      |
+| Edit and branch messages    | ✅       | ✅      |
+| Stop generation             | ✅       | ✅      |
 | Host Yourself / Run Locally | ✅       | ❌      |
 | Share Chats                 | ✅       | ❌      |
 | Set Context                 | ✅       | ❌      |
@@ -142,8 +146,6 @@ While ChatGPT offers a great conversational AI experience, it lacks some feature
 | No Login Required           | ✅       | ❌      |
 | Token Cost Calculation      | ✅       | ❌      |
 | Mobile-first design         | ✅       | ❌      |
-| Edit and branch messages    | ❌       | ✅      |
-| Stop generation             | ❌       | ✅      |
 
 As you can see, SlickGPT includes several additional features that cater to a broad range of user needs, such as hosting the service yourself, using a local chat history, sharing chats, and customizing the chat configurations. Moreover, SlickGPT does not require a login, allowing for faster and more streamlined access. These added functionalities make SlickGPT a more versatile and convenient solution for users seeking an advanced ChatGPT experience.
 
@@ -154,9 +156,9 @@ As you can see, SlickGPT includes several additional features that cater to a br
 ## Roadmap
 
 - [x] Add light/dark mode switch
+- [x] Editable messages and branching chat history
+- [x] Stop completion generation
 - [ ] Add theme switcher
-- [ ] Editable messages and branching chat history
-- [ ] Stop completion generation
 - [ ] More documentation
 - [ ] i18n
   - [ ] English

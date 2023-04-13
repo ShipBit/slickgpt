@@ -3,12 +3,14 @@ import { SSE } from 'sse.js';
 export class EventSource {
 	private eventSource?: SSE;
 	private handleAnswer?: (event: MessageEvent<any>) => void;
-	private handleError?: (event: any) => void;
+	private handleError?: (event: MessageEvent<any>) => void;
+	private handleAbort?: (event: MessageEvent<any>) => void;
 
 	start(
 		payload: any,
 		handleAnswer: (event: MessageEvent<any>) => void,
-		handleError: (event: any) => void
+		handleError: (event: MessageEvent<any>) => void,
+		handleAbort: (event: MessageEvent<any>) => void
 	) {
 		this.eventSource = new SSE('/api/ask', {
 			headers: {
@@ -18,9 +20,17 @@ export class EventSource {
 		});
 		this.handleAnswer = handleAnswer;
 		this.handleError = handleError;
+		this.handleAbort = handleAbort;
 
-		this.eventSource.addEventListener('message', this.handleAnswer);
-		this.eventSource.addEventListener('error', this.handleError);
+		if (this.handleAnswer) {
+			this.eventSource.addEventListener('message', this.handleAnswer);
+		}
+		if (this.handleError) {
+			this.eventSource.addEventListener('error', this.handleError);
+		}
+		if (this.handleAbort) {
+			this.eventSource.addEventListener('abort', this.handleAbort);
+		}
 
 		this.eventSource.stream();
 	}
@@ -36,6 +46,9 @@ export class EventSource {
 		}
 		if (this.handleError) {
 			this.eventSource?.removeEventListener('error', this.handleError);
+		}
+		if (this.handleAbort) {
+			this.eventSource?.removeEventListener('abort', this.handleAbort);
 		}
 
 		this.eventSource?.close();

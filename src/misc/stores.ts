@@ -1,10 +1,10 @@
-import type { Chat, ChatMessage, ClientSettings } from './shared';
-import { writable, type Readable, type Writable, readable, get, derived } from 'svelte/store';
 import type { ChatCompletionRequestMessage } from 'openai';
+import { writable, type Readable, type Writable, readable, get } from 'svelte/store';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { v4 as uuidv4 } from 'uuid';
 import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
+import type { Chat, ChatMessage, ClientSettings } from './shared';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
 

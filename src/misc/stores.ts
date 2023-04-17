@@ -1,16 +1,31 @@
 import type { ChatCompletionRequestMessage } from 'openai';
-import { writable, type Readable, type Writable, readable, get } from 'svelte/store';
+import { writable, type Readable, type Writable, readable, get, derived } from 'svelte/store';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { v4 as uuidv4 } from 'uuid';
 import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
 import type { Chat, ChatMessage, ClientSettings } from './shared';
+import { closeOpenedCodeTicks } from './markdownHelper';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
 
 export const liveAnswerStore: Writable<ChatCompletionRequestMessage> = writable({
 	role: 'assistant',
 	content: ''
+});
+
+export const enhancedLiveAnswerStore = derived(liveAnswerStore, ($liveAnswer) => {
+	if (!$liveAnswer?.content) {
+		return $liveAnswer;
+	}
+
+	let { content } = $liveAnswer;
+	content = closeOpenedCodeTicks(content);
+
+	return {
+		...$liveAnswer,
+		content
+	} as ChatCompletionRequestMessage;
 });
 
 export const isLoadingAnswerStore: Writable<boolean> = writable(false);

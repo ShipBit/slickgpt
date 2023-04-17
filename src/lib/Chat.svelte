@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { Chat } from '$misc/shared';
 	import { afterUpdate, beforeUpdate, onMount } from 'svelte';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
 	import snarkdown from 'snarkdown';
 	import { afterNavigate } from '$app/navigation';
-	import { chatStore, isLoadingAnswerStore, liveAnswerStore } from '$misc/stores';
+	import type { Chat } from '$misc/shared';
+	import { chatStore, enhancedLiveAnswerStore, isLoadingAnswerStore } from '$misc/stores';
 	import ChatMessages from './ChatMessages.svelte';
 
 	export let slug: string;
@@ -52,7 +52,7 @@
 			{#if $isLoadingAnswerStore}
 				<div class="place-self-start">
 					<div class="p-5 rounded-2xl variant-ghost-tertiary rounded-tl-none">
-						{@html snarkdown($liveAnswerStore.content)}
+						{@html snarkdown($enhancedLiveAnswerStore.content)}
 					</div>
 				</div>
 			{/if}

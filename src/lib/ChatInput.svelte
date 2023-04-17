@@ -16,6 +16,7 @@
 		eventSourceStore,
 		isLoadingAnswerStore,
 		liveAnswerStore,
+		enhancedLiveAnswerStore,
 		settingsStore
 	} from '$misc/stores';
 	import { countTokens } from '$misc/openai';
@@ -149,7 +150,7 @@
 	function addCompletionToChat(isAborted = false) {
 		const messageToAdd: ChatMessage = !isAborted
 			? { ...$liveAnswerStore }
-			: { ...$liveAnswerStore, isAborted: true };
+			: { ...$enhancedLiveAnswerStore, isAborted: true };
 
 		chatStore.addMessageToChat(slug, messageToAdd, lastUserMessage || undefined);
 		$isLoadingAnswerStore = false;

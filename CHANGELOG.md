@@ -2,6 +2,10 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## April 17, 2023
+
+- Opened but unclosed code tags in completions are now auto-closed automatically. This should make streaming (and partial) results more readable. Thanks to @Arro for the suggestion!
+
 ## April 13, 2023
 
 - cancelled completions are now added to the chat history as well. They might be malformatted or incomplete, but they are there.

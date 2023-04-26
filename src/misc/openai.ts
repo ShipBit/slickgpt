@@ -3,6 +3,9 @@ import type { Chat, ChatCost } from './shared';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { ChatStorekeeper } from './chatStorekeeper';
 
+// initialization is slow, so only do it once
+const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
+
 export enum OpenAiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
 	Gpt4 = 'gpt-4',
@@ -53,8 +56,6 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
  * see https://github.com/syonfox/GPT-3-Encoder/issues/2
  */
 export function countTokens(message: ChatCompletionRequestMessage): number {
-	const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
-
 	let num_tokens = 4; // every message follows <im_start>{role/name}\n{content}<im_end>\n
 	for (const [key, value] of Object.entries(message)) {
 		if (key !== 'name' && key !== 'role' && key !== 'content') {

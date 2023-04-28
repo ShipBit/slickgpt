@@ -203,16 +203,24 @@
 		calculateMessageTokens();
 	}
 
-	export function editMessage(message: ChatMessage) {
+	export async function editMessage(message: ChatMessage) {
 		originalMessage = message;
 		input = message.content;
 		isEditMode = true;
+
+		// tick is required for the action to resize the textarea
+		await tick();
+		textareaAutosizeAction(textarea);
 	}
 
-	function cancelEditMessage() {
+	async function cancelEditMessage() {
 		isEditMode = false;
 		originalMessage = null;
 		input = '';
+
+		// tick is required for the action to resize the textarea
+		await tick();
+		textareaAutosizeAction(textarea);
 	}
 </script>
 

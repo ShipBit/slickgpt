@@ -3,8 +3,11 @@ import type { Chat, ChatCost } from './shared';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { ChatStorekeeper } from './chatStorekeeper';
 
-// initialization is slow, so only do it once
-const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
+// Initialization is slow, so only do it once.
+// TypeScript misinterprets the export default class GPT3Tokenizer from gpt3-tokenizer
+// and throws "TypeError: GPT3Tokenizer is not a constructor" if we try to call the ctor here.
+// Therefore, we initialize the tokenizer in the first call to countTokens().
+let tokenizer: GPT3Tokenizer;
 
 export enum OpenAiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
@@ -56,6 +59,11 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
  * see https://github.com/syonfox/GPT-3-Encoder/issues/2
  */
 export function countTokens(message: ChatCompletionRequestMessage): number {
+	// see comment above
+	if (!tokenizer) {
+		tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
+	}
+
 	let num_tokens = 4; // every message follows <im_start>{role/name}\n{content}<im_end>\n
 	for (const [key, value] of Object.entries(message)) {
 		if (key !== 'name' && key !== 'role' && key !== 'content') {

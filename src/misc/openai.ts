@@ -85,10 +85,10 @@ export function estimateChatCost(chat: Chat): ChatCost {
 
 	for (const message of messages) {
 		if (message.role === 'assistant') {
-			tokensCompletion += countTokens(message);
+			tokensCompletion += countTokens(message as ChatCompletionRequestMessage);
 		} else {
 			// context counts as prompt (I think...)
-			tokensPrompt += countTokens(message);
+			tokensPrompt += countTokens(message as ChatCompletionRequestMessage);
 		}
 	}
 

@@ -21,7 +21,7 @@
 	let timeAgo: TimeAgo;
 
 	$: sortedChats = Object.entries($chatStore).sort((a, b) => {
-		return new Date(b[1].created).getTime() - new Date(a[1].created).getTime();
+		return new Date(b[1].createdAt).getTime() - new Date(a[1].createdAt).getTime();
 	});
 
 	onMount(() => {
@@ -63,11 +63,11 @@
 			method: 'DELETE',
 			body: JSON.stringify(docsToDelete)
 		});
-		const { deleted: unshared }: { deleted: string[] } = await response.json();
+		const { unshared }: { unshared: number } = await response.json();
 
 		let message = `${savedChatsAmount} ${savedChatsAmount === 1 ? 'chat' : 'chats'} deleted.`;
-		if (unshared?.length) {
-			message += ` ${unshared.length} ${unshared.length === 1 ? 'chat' : 'chats'} unshared.`;
+		if (unshared > 0) {
+			message += ` ${unshared} ${unshared === 1 ? 'chat' : 'chats'} unshared.`;
 		}
 
 		showToast(message);
@@ -121,7 +121,7 @@
 					<Clock class="w-6 h-6" />
 					{#if timeAgo}
 						<span class="self-center">
-							{timeAgo.format(new Date(chat.created), 'twitter-minute-now')}
+							{timeAgo.format(new Date(chat.createdAt), 'twitter-minute-now')}
 						</span>
 					{/if}
 				</div>

@@ -11,7 +11,8 @@ datasource db {
 }
 
 model Chat {
-  id             String         @id @map("_id") @db.ObjectId
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  slug           String         @unique
   title          String
   settings       OpenAiSettings
   contextMessage ChatMessage?

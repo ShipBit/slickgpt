@@ -93,7 +93,7 @@ export class ChatStorekeeper {
 
 	static getCurrentMessageBranch(chat: Chat, includeContext = true): ChatMessage[] {
 		const result: ChatMessage[] =
-			includeContext && chat.contextMessage.content ? [chat.contextMessage] : [];
+			includeContext && chat.contextMessage?.content ? [chat.contextMessage as ChatMessage] : [];
 
 		function traverse(messages: ChatMessage[]): void {
 			if (messages.length === 1) {

@@ -96,8 +96,8 @@ const addAsSibling = (slug: string, originalMessageId: string, message: ChatMess
 	const chat = { ...get(_chatStore)[slug] };
 	const parentData = ChatStorekeeper.findParent(originalMessageId, chat.messages);
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	delete message.id;
-	delete message.messages;
+	message.id = null;
+	message.messages = [];
 
 	addMessageToChat(slug, message, parentData?.parent);
 };
@@ -160,9 +160,9 @@ const deleteMessage = (slug: string, id: string) => {
 
 const deleteUpdateToken = (slug: string) => {
 	_chatStore.update((store) => {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { updateToken, ...rest } = store[slug];
-		return { ...store, [slug]: rest };
+		const chat = store[slug];
+		chat.updateToken = null;
+		return { ...store, [slug]: chat };
 	});
 };
 

@@ -1,10 +1,11 @@
 import type { ChatCompletionRequestMessage, ChatCompletionRequestMessageRoleEnum } from 'openai';
+import type { Chat as PrismaChat, ChatMessage as PrismaChatMessage } from '@prisma/client';
 import { get } from 'svelte/store';
 import { defaultOpenAiSettings, OpenAiModel, type OpenAiSettings } from './openai';
 import {
-	modalStore,
 	type ModalSettings,
 	type ToastSettings,
+	modalStore,
 	toastStore
 } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
@@ -13,10 +14,10 @@ import vercelAnalytics from '@vercel/analytics';
 import { goto } from '$app/navigation';
 import { chatStore, settingsStore } from './stores';
 import { PUBLIC_DISABLE_TRACKING } from '$env/static/public';
-import type { Chat as PrismaChat, ChatMessage as PrismaChatMessage } from '@prisma/client';
 
 export interface ChatMessage extends PrismaChatMessage {
 	role: ChatCompletionRequestMessageRoleEnum;
+	messages: ChatMessage[];
 
 	isSelected?: boolean;
 	isAborted?: boolean;
@@ -50,7 +51,7 @@ export function createNewChat(template?: {
 	context?: string;
 	title?: string;
 	settings?: OpenAiSettings;
-	messages?: ChatCompletionRequestMessage[];
+	messages?: ChatMessage[];
 }) {
 	const settings = { ...(template?.settings || defaultOpenAiSettings) };
 	const { defaultModel } = get(settingsStore);
@@ -60,14 +61,21 @@ export function createNewChat(template?: {
 
 	const slug = generateSlug();
 	const chat: Chat = {
+		id: '',
+		slug,
 		title: template?.title || slug,
 		settings,
 		contextMessage: {
+			id: null,
+			name: null,
 			role: 'system',
+			messages: [],
 			content: template?.context || ''
 		},
 		messages: template?.messages || [],
-		created: new Date()
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		updateToken: null
 	};
 
 	chatStore.updateChat(slug, chat);

@@ -30,7 +30,7 @@
 		const newSlug = generateSlug();
 		const newChat: ChatModel = {
 			...chat,
-			created: new Date(),
+			createdAt: new Date(),
 			isImported: true
 		};
 

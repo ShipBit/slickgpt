@@ -65,10 +65,10 @@
 			method: 'DELETE',
 			body: JSON.stringify(docsToDelete)
 		});
-		const { deleted }: { deleted: string[] } = await response.json();
+		const { unshared }: { unshared: number } = await response.json();
 
-		for (const deletedSlug of deleted) {
-			chatStore.deleteUpdateToken(deletedSlug);
+		if (unshared) {
+			chatStore.deleteUpdateToken(slug);
 		}
 
 		acceptTos = false;

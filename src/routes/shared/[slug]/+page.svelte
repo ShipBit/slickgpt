@@ -30,7 +30,7 @@
 		const newSlug = generateSlug();
 		const newChat: ChatModel = {
 			...chat,
-			createdAt: new Date(),
+			created: new Date(),
 			isImported: true
 		};
 
@@ -52,7 +52,7 @@
 
 <Chat {slug} {chat}>
 	<svelte:fragment slot="additional-content-top">
-		{#if chat.contextMessage.content.length > 0}
+		{#if chat.contextMessage && chat.contextMessage.content.length > 0}
 			<HintMessage title="Chat context" variantClass="variant-ghost-tertiary">
 				<p class="!mb-4">{@html snarkdown(chat.contextMessage.content)}</p>
 			</HintMessage>

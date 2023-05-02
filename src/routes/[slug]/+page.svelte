@@ -29,7 +29,7 @@
 	$: ({ slug } = data);
 	$: chat = $chatStore[slug];
 	$: cost = chat ? estimateChatCost(chat) : null;
-	$: hasContext = chat?.contextMessage?.content?.length || false;
+	$: hasContext = (chat?.contextMessage && chat?.contextMessage.content?.length > 0) || false;
 	$: hasStopSequence = chat?.settings.stop?.length || false;
 
 	let chatInput: ChatInput;
@@ -166,7 +166,8 @@
 				style={!$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
 			>
 				<button
-					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
+					disabled={(!chat.contextMessage || !chat.contextMessage.content?.length) &&
+						!chat.messages?.length}
 					class="btn btn-sm inline-flex variant-ghost-tertiary"
 					on:click={() => showModalComponent('ShareModal', { slug }, handleChatShared)}
 				>
@@ -212,7 +213,7 @@
 				actionClass="grid h-full"
 				omitAlertActionsClass={true}
 			>
-				{#if hasContext}
+				{#if hasContext && chat.contextMessage}
 					<p>
 						{@html snarkdown(chat.contextMessage.content)}
 					</p>

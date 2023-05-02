@@ -18,14 +18,14 @@ export enum OpenAiModel {
 
 export interface OpenAiSettings extends PrismaOpenAiSettings {
 	model: OpenAiModel;
+	stop?: string | string[];
 }
 
 export const defaultOpenAiSettings: OpenAiSettings = {
 	model: OpenAiModel.Gpt35Turbo,
 	max_tokens: 2048,
 	temperature: 1,
-	top_p: 1,
-	stop: []
+	top_p: 1
 };
 
 export interface OpenAiModelStats {

@@ -73,8 +73,7 @@ export function createNewChat(template?: {
 			content: template?.context || ''
 		},
 		messages: template?.messages || [],
-		createdAt: new Date(),
-		updatedAt: new Date(),
+		created: new Date(),
 		updateToken: null
 	};
 

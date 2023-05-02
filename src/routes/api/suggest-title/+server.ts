@@ -1,8 +1,8 @@
 import type { Config } from '@sveltejs/adapter-vercel';
 import type { ChatCompletionRequestMessage, CreateChatCompletionRequest } from 'openai';
 import type { RequestHandler } from './$types';
-import { OpenAiModel, defaultOpenAiSettings, type OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
+import { OpenAiModel, defaultOpenAiSettings, type OpenAiSettings } from '$misc/openai';
 import { getErrorMessage, respondToClient, throwIfUnset } from '$misc/error';
 
 // this tells Vercel to run this function as https://vercel.com/docs/concepts/functions/edge-functions

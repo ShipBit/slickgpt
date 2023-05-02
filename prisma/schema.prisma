@@ -17,8 +17,7 @@ model Chat {
   settings       OpenAiSettings
   contextMessage ChatMessage?
   messages       ChatMessage[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  created        DateTime       @default(now())
   updateToken    String?        @unique
 }
 
@@ -35,5 +34,5 @@ type OpenAiSettings {
   max_tokens  Int
   temperature Int
   top_p       Float
-  stop        String[]
+  // stop        String[]
 }

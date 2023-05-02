@@ -21,7 +21,7 @@
 	let timeAgo: TimeAgo;
 
 	$: sortedChats = Object.entries($chatStore).sort((a, b) => {
-		return new Date(b[1].createdAt).getTime() - new Date(a[1].createdAt).getTime();
+		return new Date(b[1].created).getTime() - new Date(a[1].created).getTime();
 	});
 
 	onMount(() => {
@@ -121,7 +121,7 @@
 					<Clock class="w-6 h-6" />
 					{#if timeAgo}
 						<span class="self-center">
-							{timeAgo.format(new Date(chat.createdAt), 'twitter-minute-now')}
+							{timeAgo.format(new Date(chat.created), 'twitter-minute-now')}
 						</span>
 					{/if}
 				</div>

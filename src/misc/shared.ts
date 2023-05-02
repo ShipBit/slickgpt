@@ -1,4 +1,4 @@
-import type { ChatCompletionRequestMessage } from 'openai';
+import type { ChatCompletionRequestMessage, ChatCompletionRequestMessageRoleEnum } from 'openai';
 import { get } from 'svelte/store';
 import { defaultOpenAiSettings, OpenAiModel, type OpenAiSettings } from './openai';
 import {
@@ -13,23 +13,20 @@ import vercelAnalytics from '@vercel/analytics';
 import { goto } from '$app/navigation';
 import { chatStore, settingsStore } from './stores';
 import { PUBLIC_DISABLE_TRACKING } from '$env/static/public';
+import type { Chat as PrismaChat, ChatMessage as PrismaChatMessage } from '@prisma/client';
 
-export interface ChatMessage extends ChatCompletionRequestMessage {
-	id?: string;
-	messages?: ChatMessage[];
+export interface ChatMessage extends PrismaChatMessage {
+	role: ChatCompletionRequestMessageRoleEnum;
+
 	isSelected?: boolean;
 	isAborted?: boolean;
 }
 
-export interface Chat {
-	title: string;
+export interface Chat extends PrismaChat {
 	settings: OpenAiSettings;
-	contextMessage: ChatCompletionRequestMessage;
 	messages: ChatMessage[];
-	created: Date;
 
 	isImported?: boolean;
-	updateToken?: string;
 }
 
 export interface ClientSettings {

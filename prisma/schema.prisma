@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Chat {
+  id             String         @id @map("_id") @db.ObjectId
+  title          String
+  settings       OpenAiSettings
+  contextMessage ChatMessage?
+  messages       ChatMessage[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  updateToken    String?        @unique
+}
+
+type ChatMessage {
+  id       String?
+  role     String
+  content  String
+  name     String?
+  messages ChatMessage[]
+}
+
+type OpenAiSettings {
+  model       String
+  max_tokens  Int
+  temperature Int
+  top_p       Float
+  stop        String[]
+}

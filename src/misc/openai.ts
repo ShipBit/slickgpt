@@ -1,5 +1,6 @@
 import type { ChatCompletionRequestMessage } from 'openai';
 import type { Chat, ChatCost } from './shared';
+import type { OpenAiSettings as PrismaOpenAiSettings } from '@prisma/client';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { ChatStorekeeper } from './chatStorekeeper';
 
@@ -15,19 +16,16 @@ export enum OpenAiModel {
 	Gpt432k = 'gpt-4-32k'
 }
 
-export interface OpenAiSettings {
+export interface OpenAiSettings extends PrismaOpenAiSettings {
 	model: OpenAiModel;
-	max_tokens: number; // just for completions
-	temperature: number; // 0-2
-	top_p: number; // 0-1
-	stop?: string | string[]; // max 4 entries in array
 }
 
 export const defaultOpenAiSettings: OpenAiSettings = {
 	model: OpenAiModel.Gpt35Turbo,
 	max_tokens: 2048,
 	temperature: 1,
-	top_p: 1
+	top_p: 1,
+	stop: []
 };
 
 export interface OpenAiModelStats {

@@ -4,6 +4,7 @@ import type { Config } from '@sveltejs/adapter-vercel';
 import type { RequestHandler } from './$types';
 import { generateSlug } from 'random-word-slugs';
 import type { Chat } from '$misc/shared';
+import type { Chat as PrismaChat } from '@prisma/client';
 import { respondToClient, throwIfUnset, getErrorMessage } from '$misc/error';
 
 // this tells Vercel to run this function as https://vercel.com/docs/concepts/functions/edge-functions
@@ -11,9 +12,8 @@ export const config: Config = {
 	runtime: 'nodejs18.x'
 };
 
-const prisma = new PrismaClient();
-
 export const GET: RequestHandler = async ({ url }) => {
+	const prisma = new PrismaClient();
 	const slug = url.searchParams.get('slug');
 	if (!slug) {
 		throw new Error('missing URL param: slug');
@@ -34,6 +34,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
+		const prisma = new PrismaClient();
 		const requestData = await request.json();
 		throwIfUnset('request data', requestData);
 
@@ -43,24 +44,67 @@ export const POST: RequestHandler = async ({ request }) => {
 		const chat: Chat = requestData.chat;
 		throwIfUnset('chat', chat);
 
-		const upsertChat = await prisma.chat.upsert({
-			where: {
-				slug,
-				updateToken: chat.updateToken || undefined
-			},
-			update: {
-				...chat
-			},
-			create: {
-				...chat,
-				slug: generateSlug(),
+		const cleanedChat: Partial<PrismaChat> = {
+			slug: chat.slug,
+			title: chat.title,
+			contextMessage: chat.contextMessage
+				? {
+						id: null,
+						role: chat.contextMessage.role,
+						content: chat.contextMessage.content,
+						name: chat.contextMessage.name,
+						messages: []
+				  }
+				: null,
+			settings: chat.settings,
+			messages: chat.messages,
+			updateToken: chat.updateToken,
+			created: chat.created
+		};
+
+		console.log('cleaned chat');
+		console.log(cleanedChat);
+
+		let sharedChat: PrismaChat | null = null;
+
+		if (!cleanedChat.updateToken) {
+			const data = {
+				...cleanedChat,
 				updateToken: generateSlug()
+			} as PrismaChat;
+
+			console.log('No update token. Sharing new chat:');
+			console.log(data);
+			sharedChat = await prisma.chat.create({ data });
+		} else {
+			const savedChat = await prisma.chat.findUnique({ where: { slug } });
+			console.log('saved chat: ' + savedChat?.slug + ' // ' + savedChat?.updateToken);
+
+			if (savedChat?.updateToken === chat.updateToken) {
+				console.log('updating saved chat');
+				await prisma.chat.update({
+					where: { slug },
+					data: { ...cleanedChat }
+				});
+			} else {
+				// wrong update token => share as new
+				console.log('Wrong update token. Sharing as new chat');
+				sharedChat = await prisma.chat.create({
+					data: {
+						...(cleanedChat as PrismaChat),
+						slug: generateSlug(),
+						updateToken: generateSlug()
+					}
+				});
 			}
-		});
+		}
+
+		console.log('Shared: ');
+		console.log(sharedChat);
 
 		return respondToClient({
 			slug,
-			updateToken: upsertChat.updateToken
+			updateToken: sharedChat?.updateToken || null
 		});
 	} catch (err) {
 		throw error(500, getErrorMessage(err));
@@ -69,6 +113,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 export const DELETE: RequestHandler = async ({ request }) => {
 	try {
+		const prisma = new PrismaClient();
 		// key: slug, value: updateToken
 		const requestData = (await request.json()) as { [key: string]: string };
 		throwIfUnset('request data', requestData);

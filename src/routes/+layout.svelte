@@ -2,8 +2,8 @@
 	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
 	import '@skeletonlabs/skeleton/styles/all.css';
 	import '../app.postcss';
+	import { inject } from '@vercel/analytics';
 
-	import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
 	import { dev } from '$app/environment';
 	import {
 		type ModalComponent,
@@ -26,6 +26,8 @@
 	import ShareModal from '$lib/Modals/ShareModal.svelte';
 	import CostModal from '$lib/Modals/CostModal.svelte';
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
+
+	inject({ mode: dev ? 'development' : 'production' });
 
 	setupSkeleton();
 
@@ -71,21 +73,6 @@
 	<meta name="twitter:image:alt" content={meta.imageAlt} />
 
 	<title>{meta.title}</title>
-
-	{#if !dev && PUBLIC_PLAUSIBLE_DOMAIN}
-		<script
-			defer
-			data-domain={PUBLIC_PLAUSIBLE_DOMAIN}
-			src="https://plausible.io/js/script.outbound-links.js"
-		></script>
-		<script>
-			window.plausible =
-				window.plausible ||
-				function () {
-					(window.plausible.q = window.plausible.q || []).push(arguments);
-				};
-		</script>
-	{/if}
 </svelte:head>
 
 <AppShell

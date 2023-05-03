@@ -8,8 +8,9 @@ import {
 	toastStore
 } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
+import vercelAnalytics from '@vercel/analytics';
+
 import { goto } from '$app/navigation';
-import { browser } from '$app/environment';
 import { chatStore, settingsStore } from './stores';
 
 export interface ChatMessage extends ChatCompletionRequestMessage {
@@ -128,9 +129,7 @@ export function showModalComponent(
 }
 
 export function track(action: string) {
-	if (browser && window.plausible) {
-		window.plausible(action);
-	}
+	vercelAnalytics.track(action);
 }
 
 export function showToast(

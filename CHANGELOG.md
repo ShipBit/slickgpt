@@ -2,6 +2,10 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## May 12, 2023
+
+- add new enironment variable PUBLIC_DISABLE_TRACKING. Set this to `true` to prevent tracking actions.
+
 ## April 28, 2023
 
 - improved performance in large chats by initializing the tokenizer only once (thanks @Schroedi)

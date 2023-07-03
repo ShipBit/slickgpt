@@ -5,6 +5,7 @@ Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'
 ## July 03, 2023
 
 - Fixed an issue in Firefox that made the ChatInput appear too small in height
+- Maintenance: Update client libs, use Svelte 4 etc.
 
 ## May 12, 2023
 

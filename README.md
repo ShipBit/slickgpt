@@ -131,21 +131,21 @@ SlickGPT offers a light and dark theme. You can switch between the two modes by 
 
 While ChatGPT offers a great conversational AI experience, it lacks some features many users desire.
 
-| Feature                     | SlickGPT | ChatGPT |
-| --------------------------- | -------- | ------- |
-| Use different models        | ✅       | ✅      |
-| Chat history                | ✅       | ✅      |
-| Highlight / Format code     | ✅       | ✅      |
-| Use Your Own API Key        | ✅       | ✅      |
-| Edit and branch messages    | ✅       | ✅      |
-| Stop generation             | ✅       | ✅      |
-| Host Yourself / Run Locally | ✅       | ❌      |
-| Share Chats                 | ✅       | ❌      |
-| Set Context                 | ✅       | ❌      |
-| Change model configuration  | ✅       | ❌      |
-| No Login Required           | ✅       | ❌      |
-| Token Cost Calculation      | ✅       | ❌      |
-| Mobile-first design         | ✅       | ❌      |
+| Feature                     | SlickGPT | ChatGPT                |
+| --------------------------- | -------- | ---------------------- |
+| Use different models        | ✅       | ✅                     |
+| Chat history                | ✅       | ✅                     |
+| Highlight / Format code     | ✅       | ✅                     |
+| Use Your Own API Key        | ✅       | ✅                     |
+| Edit and branch messages    | ✅       | ✅                     |
+| Stop generation             | ✅       | ✅                     |
+| Share Chats                 | ✅       | ✅ (implemented later) |
+| Host Yourself / Run Locally | ✅       | ❌                     |
+| Set Context                 | ✅       | ❌                     |
+| Change model configuration  | ✅       | ❌                     |
+| No Login Required           | ✅       | ❌                     |
+| Token Cost Calculation      | ✅       | ❌                     |
+| Mobile-first design         | ✅       | ❌                     |
 
 As you can see, SlickGPT includes several additional features that cater to a broad range of user needs, such as hosting the service yourself, using a local chat history, sharing chats, and customizing the chat configurations. Moreover, SlickGPT does not require a login, allowing for faster and more streamlined access. These added functionalities make SlickGPT a more versatile and convenient solution for users seeking an advanced ChatGPT experience.
 

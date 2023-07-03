@@ -248,7 +248,7 @@
 					<div class="grid grid-cols-[1fr_auto]">
 						<!-- Input -->
 						<textarea
-							class="textarea overflow-hidden"
+							class="textarea overflow-hidden min-h-[42px]"
 							rows="1"
 							placeholder="Enter to send, Shift+Enter for newline"
 							use:textareaAutosizeAction

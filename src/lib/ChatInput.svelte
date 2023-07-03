@@ -120,7 +120,7 @@
 	}
 
 	function handleAbort(_event: MessageEvent<any>) {
-		// th message we're adding is incomplete, so HLJS probably can't highlight it correctly
+		// the message we're adding is incomplete, so HLJS probably can't highlight it correctly
 		addCompletionToChat(true);
 	}
 
@@ -129,9 +129,10 @@
 		$isLoadingAnswerStore = false;
 
 		// always true, check just for TypeScript
-		if (lastUserMessage?.id) {
-			chatStore.deleteMessage(slug, lastUserMessage.id);
-		}
+		// if (lastUserMessage?.id) {
+		// 	chatStore.deleteMessage(slug, lastUserMessage.id);
+		// }
+		addCompletionToChat(true);
 
 		console.error(event);
 

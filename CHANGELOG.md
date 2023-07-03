@@ -2,6 +2,10 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## July 03, 2023
+
+- Fixed an issue in Firefox that made the ChatInput appear too small in height
+
 ## May 12, 2023
 
 - add new enironment variable PUBLIC_DISABLE_TRACKING. Set this to `true` to prevent tracking actions.

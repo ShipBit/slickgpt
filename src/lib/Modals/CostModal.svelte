@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { Accordion, AccordionItem, ConicGradient, modalStore } from '@skeletonlabs/skeleton';
+	import { Accordion, AccordionItem, ConicGradient, getModalStore } from '@skeletonlabs/skeleton';
 	import type { ConicStop } from '@skeletonlabs/skeleton';
 	import type { ChatCost } from '$misc/shared';
+
+	const modalStore = getModalStore();
 
 	export let cost: ChatCost = $modalStore[0].meta.chatCost;
 	export let messageTokens: number = $modalStore[0].meta.messageTokens;

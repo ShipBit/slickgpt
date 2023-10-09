@@ -1,12 +1,7 @@
-import type { ChatCompletionRequestMessage } from 'openai';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { get } from 'svelte/store';
 import { defaultOpenAiSettings, OpenAiModel, type OpenAiSettings } from './openai';
-import {
-	modalStore,
-	type ModalSettings,
-	type ToastSettings,
-	toastStore
-} from '@skeletonlabs/skeleton';
+import type { ModalSettings, ToastSettings, ToastStore, ModalStore } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
 import vercelAnalytics from '@vercel/analytics';
 
@@ -14,7 +9,7 @@ import { goto } from '$app/navigation';
 import { chatStore, settingsStore } from './stores';
 import { PUBLIC_DISABLE_TRACKING } from '$env/static/public';
 
-export interface ChatMessage extends ChatCompletionRequestMessage {
+export interface ChatMessage extends ChatCompletionMessageParam {
 	id?: string;
 	messages?: ChatMessage[];
 	isSelected?: boolean;
@@ -24,7 +19,7 @@ export interface ChatMessage extends ChatCompletionRequestMessage {
 export interface Chat {
 	title: string;
 	settings: OpenAiSettings;
-	contextMessage: ChatCompletionRequestMessage;
+	contextMessage: ChatCompletionMessageParam;
 	messages: ChatMessage[];
 	created: Date;
 
@@ -50,10 +45,10 @@ export interface ChatCost {
 }
 
 export function createNewChat(template?: {
-	context?: string;
+	context?: string | null;
 	title?: string;
 	settings?: OpenAiSettings;
-	messages?: ChatCompletionRequestMessage[];
+	messages?: ChatCompletionMessageParam[];
 }) {
 	const settings = { ...(template?.settings || defaultOpenAiSettings) };
 	const { defaultModel } = get(settingsStore);
@@ -100,7 +95,7 @@ export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promis
 				role: m.role,
 				content: m.content,
 				name: m.name
-			} as ChatCompletionRequestMessage)
+			}) as ChatCompletionMessageParam
 	);
 
 	const response = await fetch('/api/suggest-title', {
@@ -116,6 +111,7 @@ export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promis
 }
 
 export function showModalComponent(
+	modalStore: ModalStore,
 	component: string,
 	meta?: object,
 	response?: ((r: any) => void) | undefined
@@ -137,6 +133,7 @@ export function track(action: string) {
 }
 
 export function showToast(
+	toastStore: ToastStore,
 	message: string,
 	type: 'primary' | 'secondary' | 'tertiary' | 'success' | 'warning' | 'error' = 'primary',
 	autohide = true,

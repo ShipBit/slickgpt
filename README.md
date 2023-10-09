@@ -48,6 +48,8 @@
   </ol>
 </details>
 
+## Now upgraded to Svelte4, Skeleton 2.0 and OpenAI 4
+
 ## About the project
 
 ![SlickGPT][slickgpt-screenshot]

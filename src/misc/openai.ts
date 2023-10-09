@@ -1,4 +1,4 @@
-import type { ChatCompletionRequestMessage } from 'openai';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat';
 import type { Chat, ChatCost } from './shared';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { ChatStorekeeper } from './chatStorekeeper';
@@ -58,7 +58,7 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
  * see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
  * see https://github.com/syonfox/GPT-3-Encoder/issues/2
  */
-export function countTokens(message: ChatCompletionRequestMessage): number {
+export function countTokens(message: ChatCompletionMessageParam): number {
 	// see comment above
 	if (!tokenizer) {
 		tokenizer = new GPT3Tokenizer({ type: 'gpt3' });

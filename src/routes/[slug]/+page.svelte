@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount, tick } from 'svelte';
-	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import hljs from 'highlight.js';
 	import { XMark } from '@inqling/svelte-icons/heroicon-24-solid';
 	import { Trash, Cog6Tooth, Share } from '@inqling/svelte-icons/heroicon-24-outline';
@@ -23,6 +23,9 @@
 		type ChatMessage
 	} from '$misc/shared';
 	import snarkdown from 'snarkdown';
+
+	const modalStore = getModalStore();
+	const toastStore = getToastStore();
 
 	export let data: PageData;
 
@@ -89,7 +92,7 @@
 	async function handleCloseChat() {
 		// untouched => discard
 		if (chat.title === slug && !chat.contextMessage?.content && chat.messages.length === 0) {
-			showToast('Empty chat was discarded automatically', 'secondary');
+			showToast(toastStore, 'Empty chat was discarded automatically', 'secondary');
 			deleteChat(true);
 		}
 
@@ -104,11 +107,11 @@
 			if ($settingsStore.openAiApiKey) {
 				const title = await suggestChatTitle(chat, $settingsStore.openAiApiKey);
 				chatStore.updateChat(slug, { title });
-				showToast(`Chat title set to: '${title}'`, 'secondary');
+				showToast(toastStore, `Chat title set to: '${title}'`, 'secondary');
 			}
 			goto('/');
 		} else {
-			showModalComponent('SuggestTitleModal', { slug }, () => {
+			showModalComponent(modalStore, 'SuggestTitleModal', { slug }, () => {
 				// see https://www.reddit.com/r/sveltejs/comments/10o7tpu/sveltekit_issue_goto_not_working_on_ios/
 				// await tick() doesn't fix it, hence setTimeout
 				setTimeout(() => goto('/'), 0);
@@ -142,7 +145,7 @@
 			<span class="relative inline-flex">
 				<button
 					class="btn btn-sm variant-ghost-warning"
-					on:click={() => showModalComponent('SettingsModal', { slug })}
+					on:click={() => showModalComponent(modalStore, 'SettingsModal', { slug })}
 				>
 					<Cog6Tooth class="w-6 h-6" />
 				</button>
@@ -168,7 +171,7 @@
 				<button
 					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
 					class="btn btn-sm inline-flex variant-ghost-tertiary"
-					on:click={() => showModalComponent('ShareModal', { slug }, handleChatShared)}
+					on:click={() => showModalComponent(modalStore, 'ShareModal', { slug }, handleChatShared)}
 				>
 					<Share class="w-6 h-6" />
 				</button>
@@ -212,7 +215,7 @@
 				actionClass="grid h-full"
 				omitAlertActionsClass={true}
 			>
-				{#if hasContext}
+				{#if hasContext && chat.contextMessage.content}
 					<p>
 						{@html snarkdown(chat.contextMessage.content)}
 					</p>
@@ -241,7 +244,7 @@
 					<div class="flex flex-row md:flex-col space-x-2 space-y-2">
 						<button
 							class="btn self-center variant-filled-primary"
-							on:click={() => showModalComponent('ContextModal', { slug })}
+							on:click={() => showModalComponent(modalStore, 'ContextModal', { slug })}
 						>
 							Edit
 						</button>

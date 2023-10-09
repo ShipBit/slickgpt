@@ -1,5 +1,8 @@
 import type { Config } from '@sveltejs/adapter-vercel';
-import type { ChatCompletionRequestMessage, CreateChatCompletionRequest } from 'openai';
+import type {
+	ChatCompletionMessageParam,
+	ChatCompletionCreateParamsNonStreaming
+} from 'openai/resources/chat';
 import type { RequestHandler } from './$types';
 import { OpenAiModel, defaultOpenAiSettings, type OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
@@ -15,7 +18,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		const requestData = await request.json();
 		throwIfUnset('request data', requestData);
 
-		const messages: ChatCompletionRequestMessage[] = requestData.messages;
+		const messages: ChatCompletionMessageParam[] = requestData.messages;
 		throwIfUnset('messages', messages);
 
 		const fixedMessages = [
@@ -25,7 +28,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 				role: 'user',
 				content:
 					"Suggest a short title for this chat, summarising its content. Take the 'system' message into account and the first prompt from me and your first answer. The title should not be longer than 100 chars. Answer with just the title. Don't use punctuation is the title."
-			} as ChatCompletionRequestMessage
+			} as ChatCompletionMessageParam
 		];
 
 		const settings: OpenAiSettings = {
@@ -36,7 +39,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		const openAiKey: string = requestData.openAiKey;
 		throwIfUnset('OpenAI API key', openAiKey);
 
-		const completionOpts: CreateChatCompletionRequest = {
+		const completionOpts: ChatCompletionCreateParamsNonStreaming = {
 			...settings,
 			messages: fixedMessages,
 			stream: false

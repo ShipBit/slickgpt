@@ -2,15 +2,17 @@
 	import { showModalComponent } from '$misc/shared';
 	import { createEventDispatcher } from 'svelte';
 	import { PencilSquare, XMark } from '@inqling/svelte-icons/heroicon-24-solid';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 
 	const dispatch = createEventDispatcher();
+	const modalStore = getModalStore();
 
 	export let title: string;
 	export let slug = '';
 
 	function handleEditTitle() {
 		if (slug) {
-			showModalComponent('SuggestTitleModal', { slug });
+			showModalComponent(modalStore, 'SuggestTitleModal', { slug });
 		}
 	}
 </script>
@@ -19,7 +21,7 @@
 	<div class="flex flex-col-reverse md:flex-row justify-center md:justify-between items-center">
 		<!-- Title -->
 		<div class="flex justify-center md:justify-start w-full px-4 md:px-0 mt-4 md:mt-0 max-w-[80%]">
-			<h2 class="unstyled truncate text-base md:text-2xl">
+			<h2 class="h2 truncate text-base md:text-2xl font-bold">
 				{title}
 			</h2>
 

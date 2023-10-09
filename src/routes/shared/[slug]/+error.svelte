@@ -4,7 +4,7 @@
 </script>
 
 <div class="flex flex-col justify-center items-center h-full space-y-4 text-center">
-	<h2>Aww, snap!</h2>
+	<h2 class="h2 font-2xl font-bold">Aww, snap!</h2>
 	<p>
 		The requested chat was not found. <br />
 		Either your link is invalid or the other person unshared this chat.

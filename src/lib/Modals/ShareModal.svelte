@@ -1,9 +1,12 @@
 <script lang="ts">
-	import { Accordion, AccordionItem, modalStore } from '@skeletonlabs/skeleton';
+	import { Accordion, AccordionItem, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { clickToCopyAction, confettiAction } from 'svelte-legos';
 	import { DocumentDuplicate } from '@inqling/svelte-icons/heroicon-24-solid';
 	import { chatStore } from '$misc/stores';
 	import { showToast, track } from '$misc/shared';
+
+	const modalStore = getModalStore();
+	const toastStore = getToastStore();
 
 	let slug: string = $modalStore[0].meta?.slug || '';
 	$: chat = $chatStore[slug];
@@ -76,7 +79,7 @@
 
 	function handleCopyDone() {
 		modalStore.close();
-		showToast('Share URL copied to clipboard');
+		showToast(toastStore, 'Share URL copied to clipboard');
 	}
 
 	function handleClose() {
@@ -86,7 +89,7 @@
 
 {#if chat}
 	<div class="card variant-filled-surface-700 p-8 max-w-xl md:min-w-[500px]">
-		<h3>Share</h3>
+		<h3 class="h3">Share</h3>
 		<Accordion>
 			<AccordionItem>
 				<svelte:fragment slot="summary">Is my data secure?</svelte:fragment>

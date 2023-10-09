@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { modalStore, ProgressRadial } from '@skeletonlabs/skeleton';
+	import { getModalStore, ProgressRadial } from '@skeletonlabs/skeleton';
 	import { confettiAction } from 'svelte-legos';
 	import { chatStore, settingsStore } from '$misc/stores';
 	import { canSuggestTitle, suggestChatTitle, track } from '$misc/shared';
+
+	const modalStore = getModalStore();
 
 	let slug = $modalStore[0].meta?.slug || '';
 	let isLoading = false;
@@ -32,7 +34,7 @@
 </script>
 
 <div class="card variant-filled-surface-700 p-8">
-	<h3 class="mb-4">Name your chat</h3>
+	<h3 class="h3 mb-4">Name your chat</h3>
 
 	<form class="flex flex-col space-y-4">
 		<label class="label">

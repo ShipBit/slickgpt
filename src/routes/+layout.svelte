@@ -1,6 +1,4 @@
 <script lang="ts">
-	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
-	import '@skeletonlabs/skeleton/styles/all.css';
 	import 'highlightjs-copy/dist/highlightjs-copy.min.css';
 	import '../app.postcss';
 	import { inject } from '@vercel/analytics';
@@ -28,11 +26,13 @@
 	import ShareModal from '$lib/Modals/ShareModal.svelte';
 	import CostModal from '$lib/Modals/CostModal.svelte';
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
+	import { initializeStores } from '@skeletonlabs/skeleton';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
 	hljs.addPlugin(new CopyButtonPlugin());
 
+	initializeStores();
 	setupSkeleton();
 
 	// see https://www.skeleton.dev/utilities/modals

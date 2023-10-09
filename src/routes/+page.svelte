@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import TimeAgo from 'javascript-time-ago';
 	import en from 'javascript-time-ago/locale/en';
-	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import {
 		PlusCircle,
 		ChatBubbleLeftRight,
@@ -17,6 +17,9 @@
 	import { goto } from '$app/navigation';
 	import { createNewChat, showToast } from '$misc/shared';
 	import { chatStore, isTimeagoInitializedStore } from '$misc/stores';
+
+	const modalStore = getModalStore();
+	const toastStore = getToastStore();
 
 	let timeAgo: TimeAgo;
 
@@ -70,7 +73,7 @@
 			message += ` ${unshared.length} ${unshared.length === 1 ? 'chat' : 'chats'} unshared.`;
 		}
 
-		showToast(message);
+		showToast(toastStore, message);
 
 		// update the local store
 		$chatStore = {};

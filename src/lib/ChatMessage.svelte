@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ChatMessage } from '$misc/shared';
 	import { createEventDispatcher } from 'svelte';
-	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { type ModalSettings, getModalStore } from '@skeletonlabs/skeleton';
 	import snarkdown from 'snarkdown';
 	import { XMark, PencilSquare } from '@inqling/svelte-icons/heroicon-24-solid';
 	import { chatStore } from '$misc/stores';
@@ -10,6 +10,7 @@
 	import ChatMessages from './ChatMessages.svelte';
 
 	const dispatch = createEventDispatcher();
+	const modalStore = getModalStore();
 
 	export let slug: string;
 	export let message: ChatMessage;

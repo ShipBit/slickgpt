@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { modalStore, ProgressRadial } from '@skeletonlabs/skeleton';
+	import { getModalStore, ProgressRadial } from '@skeletonlabs/skeleton';
 	import { confettiAction } from 'svelte-legos';
 	import { chatStore, settingsStore } from '$misc/stores';
 	import { canSuggestTitle, suggestChatTitle, track } from '$misc/shared';
+
+	const modalStore = getModalStore();
 
 	let slug = $modalStore[0].meta?.slug || '';
 	let isLoading = false;

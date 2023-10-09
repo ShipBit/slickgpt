@@ -1,5 +1,8 @@
 import type { Config } from '@sveltejs/adapter-vercel';
-import type { ChatCompletionRequestMessage, CreateChatCompletionRequest } from 'openai';
+import type {
+	ChatCompletionMessageParam,
+	ChatCompletionCreateParamsStreaming
+} from 'openai/resources/chat';
 import type { RequestHandler } from './$types';
 import type { OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
@@ -15,7 +18,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		const requestData = await request.json();
 		throwIfUnset('request data', requestData);
 
-		const messages: ChatCompletionRequestMessage[] = requestData.messages;
+		const messages: ChatCompletionMessageParam[] = requestData.messages;
 		throwIfUnset('messages', messages);
 
 		const settings: OpenAiSettings = requestData.settings;
@@ -24,7 +27,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		const openAiKey: string = requestData.openAiKey;
 		throwIfUnset('OpenAI API key', openAiKey);
 
-		const completionOpts: CreateChatCompletionRequest = {
+		const completionOpts: ChatCompletionCreateParamsStreaming = {
 			...settings,
 			messages,
 			stream: true

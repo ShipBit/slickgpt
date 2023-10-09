@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { Accordion, AccordionItem, modalStore } from '@skeletonlabs/skeleton';
+	import { Accordion, AccordionItem, getModalStore } from '@skeletonlabs/skeleton';
 	import { chatStore } from '$misc/stores';
 	import { track } from '$misc/shared';
 
+	const modalStore = getModalStore();
 	let slug: string = $modalStore[0].meta?.slug || '';
 	let chat = $chatStore[slug];
 

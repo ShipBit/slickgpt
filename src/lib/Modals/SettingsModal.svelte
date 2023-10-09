@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { Accordion, AccordionItem, modalStore } from '@skeletonlabs/skeleton';
+	import { Accordion, AccordionItem, getModalStore } from '@skeletonlabs/skeleton';
 	import { chatStore, settingsStore } from '$misc/stores';
 	import { models, OpenAiModel } from '$misc/openai';
 	import { track } from '$misc/shared';
+
+	const modalStore = getModalStore();
 
 	let slug: string = $modalStore[0].meta?.slug || '';
 	let title = $chatStore[slug].title;
@@ -59,7 +61,7 @@
 			<!-- API key -->
 			{#if editApiKey || !$settingsStore.openAiApiKey}
 				<label class="label">
-					<div class="flex justify-between space-x-12	">
+					<div class="flex justify-between space-x-12">
 						<span>OpenAI API key</span>
 						<a target="_blank" rel="noreferrer" href="https://platform.openai.com/account/api-keys">
 							Get yours
@@ -92,7 +94,7 @@
 			{#if $settingsStore.openAiApiKey}
 				<div class="flex flex-col space-y-2">
 					<label class="label">
-						<div class="flex justify-between space-x-12	">
+						<div class="flex justify-between space-x-12">
 							<span>Model</span>
 							<a
 								target="_blank"

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { ChatCompletionRequestMessage } from 'openai';
+	import type { ChatCompletionMessageParam } from 'openai/resources/chat';
 	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
-	import { focusTrap } from '@skeletonlabs/skeleton';
+	import { focusTrap, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
 		type ChatCost,
@@ -35,11 +35,14 @@
 	let isEditMode = false;
 	let originalMessage: ChatMessage | null = null;
 
+	const modalStore = getModalStore();
+	const toastStore = getToastStore();
+
 	$: chat = $chatStore[slug];
 	$: message = {
 		role: 'user',
 		content: input.trim()
-	} as ChatCompletionRequestMessage;
+	} as ChatCompletionMessageParam;
 
 	const unsubscribe = chatStore.subscribe((chats) => {
 		const chat = chats[slug];
@@ -87,7 +90,7 @@
 						role: m.role,
 						content: m.content,
 						name: m.name
-					} as ChatCompletionRequestMessage)
+					}) as ChatCompletionMessageParam
 			),
 			settings: chat.settings,
 			openAiKey: $settingsStore.openAiApiKey
@@ -137,10 +140,10 @@
 
 		const data = JSON.parse(event.data);
 
-		showToast(data.message || 'An error occured.', 'error');
+		showToast(toastStore, data.message || 'An error occured.', 'error');
 
 		if (data.message.includes('API key')) {
-			showModalComponent('SettingsModal', { slug });
+			showModalComponent(modalStore, 'SettingsModal', { slug });
 		}
 
 		// restore last user prompt
@@ -190,7 +193,7 @@
 
 	function openTokenCostDialog() {
 		calculateMessageTokens();
-		showModalComponent('CostModal', { chatCost, maxTokensCompletion, messageTokens });
+		showModalComponent(modalStore, 'CostModal', { chatCost, maxTokensCompletion, messageTokens });
 	}
 
 	async function handleInsertCode() {

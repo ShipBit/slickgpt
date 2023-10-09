@@ -9,10 +9,7 @@ const config = {
 	content: [
 		'./src/**/*.{html,js,svelte,ts}',
 		// 3. Append the path to the Skeleton package
-		join(require.resolve(
-			'@skeletonlabs/skeleton'),
-			'../**/*.{html,js,svelte,ts}'
-		)
+		join(require.resolve('@skeletonlabs/skeleton'), '../**/*.{html,js,svelte,ts}')
 	],
 	theme: {
 		extend: {
@@ -55,7 +52,7 @@ const config = {
 		skeleton({
 			themes: {
 				// Register each theme within this array:
-				preset: [ "skeleton" ]
+				preset: [{ name: 'skeleton', enhancements: true }]
 			}
 		})
 	]

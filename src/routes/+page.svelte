@@ -107,7 +107,7 @@
 							<ChatBubbleLeftRight class="w-10 h-10" />
 						{/if}
 					</div>
-					<h2 class="unstyled line-clamp-2 text-lg">{chat.title}</h2>
+					<h2 class="h2 line-clamp-2 text-lg font-bold">{chat.title}</h2>
 				</div>
 			</div>
 			<hr class="my-4" />

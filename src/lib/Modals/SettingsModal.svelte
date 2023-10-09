@@ -56,7 +56,7 @@
 
 <div class="card variant-filled-surface-700 p-8">
 	<form>
-		<h3 class="mb-4">Settings</h3>
+		<h3 class="h3 mb-4">Settings</h3>
 		<div class="flex-row space-y-6">
 			<!-- API key -->
 			{#if editApiKey || !$settingsStore.openAiApiKey}
@@ -97,6 +97,7 @@
 						<div class="flex justify-between space-x-12">
 							<span>Model</span>
 							<a
+								class="anchor"
 								target="_blank"
 								rel="noreferrer"
 								href="https://platform.openai.com/docs/api-reference/completions/create"

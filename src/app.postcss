@@ -1,9 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Inter:wght@400;500;600;700;800;900&family=Barlow:wght@400;700;900&family=Fira+Code:wght@400;600;700&display=fallback');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 @tailwind variants;
-
-@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Inter:wght@400;500;600;700;800;900&family=Barlow:wght@400;700;900&family=Fira+Code:wght@400;600;700&display=fallback');
 
 /*place global styles here */
 
@@ -35,4 +35,12 @@ li {
 
 .hljs-copy-button + .hljs-copy-button {
 	@apply hidden;
+}
+
+.hljs {
+	white-space: break-spaces;
+}
+
+code:is(:not(pre *)) {
+	@apply code;
 }

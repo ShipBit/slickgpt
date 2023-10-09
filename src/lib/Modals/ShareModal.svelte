@@ -89,7 +89,7 @@
 
 {#if chat}
 	<div class="card variant-filled-surface-700 p-8 max-w-xl md:min-w-[500px]">
-		<h3>Share</h3>
+		<h3 class="h3">Share</h3>
 		<Accordion>
 			<AccordionItem>
 				<svelte:fragment slot="summary">Is my data secure?</svelte:fragment>

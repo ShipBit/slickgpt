@@ -7,7 +7,7 @@
 
 <aside class="alert {variantClass} max-w-4xl mx-auto mt-6 self-center">
 	<div class="alert-message flex flex-col">
-		<h3>{title}</h3>
+		<h3 class="h3">{title}</h3>
 		<slot />
 	</div>
 	<div class={actionClass} class:alert-actions={!omitAlertActionsClass}>

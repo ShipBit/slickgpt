@@ -34,7 +34,7 @@
 </script>
 
 <div class="card variant-filled-surface-700 p-8">
-	<h3 class="mb-4">Name your chat</h3>
+	<h3 class="h3 mb-4">Name your chat</h3>
 
 	<form class="flex flex-col space-y-4">
 		<label class="label">

@@ -8,7 +8,7 @@ body {
 }
 
 pre {
-	@apply !text-xs my-2;
+	@apply !text-xs my-2 !overflow-hidden !p-0;
 }
 
 ul,
@@ -26,4 +26,8 @@ ul {
 
 li {
 	@apply ml-8 my-1;
+}
+
+.hljs-copy-button + .hljs-copy-button {
+	@apply hidden;
 }

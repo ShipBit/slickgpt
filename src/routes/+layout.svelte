@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
 	import '@skeletonlabs/skeleton/styles/all.css';
+	import 'highlightjs-copy/dist/highlightjs-copy.min.css';
 	import '../app.postcss';
 	import { inject } from '@vercel/analytics';
 
@@ -15,6 +16,7 @@
 		setInitialClassState
 	} from '@skeletonlabs/skeleton';
 	import hljs from 'highlight.js';
+	import CopyButtonPlugin from 'highlightjs-copy';
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
 	// see https://highlightjs.org/static/demo/ for options:
 	import 'highlight.js/styles/night-owl.css';
@@ -28,6 +30,8 @@
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
 
 	inject({ mode: dev ? 'development' : 'production' });
+
+	hljs.addPlugin(new CopyButtonPlugin());
 
 	setupSkeleton();
 

@@ -54,6 +54,7 @@
 		"firebase": "^9.23.0",
 		"gpt3-tokenizer": "^1.1.5",
 		"highlight.js": "^11.8.0",
+		"highlightjs-copy": "^1.0.5",
 		"javascript-time-ago": "^2.5.9",
 		"openai": "^3.3.0",
 		"random-word-slugs": "^0.1.7",

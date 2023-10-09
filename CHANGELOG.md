@@ -2,6 +2,11 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## October 09, 2023
+
+- Messages with code now display a "Copy Code" button onHover
+- upgraded all client libs, including Svelte4, Skeleton 2.0 and OpenAI 4
+
 ## July 03, 2023
 
 - Fixed an issue in Firefox that made the ChatInput appear too small in height

@@ -12,7 +12,8 @@ let tokenizer: GPT3Tokenizer;
 export enum OpenAiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
 	Gpt4 = 'gpt-4',
-	Gpt432k = 'gpt-4-32k'
+	Gpt432k = 'gpt-4-32k',
+	Gpt41106preview = 'gpt-4-1106-preview'
 }
 
 export interface OpenAiSettings {
@@ -52,6 +53,11 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 		maxTokens: 32768,
 		costPrompt: 0.06,
 		costCompletion: 0.12
+	},
+	'gpt-4-1106-preview': {
+		maxTokens: 128000,
+		costPrompt: 0.01,
+		costCompletion: 0.03
 	}
 };
 /**

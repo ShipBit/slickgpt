@@ -17,7 +17,8 @@
 		isLoadingAnswerStore,
 		liveAnswerStore,
 		enhancedLiveAnswerStore,
-		settingsStore
+		settingsStore,
+		OpenAI_API_Key
 	} from '$misc/stores';
 	import { countTokens } from '$misc/openai';
 
@@ -93,7 +94,7 @@
 					}) as ChatCompletionMessageParam
 			),
 			settings: chat.settings,
-			openAiKey: $settingsStore.openAiApiKey
+			openAiKey: $OpenAI_API_Key
 		};
 
 		$eventSourceStore.start(payload, handleAnswer, handleError, handleAbort);
@@ -208,7 +209,7 @@
 
 	export async function editMessage(message: ChatMessage) {
 		originalMessage = message;
-		input = message.content;
+		input = message.content + '';
 		isEditMode = true;
 
 		// tick is required for the action to resize the textarea

@@ -28,7 +28,6 @@ export interface Chat {
 }
 
 export interface ClientSettings {
-	openAiApiKey?: string;
 	hideLanguageHint?: boolean;
 	useTitleSuggestions?: boolean;
 	defaultModel?: OpenAiModel;

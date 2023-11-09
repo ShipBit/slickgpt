@@ -7,6 +7,7 @@ import type { RequestHandler } from './$types';
 import type { OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
 import { getErrorMessage, throwIfUnset } from '$misc/error';
+import cryptr from '$misc/cryptr';
 
 // this tells Vercel to run this function as https://vercel.com/docs/concepts/functions/edge-functions
 export const config: Config = {
@@ -42,9 +43,11 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		// 		: 'https://api.openai.com/v1/completions';
 		const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
+		const decryptedKey = cryptr.decrypt(openAiKey);
+
 		const response = await fetch(apiUrl, {
 			headers: {
-				Authorization: `Bearer ${openAiKey}`,
+				Authorization: `Bearer ${decryptedKey}`,
 				'Content-Type': 'application/json'
 			},
 			method: 'POST',

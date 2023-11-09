@@ -6,6 +6,18 @@ import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
 import type { Chat, ChatMessage, ClientSettings } from './shared';
 import { closeOpenedCodeTicks } from './markdownHelper';
+import { browser } from '$app/environment';
+
+export const OpenAI_API_Key = writable('');
+
+if (browser) {
+	if (localStorage.getItem('OpenAI_API_Key')) {
+		OpenAI_API_Key.set(localStorage.getItem('OpenAI_API_Key') + '');
+	}
+	OpenAI_API_Key.subscribe((key) => {
+		localStorage.setItem('OpenAI_API_Key', key);
+	});
+}
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
 

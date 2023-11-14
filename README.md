@@ -31,6 +31,11 @@
     <a href="https://github.com/ShipBit/slickgpt/issues">Report Bug</a>
     ·
     <a href="https://github.com/ShipBit/slickgpt/issues">Request Feature</a>
+    <br />
+    <br />
+    <a href="https://discord.gg/k8tTBar3gZ">Join our Discord server</a>
+    ·
+    <a href="https://patreon.com/ShipBit?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link">Support us at Patreon</a>
   </p>
 </div>
 

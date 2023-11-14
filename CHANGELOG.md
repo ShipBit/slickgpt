@@ -2,6 +2,10 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## November 14, 2023
+
+- Links to our new Discord and Patreon were added. Feel free to remove them in your custom instance!
+
 ## October 09, 2023
 
 - Messages with code now display a "Copy Code" button onHover

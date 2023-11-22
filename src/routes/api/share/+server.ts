@@ -1,9 +1,11 @@
 import { error } from '@sveltejs/kit';
 import type { Config } from '@sveltejs/adapter-vercel';
 import type { RequestHandler } from './$types';
-import { ref, set, update } from 'firebase/database';
+// bypassing firebase
+// import { ref, set, update } from 'firebase/database';
 import { generateSlug } from 'random-word-slugs';
-import { db, loadChatFromDb } from '$misc/firebase';
+// bypassing firebase
+// import { db, loadChatFromDb } from '$misc/firebase';
 import type { Chat } from '$misc/shared';
 import { respondToClient, throwIfUnset, getErrorMessage } from '$misc/error';
 
@@ -60,7 +62,9 @@ export const POST: RequestHandler = async ({ request }) => {
 		};
 
 		// save to firebase
-		await set(ref(db, `sharedchats/${slug}`), documentToSave);
+		//await set(ref(db, `sharedchats/${slug}`), documentToSave);
+		// bypass
+		console.log('Saving document to Firebase:', documentToSave);
 
 		return respondToClient({ slug, updateToken });
 	} catch (err) {
@@ -95,7 +99,9 @@ export const DELETE: RequestHandler = async ({ request }) => {
 
 		if (deleted.length) {
 			// delete in firebase
-			await update(ref(db), updates);
+			// await update(ref(db), updates);
+			// bypass firebase
+			console.log('Deleting documents:', updates);
 		}
 
 		return respondToClient({ deleted });

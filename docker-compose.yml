@@ -1,0 +1,29 @@
+version: "3.3"
+# update the .env file for all variables used!
+# cd dockers
+# docker build . -t slickgpt -t slickgpt:$(date +%Y%m%d)
+# docker compose -f docker-compose.slickgpt.yml build
+# docker-compose -f ./docker-compose.slickgpt.yml down
+# docker-compose -f ./docker-compose.slickgpt.yml pull
+# docker-compose -f ./docker-compose.slickgpt.yml up -d
+
+# docker compose --env-file ./slickgpt/slickgpt/.env -f ./slickgpt/slickgpt/docker-compose.slickgpt.yml up -d
+services:
+
+  slickgpt:
+    image: slickgpt:latest
+    build: .
+    command: npm run preview -- --host
+    # yes you are reading this right -- no ports exposed. 
+    # In your cloudflared configuration portal, you'll point the URL to
+    # http://slickgpt:4173
+
+  slicktunnel:
+    container_name: cloudflared-slick
+    image: cloudflare/cloudflared:latest #2023.5.1-amd64
+    restart: unless-stopped
+    command: tunnel run 
+    environment:
+      - TUNNEL_TOKEN=${SLICKGPT_CLOUDFLARED}
+    cap_drop:
+      - ALL

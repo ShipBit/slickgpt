@@ -61,6 +61,7 @@
 		"random-word-slugs": "^0.1.7",
 		"snarkdown": "^2.0.0",
 		"sse.js": "^1.0.0",
+		"svelte-command-palette": "^1.2.1",
 		"svelte-legos": "^0.2.2",
 		"uuid": "^9.0.1"
 	}

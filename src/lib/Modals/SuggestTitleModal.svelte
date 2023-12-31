@@ -36,7 +36,7 @@
 <div class="card variant-filled-surface-700 p-8">
 	<h3 class="h3 mb-4">Name your chat</h3>
 
-	<form class="flex flex-col space-y-4">
+	<form class="flex flex-col space-y-4" on:submit|preventDefault={handleSave}>
 		<label class="label">
 			<span class="inline-block w-40">Set chat title</span>
 			<input type="text" class="input" bind:value={title} />
@@ -46,6 +46,7 @@
 			<span class="self-center">OR:</span>
 
 			<button
+				type="button"
 				class="btn variant variant-filled-secondary"
 				disabled={isLoading}
 				use:confettiAction={{ type: 'school-pride' }}
@@ -80,7 +81,7 @@
 				</label>
 			{/if}
 
-			<button class="btn variant-filled-primary max-w-[100px] self-end" on:click={handleSave}>
+			<button type="submit" class="btn variant-filled-primary max-w-[100px] self-end">
 				Save
 			</button>
 		</div>

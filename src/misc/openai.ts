@@ -55,7 +55,7 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 		costCompletion: 0.12
 	},
 	'gpt-4-1106-preview': {
-		maxTokens: 128000,
+		maxTokens: 4096,
 		costPrompt: 0.01,
 		costCompletion: 0.03
 	}

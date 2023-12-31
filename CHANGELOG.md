@@ -2,6 +2,11 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## Dezember 31, 2023
+
+- Pressing ENTER in the "Edit Chat Title" modal now saves the title instead of suggesting one via GPT
+- Fixed gpt-4-turbo maxToken length
+
 ## November 14, 2023
 
 - Links to our new Discord and Patreon were added. Feel free to remove them in your custom instance!

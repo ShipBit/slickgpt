@@ -31,6 +31,7 @@
 	import { chatStore } from './../misc/stores';
 	import type { action } from 'svelte-command-palette/types';
 	import { goto } from '$app/navigation';
+	import { get } from 'svelte/store';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -68,17 +69,14 @@
 	}
 	// Create a stream of a sorted list of chats
 	let sortedChats: [string, any][] = []
+	let chatActions: action[] = []
+	let actions : action[] = [];
+	let key = 0;
 	$: {
 		sortedChats = 
 			Object.entries($chatStore).sort((a, b) => {
 			return new Date(b[1].created).getTime() - new Date(a[1].created).getTime();
 		});
-	}
-
-	let chatActions: action[] = []
-
-	// Map every chat to a command pallete action, with name as title and first few chars as description
-	$:  {
 		chatActions = sortedChats.map(([slug, chat]) => {
 			return {
 				title: chat.title,	
@@ -90,13 +88,11 @@
 				keywords: [chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].content || "" : "", chat.messages.length > 1 ? chat.messages[chat.messages.length - 2].content || "" : "" ]
 			};
 		})
-	}
-	// Reactively define the actions
-	let actions : action[] = [];
-	$: {
+		console.log(chatActions)
 		actions = defineActions(chatActions);
-		const paletteMethods = createStoreMethods();
+		key++;
 	}
+	const paletteMethods = createStoreMethods();
 </script>
 
 <svelte:head>
@@ -110,7 +106,6 @@
 	<meta property="og:image" content={meta.image} />
 	<meta name="twitter:image" content={meta.image} />
 	<meta name="twitter:image:alt" content={meta.imageAlt} />
-
 	<title>{meta.title}</title>
 </svelte:head>
 
@@ -120,9 +115,8 @@
 	slotFooter="py-2 md:py-6 px-4 lg:px-12"
 >
 	<svelte:fragment slot="header">
-		<Header /> <p>CMD+K to search chats</p>
+		<Header /> <button on:click={paletteMethods.openPalette}>Search Chats</button>
 	</svelte:fragment>
-
 	<slot />
 
 	<svelte:fragment slot="footer">
@@ -134,11 +128,16 @@
 <Toast />
 
 <Modal components={modalComponentRegistry} />
+{#key key}
 <CommandPalette 
-	overlayClass=""
+
 	keyboardButtonClass={null}
-	inputClass="form-input block w-full bg-white text-black"
-	titleClass="text-gray-900 font-bold"
-	resultsContainerClass="z-index: 1000, rounded-md border-none margin-0"
-    resultContainerClass=""
-	commands={actions}/>	
+	inputClass="h4 font-bold"
+	titleClass="font-bold"
+	resultsContainerClass="z-index-1000 bg-gray-100 dark:bg-gray-700" 
+	resultContainerClass="bg-gray-100 dark:bg-dark-700" 
+	paletteWrapperInnerClass="bg-gray-100 dark:bg-dark-700"
+	commands={actions}/>
+	
+{/key}
+	

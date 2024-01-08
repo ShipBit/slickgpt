@@ -130,14 +130,14 @@
 <Modal components={modalComponentRegistry} />
 {#key key}
 <CommandPalette 
-
-	keyboardButtonClass={null}
-	inputClass="h4 font-bold"
-	titleClass="font-bold"
-	resultsContainerClass="z-index-1000 bg-gray-100 dark:bg-gray-700" 
-	resultContainerClass="bg-gray-100 dark:bg-dark-700" 
-	paletteWrapperInnerClass="bg-gray-100 dark:bg-dark-700"
+	keyboardButtonClass="dark:bg-gray-700"
+	inputClass="bg-gray-100 dark:bg-gray-700"
+	overlayClass="dark:bg-gray-700"
+	resultsContainerClass="z-index-1000 dark:bg-gray-700" 
+	resultContainerClass="card variant-ghost-surface"  
+	paletteWrapperInnerClass="bg-gray-100 dark:bg-gray-700"
+	titleClass="text-black"
+	subtitleClass="text-grey-300"
 	commands={actions}/>
-	
 {/key}
 	

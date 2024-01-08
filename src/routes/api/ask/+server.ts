@@ -9,6 +9,7 @@ import type { RequestHandler } from './$types';
 import type { OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
 import { getErrorMessage, throwIfUnset } from '$misc/error';
+import { MODERATION } from '$env/static/private';
 
 // this tells Vercel to run this function as https://vercel.com/docs/concepts/functions/edge-functions
 export const config: Config = {
@@ -28,41 +29,43 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 
 		const openAiKey: string = requestData.openAiKey;
 		throwIfUnset('OpenAI API key', openAiKey);
-		
-		// Handle moderation
-		const moderationUrl = 'https://api.openai.com/v1/moderations';
 
-		const textMessages = messages.map(msg => msg.content);
+		if (MODERATION === 'true') {
+			// Handle moderation
+			const moderationUrl = 'https://api.openai.com/v1/moderations';
 
-		const moderationResponse = await fetch(moderationUrl, {
-			method: 'POST',
-			headers: {
-			  'Content-Type': 'application/json',
-			  'Authorization': `Bearer ${openAiKey}`
-			},
-			body: JSON.stringify({ input: textMessages })
-		  });
+			const textMessages = messages.map(msg => msg.content);
+
+			const moderationResponse = await fetch(moderationUrl, {
+				method: 'POST',
+				headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${openAiKey}`
+				},
+				body: JSON.stringify({ input: textMessages })
+			});
 
 
-		if (!moderationResponse.ok) {
-			const err = await moderationResponse.json();
-			throw new Error(err.error);
-		}
-
-		const moderationJson = await moderationResponse.json()
-
-		moderationJson.results.forEach((result: Moderation, index: number) => {
-			if (result.flagged) {
-				throw new Error(`Message ${index + 1} is globally flagged for moderation.`);
+			if (!moderationResponse.ok) {
+				const err = await moderationResponse.json();
+				throw new Error(err.error);
 			}
-		
-			for (const [category, flagged] of Object.entries(result.categories)) {
-				if (flagged) {
-					throw new Error(`Message ${index + 1} is flagged for ${category}.`);
+
+			const moderationJson = await moderationResponse.json()
+
+			moderationJson.results.forEach((result: Moderation, index: number) => {
+				if (result.flagged) {
+					throw new Error(`Message ${index + 1} is globally flagged for moderation.`);
 				}
-			}
-		});
-
+			
+				for (const [category, flagged] of Object.entries(result.categories)) {
+					if (flagged) {
+						throw new Error(`Message ${index + 1} is flagged for ${category}.`);
+					}
+				}
+			});
+		}
+		
 		const completionOpts: ChatCompletionCreateParamsStreaming = {
 			...settings,
 			messages,

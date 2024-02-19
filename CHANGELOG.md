@@ -2,6 +2,10 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## February 19, 2024
+
+- upgraded to new OpenAI 0125 preview models and model aliases
+
 ## Dezember 31, 2023
 
 - Pressing ENTER in the "Edit Chat Title" modal now saves the title instead of suggesting one via GPT

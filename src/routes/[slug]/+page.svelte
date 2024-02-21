@@ -6,7 +6,7 @@
 	import { Trash, Cog6Tooth, Share } from '@inqling/svelte-icons/heroicon-24-outline';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { chatStore, isLoadingAnswerStore, settingsStore } from '$misc/stores';
+	import { OpenAI_API_Key, chatStore, isLoadingAnswerStore, settingsStore } from '$misc/stores';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import ChatInput from '$lib/ChatInput.svelte';
 	import Chat from '$lib/Chat.svelte';
@@ -104,8 +104,8 @@
 
 		// has no title
 		if ($settingsStore.useTitleSuggestions) {
-			if ($settingsStore.openAiApiKey) {
-				const title = await suggestChatTitle(chat, $settingsStore.openAiApiKey);
+			if ($OpenAI_API_Key) {
+				const title = await suggestChatTitle(chat, $OpenAI_API_Key);
 				chatStore.updateChat(slug, { title });
 				showToast(toastStore, `Chat title set to: '${title}'`, 'secondary');
 			}
@@ -149,7 +149,7 @@
 				>
 					<Cog6Tooth class="w-6 h-6" />
 				</button>
-				{#if !$settingsStore.openAiApiKey}
+				{#if !$OpenAI_API_Key}
 					<span class="relative flex h-3 w-3">
 						<span
 							style="left: -10px;"
@@ -164,10 +164,7 @@
 			</span>
 
 			<!-- Share -->
-			<span
-				class="relative inline-flex"
-				style={!$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
-			>
+			<span class="relative inline-flex" style={!$OpenAI_API_Key ? 'margin-left: -4px;' : ''}>
 				<button
 					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
 					class="btn btn-sm inline-flex variant-ghost-tertiary"

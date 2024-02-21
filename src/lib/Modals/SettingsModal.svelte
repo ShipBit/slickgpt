@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Accordion, AccordionItem, getModalStore } from '@skeletonlabs/skeleton';
-	import { chatStore, settingsStore } from '$misc/stores';
+	import { OpenAI_API_Key, chatStore, settingsStore } from '$misc/stores';
 	import { models, OpenAiModel } from '$misc/openai';
 	import { track } from '$misc/shared';
 
@@ -59,7 +59,7 @@
 		<h3 class="h3 mb-4">Settings</h3>
 		<div class="flex-row space-y-6">
 			<!-- API key -->
-			{#if editApiKey || !$settingsStore.openAiApiKey}
+			{#if editApiKey || !$OpenAI_API_Key}
 				<label class="label">
 					<div class="flex justify-between space-x-12">
 						<span>OpenAI API key</span>
@@ -70,9 +70,17 @@
 					<input
 						required
 						class="input"
-						class:input-error={!$settingsStore.openAiApiKey}
+						class:input-error={!$OpenAI_API_Key}
 						type="text"
-						bind:value={$settingsStore.openAiApiKey}
+						on:input={async (e) => {
+							const response = await fetch('/api/encrypt-key', {
+								method: 'POST',
+								// @ts-expect-error value is a valid prop
+								body: JSON.stringify({ key: e.target.value })
+							}).then((res) => res.json());
+
+							if (response.encryptedKey) $OpenAI_API_Key = response.encryptedKey;
+						}}
 						on:blur={() => (editApiKey = false)}
 					/>
 				</label>
@@ -81,7 +89,7 @@
 					<span class="label">OpenAI API key</span>
 
 					<div class="flex justify-between items-center space-x-4">
-						<span>{maskString($settingsStore.openAiApiKey)}</span>
+						<span>{'********************'}</span>
 
 						<button class="btn btn-sm variant-ghost-secondary" on:click={() => (editApiKey = true)}>
 							Edit
@@ -91,7 +99,7 @@
 			{/if}
 
 			<!-- Model -->
-			{#if $settingsStore.openAiApiKey}
+			{#if $OpenAI_API_Key}
 				<div class="flex flex-col space-y-2">
 					<label class="label">
 						<div class="flex justify-between space-x-12">

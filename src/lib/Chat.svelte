@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { afterUpdate, beforeUpdate, onMount } from 'svelte';
+	import { afterUpdate, onMount } from 'svelte';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
 	import snarkdown from 'snarkdown';
 	import { afterNavigate } from '$app/navigation';
@@ -18,7 +18,7 @@
 
 	// Autoscroll: https://svelte.dev/tutorial/update
 	let div: HTMLElement | null | undefined;
-	let autoscroll: boolean | null | undefined;
+	// let autoscroll: boolean | null | undefined;
 
 	onMount(() => {
 		// bind to the *scrollable* element by it's id
@@ -26,12 +26,15 @@
 		div = document.getElementById('page');
 	});
 
-	beforeUpdate(() => {
-		autoscroll = div && div.offsetHeight + div.scrollTop > div.scrollHeight - 20;
-	});
+	// beforeUpdate(() => {
+	// TODO: This isn't working anymore. Disabled the check for now and always auto-scroll
+	// autoscroll = div ? div.scrollTop === div.scrollHeight - div.offsetHeight : false;
+	// });
 
 	afterUpdate(() => {
-		if (autoscroll) div?.scrollTo({ top: div.scrollHeight, behavior: 'smooth' });
+		// if (autoscroll) {
+		div?.scrollTo({ top: div.scrollHeight, behavior: 'smooth' });
+		// }
 	});
 
 	// autoscroll to bottom after navigation

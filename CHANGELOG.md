@@ -2,6 +2,11 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## March 04, 2024
+
+- add CommandBar to search and jump to chats (thanks @th8m0z)
+- integrate Moderation API, can be disabled in .env file (thanks @th8m0z)
+
 ## February 19, 2024
 
 - upgraded to new OpenAI 0125 preview models and model aliases

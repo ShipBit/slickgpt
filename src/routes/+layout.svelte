@@ -75,7 +75,6 @@
 	<meta property="og:image" content={meta.image} />
 	<meta name="twitter:image" content={meta.image} />
 	<meta name="twitter:image:alt" content={meta.imageAlt} />
-
 	<title>{meta.title}</title>
 </svelte:head>
 
@@ -87,7 +86,6 @@
 	<svelte:fragment slot="header">
 		<Header />
 	</svelte:fragment>
-
 	<slot />
 
 	<svelte:fragment slot="footer">

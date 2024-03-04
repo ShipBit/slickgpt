@@ -48,6 +48,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@azure/msal-browser": "^3.10.0",
+		"@azure/msal-node": "^2.6.4",
 		"@floating-ui/dom": "^1.6.3",
 		"@inqling/svelte-icons": "4.1.2",
 		"@vercel/analytics": "^1.2.2",

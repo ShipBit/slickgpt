@@ -6,6 +6,7 @@ import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
 import type { Chat, ChatMessage, ClientSettings } from './shared';
 import { closeOpenedCodeTicks } from './markdownHelper';
+import type { AccountInfo } from '@azure/msal-browser';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
 
@@ -19,6 +20,15 @@ export const isLoadingAnswerStore: Writable<boolean> = writable(false);
 export const isTimeagoInitializedStore: Writable<boolean> = writable(false);
 
 export const eventSourceStore: Readable<EventSource> = readable(new EventSource());
+
+export const authType = writable<'payPerUse' | 'fixedPrice'>('payPerUse');
+
+export const account = writable<AccountInfo | null>(null);
+
+export const isPro = derived(account, ($account) => {
+	// TODO: check claim here!
+	return $account != null;
+});
 
 /**
  * Custom chat store

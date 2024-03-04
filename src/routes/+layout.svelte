@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import 'highlightjs-copy/dist/highlightjs-copy.min.css';
 	import '../app.postcss';
 	import { inject } from '@vercel/analytics';
@@ -11,7 +12,8 @@
 		storeHighlightJs,
 		Toast,
 		storePopup,
-		setInitialClassState
+		setInitialClassState,
+		initializeStores
 	} from '@skeletonlabs/skeleton';
 	import hljs from 'highlight.js';
 	import CopyButtonPlugin from 'highlightjs-copy';
@@ -26,7 +28,9 @@
 	import ShareModal from '$lib/Modals/ShareModal.svelte';
 	import CostModal from '$lib/Modals/CostModal.svelte';
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
-	import { initializeStores } from '@skeletonlabs/skeleton';
+	import UserModal from '$lib/Modals/UserModal.svelte';
+	import { AuthService } from '$misc/authService';
+	import { authType } from '$misc/stores';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -35,13 +39,23 @@
 	initializeStores();
 	setupSkeleton();
 
+	let authService: AuthService;
+
+	onMount(async () => {
+		if ($authType === 'fixedPrice') {
+			authService = await AuthService.getInstance();
+			await authService.login();
+		}
+	});
+
 	// see https://www.skeleton.dev/utilities/modals
 	const modalComponentRegistry: Record<string, ModalComponent> = {
 		SettingsModal: { ref: SettingsModal },
 		ContextModal: { ref: ContextModal },
 		ShareModal: { ref: ShareModal },
 		CostModal: { ref: CostModal },
-		SuggestTitleModal: { ref: SuggestTitleModal }
+		SuggestTitleModal: { ref: SuggestTitleModal },
+		UserModal: { ref: UserModal }
 	};
 
 	const meta = {

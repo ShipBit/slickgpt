@@ -1,6 +1,14 @@
 <script lang="ts">
-	import { LightSwitch } from '@skeletonlabs/skeleton';
+	import { LightSwitch, getModalStore } from '@skeletonlabs/skeleton';
 	import CommandBar from '$lib/CommandBar.svelte';
+	import { User } from '@inqling/svelte-icons/heroicon-24-outline';
+	import { showModalComponent } from '$misc/shared';
+
+	const modalStore = getModalStore();
+
+	function showUserModal() {
+		showModalComponent(modalStore, 'UserModal');
+	}
 </script>
 
 <div class="flex justify-between">
@@ -10,8 +18,13 @@
 	</a>
 
 	<div class="flex items-center space-x-4">
+		<LightSwitch />
+
 		<CommandBar />
 
-		<LightSwitch />
+		<button type="button" class="btn btn-sm variant-ghost-primary" on:click={showUserModal}>
+			<span><User class="w-4 h-4" /></span>
+			<span>Login</span>
+		</button>
 	</div>
 </div>

@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { createStoreMethods } from 'svelte-command-palette';
-	import CommandPalette, { defineActions } from 'svelte-command-palette';
-	import { chatStore } from './../misc/stores';
+	import { MagnifyingGlass } from '@inqling/svelte-icons/heroicon-24-outline';
+	import CommandPalette, { defineActions, createStoreMethods } from 'svelte-command-palette';
 	import type { action } from 'svelte-command-palette/types';
 	import { goto } from '$app/navigation';
-	import { MagnifyingGlass } from '@inqling/svelte-icons/heroicon-24-outline';
+	import { chatStore } from '$misc/stores';
 
 	const paletteMethods = createStoreMethods();
 
@@ -18,23 +17,21 @@
 			return new Date(b[1].created).getTime() - new Date(a[1].created).getTime();
 		});
 		chatActions = sortedChats.map(([slug, chat]) => {
+			const firstMessage =
+				chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].content || '' : '';
+			const secondMessage =
+				chat.messages.length > 1 ? chat.messages[chat.messages.length - 2].content || '' : '';
+
 			return {
 				title: chat.title,
-				description:
-					chat.messages.length > 0
-						? chat.messages[chat.messages.length - 1].content?.substring(0, 300) || ''
-						: '',
+				description: firstMessage?.substring(0, 300),
 				onRun: () => {
 					goto(`/${slug}`);
 				},
-				// Keywords are full first and second message, but maybe we can do something better here
-				keywords: [
-					chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].content || '' : '',
-					chat.messages.length > 1 ? chat.messages[chat.messages.length - 2].content || '' : ''
-				]
+				// TODO: maybe we can do something better here
+				keywords: [firstMessage, secondMessage]
 			};
 		});
-		console.log(chatActions);
 		actions = defineActions(chatActions);
 		key++;
 	}

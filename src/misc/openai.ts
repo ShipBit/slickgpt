@@ -33,7 +33,7 @@ export const defaultOpenAiSettings: OpenAiSettings = {
 };
 
 export interface OpenAiModelStats {
-	maxTokens: number; // total length (prompts + completion)
+	maxTokens: number; // The max tokens you allow GPT to respond with
 	// $ per 1k tokens, see https://openai.com/pricing:
 	costPrompt: number;
 	costCompletion: number;
@@ -61,7 +61,7 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 		costCompletion: 0.03
 	},
 	'gpt-4-turbo-preview': {
-		maxTokens: 128000,
+		maxTokens: 4096,
 		costPrompt: 0.01,
 		costCompletion: 0.03
 	}

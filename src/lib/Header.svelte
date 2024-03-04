@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { LightSwitch } from '@skeletonlabs/skeleton';
-	// import ThemeSwitcher from './ThemeSwitcher.svelte';
+	import CommandBar from '$lib/CommandBar.svelte';
 </script>
 
 <div class="flex justify-between">
@@ -9,10 +9,9 @@
 		<h1 class="font-barlow text-2xl md:text-4xl font-bold tracking-wide">SlickGPT</h1>
 	</a>
 
-	<div class="flex items-center space-x-2">
-		<LightSwitch />
+	<div class="flex items-center space-x-4">
+		<CommandBar />
 
-		<!-- See ThemeSwitcher component to find out why this is commented out -->
-		<!-- <ThemeSwitcher /> -->
+		<LightSwitch />
 	</div>
 </div>

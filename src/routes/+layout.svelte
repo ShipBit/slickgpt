@@ -27,11 +27,6 @@
 	import CostModal from '$lib/Modals/CostModal.svelte';
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
 	import { initializeStores } from '@skeletonlabs/skeleton';
-	import CommandPalette, { defineActions, createStoreMethods } from 'svelte-command-palette'
-	import { chatStore } from './../misc/stores';
-	import type { action } from 'svelte-command-palette/types';
-	import { goto } from '$app/navigation';
-	import { get } from 'svelte/store';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -67,32 +62,6 @@
 		// see https://www.skeleton.dev/utilities/popups
 		storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 	}
-	// Create a stream of a sorted list of chats
-	let sortedChats: [string, any][] = []
-	let chatActions: action[] = []
-	let actions : action[] = [];
-	let key = 0;
-	$: {
-		sortedChats = 
-			Object.entries($chatStore).sort((a, b) => {
-			return new Date(b[1].created).getTime() - new Date(a[1].created).getTime();
-		});
-		chatActions = sortedChats.map(([slug, chat]) => {
-			return {
-				title: chat.title,	
-				description: chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].content?.substring(0, 300) || "" : "",
-				onRun: () => {
-					goto(`/${slug}`)
-				},
-				// Keywords are full first and second message, but maybe we can do something better here
-				keywords: [chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].content || "" : "", chat.messages.length > 1 ? chat.messages[chat.messages.length - 2].content || "" : "" ]
-			};
-		})
-		console.log(chatActions)
-		actions = defineActions(chatActions);
-		key++;
-	}
-	const paletteMethods = createStoreMethods();
 </script>
 
 <svelte:head>
@@ -115,7 +84,7 @@
 	slotFooter="py-2 md:py-6 px-4 lg:px-12"
 >
 	<svelte:fragment slot="header">
-		<Header /> <button on:click={paletteMethods.openPalette}>Search Chats</button>
+		<Header />
 	</svelte:fragment>
 	<slot />
 
@@ -128,16 +97,3 @@
 <Toast />
 
 <Modal components={modalComponentRegistry} />
-{#key key}
-<CommandPalette 
-	keyboardButtonClass="dark:bg-gray-700"
-	inputClass="bg-gray-100 dark:bg-gray-700"
-	overlayClass="dark:bg-gray-700"
-	resultsContainerClass="z-index-1000 dark:bg-gray-700" 
-	resultContainerClass="card variant-ghost-surface"  
-	paletteWrapperInnerClass="bg-gray-100 dark:bg-gray-700"
-	titleClass="text-black"
-	subtitleClass="text-grey-300"
-	commands={actions}/>
-{/key}
-	

@@ -6,7 +6,14 @@
 	import { Trash, Cog6Tooth, Share } from '@inqling/svelte-icons/heroicon-24-outline';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { mode, chatStore, isLoadingAnswerStore, liveAnswerStore, settingsStore } from '$misc/stores';
+	import {
+		mode,
+		chatStore,
+		isLoadingAnswerStore,
+        liveAnswerStore,
+		settingsStore,
+		liveAnswerStore
+	} from '$misc/stores';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import ChatInput from '$lib/ChatInput.svelte';
 	import Chat from '$lib/Chat.svelte';

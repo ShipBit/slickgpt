@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
 import type { Chat, ChatMessage, ClientSettings } from './shared';
-import { closeOpenedCodeTicks } from './markdownHelper';
 import type { AccountInfo } from '@azure/msal-browser';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});

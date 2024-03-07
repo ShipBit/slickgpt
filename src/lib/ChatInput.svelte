@@ -16,7 +16,6 @@
 		eventSourceStore,
 		isLoadingAnswerStore,
 		liveAnswerStore,
-		enhancedLiveAnswerStore,
 		settingsStore,
 		mode
 	} from '$misc/stores';

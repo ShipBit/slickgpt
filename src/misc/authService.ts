@@ -10,14 +10,11 @@ import {
 	type EndSessionRequest
 } from '@azure/msal-browser';
 import { b2cPolicies, msalConfig } from './authConfig';
-import { account } from '$misc/stores';
+import { account } from './stores';
 
 export class AuthService {
-	token: Writable<string> = writable('');
-
 	private static instance: Promise<AuthService> | null = null;
 	private msal: PublicClientApplication;
-	private refreshTokenExpirationOffsetSeconds = 14400;
 
 	private loginRequest: PopupRequest = {
 		scopes: ['openid', 'profile', 'https://shipbit.onmicrosoft.com/wingman-api/Wingman.Use']
@@ -32,6 +29,8 @@ export class AuthService {
 		forceRefresh: false
 	};
 
+	token: Writable<string> = writable('');
+
 	constructor() {
 		this.msal = new PublicClientApplication(msalConfig);
 	}
@@ -41,27 +40,40 @@ export class AuthService {
 
 		this.msal
 			.handleRedirectPromise()
-			.then((response) => {
+			.then(async (response) => {
 				if (response) {
+					// Coming from a redirect
 					account.set(response.account);
 					this.updateToken(response.accessToken);
+				} else {
+					// Normal page load
+					const firstAccount = this.getAccount();
+					if (firstAccount) {
+						await this.refreshToken(true);
+					} else {
+						await this.login();
+					}
 				}
 			})
-			.catch((error) => {
+			.catch(async (error) => {
 				if (error instanceof ServerError && error.errorMessage.includes('AADB2C90118')) {
 					// Invoke password reset user flow
 					this.initiatePasswordReset();
 				} else {
 					console.error(error);
 				}
+				const firstAccount = this.getAccount();
+				if (firstAccount) {
+					await this.refreshToken(false);
+				} else {
+					await this.login();
+				}
 			});
-
-		this.refreshToken(true);
 
 		// timeout to refresh token
 		setInterval(
 			() => {
-				this.refreshToken();
+				this.refreshToken(true);
 			},
 			1000 * 60 * 30
 		);
@@ -100,24 +112,24 @@ export class AuthService {
 	}
 
 	public async refreshToken(forceRefresh: boolean = false) {
-		const account = this.getAccount();
-		if (!account) {
+		const userAccount = this.getAccount();
+		if (!userAccount) {
+			account.set(null);
 			return null;
 		}
-		this.silentRequest.account = account;
+
+		this.silentRequest.account = userAccount;
 		this.silentRequest.forceRefresh = forceRefresh;
 
 		if (forceRefresh) {
-			this.silentRequest.refreshTokenExpirationOffsetSeconds =
-				this.refreshTokenExpirationOffsetSeconds;
-		} else {
-			this.silentRequest.refreshTokenExpirationOffsetSeconds = undefined;
+			this.msal.clearCache();
 		}
 
 		try {
 			const response = await this.msal.acquireTokenSilent(this.silentRequest);
 
 			this.updateToken(response.accessToken);
+			account.set(response.account);
 
 			return response?.accessToken;
 		} catch (error) {
@@ -153,10 +165,6 @@ export class AuthService {
 		const currentAccounts = this.msal.getAllAccounts();
 
 		if (!currentAccounts || currentAccounts.length < 1) {
-			return null;
-		} else if (currentAccounts.length > 1) {
-			// Add your account choosing logic here
-			console.warn('Multiple accounts detected.');
 			return null;
 		}
 		return currentAccounts[0];

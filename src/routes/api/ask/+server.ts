@@ -9,7 +9,7 @@ import type { RequestHandler } from './$types';
 import type { OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
 import { getErrorMessage, throwIfUnset } from '$misc/error';
-import { MODERATION } from '$env/static/private';
+import { MODERATION, OPENAI_API_URL, MIDDLEWARE_API_URL } from '$env/static/private';
 
 // this tells Vercel to run this function as https://vercel.com/docs/concepts/functions/edge-functions
 export const config: Config = {
@@ -27,10 +27,14 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		const settings: OpenAiSettings = requestData.settings;
 		throwIfUnset('settings', settings);
 
-		const openAiKey: string = requestData.openAiKey;
-		throwIfUnset('OpenAI API key', openAiKey);
+		const token: string = requestData.token;
+		throwIfUnset('token', token);
 
-		if (MODERATION === 'true') {
+		const mode: 'direct' | 'middleware' = requestData.mode;
+		throwIfUnset('mode', mode);
+
+		// TODO: Disabled for middleware for now
+		if (mode === 'direct' && MODERATION === 'true') {
 			// Handle moderation
 			const moderationUrl = 'https://api.openai.com/v1/moderations';
 
@@ -40,7 +44,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${openAiKey}`
+					Authorization: `Bearer ${token}`
 				},
 				body: JSON.stringify({ input: textMessages })
 			});
@@ -71,15 +75,25 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			stream: true
 		};
 
-		const apiUrl = 'https://api.openai.com/v1/chat/completions';
+		const apiUrl = mode === 'direct' ? OPENAI_API_URL : MIDDLEWARE_API_URL;
+
+		let body = completionOpts;
+		// TODO: Our API does not support the additional settings (yet)
+		if (mode === 'middleware') {
+			body = {
+				messages,
+				stream: true,
+				model: 'gpt-4-turbo-preview' // settings.model
+			};
+		}
 
 		const response = await fetch(apiUrl, {
 			headers: {
-				Authorization: `Bearer ${openAiKey}`,
+				Authorization: `Bearer ${token}`,
 				'Content-Type': 'application/json'
 			},
 			method: 'POST',
-			body: JSON.stringify(completionOpts)
+			body: JSON.stringify(body)
 		});
 
 		if (!response.ok) {
@@ -87,11 +101,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			throw err.error;
 		}
 
-		return new Response(response.body, {
-			headers: {
-				'Content-Type': 'text/event-stream'
-			}
-		});
+		return response;
 	} catch (err) {
 		throw error(500, getErrorMessage(err));
 	}

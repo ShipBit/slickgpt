@@ -10,6 +10,8 @@ import type { AccountInfo } from '@azure/msal-browser';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
 
+export const mode: Writable<'direct' | 'middleware'> = localStorageStore('slickgpt.mode', 'direct');
+
 export const liveAnswerStore: Writable<ChatCompletionMessageParam> = writable({
 	role: 'assistant',
 	content: ''
@@ -20,8 +22,6 @@ export const isLoadingAnswerStore: Writable<boolean> = writable(false);
 export const isTimeagoInitializedStore: Writable<boolean> = writable(false);
 
 export const eventSourceStore: Readable<EventSource> = readable(new EventSource());
-
-export const authType = writable<'payPerUse' | 'fixedPrice'>('payPerUse');
 
 export const account = writable<AccountInfo | null>(null);
 

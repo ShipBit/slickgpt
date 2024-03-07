@@ -6,8 +6,9 @@ import { generateSlug } from 'random-word-slugs';
 import vercelAnalytics from '@vercel/analytics';
 
 import { goto } from '$app/navigation';
-import { chatStore, settingsStore } from './stores';
+import { mode, chatStore, settingsStore } from './stores';
 import { PUBLIC_DISABLE_TRACKING } from '$env/static/public';
+import { AuthService } from './authService';
 
 export interface ChatMessage extends ChatCompletionMessageParam {
 	id?: string;
@@ -77,7 +78,7 @@ export function canSuggestTitle(chat: Chat) {
 	return chat.contextMessage?.content || chat.messages?.length > 0;
 }
 
-export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promise<string> {
+export async function suggestChatTitle(chat: Chat): Promise<string> {
 	if (!canSuggestTitle(chat)) {
 		return Promise.resolve(chat.title);
 	}
@@ -86,8 +87,8 @@ export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promis
 		chat.messages.length === 1
 			? chatStore.getCurrentMessageBranch(chat)
 			: chat.contextMessage?.content
-			? [chat.contextMessage, ...chat.messages]
-			: chat.messages;
+				? [chat.contextMessage, ...chat.messages]
+				: chat.messages;
 
 	const filteredMessages = messages?.slice(0, chat.contextMessage?.content ? 3 : 2).map(
 		(m) =>
@@ -98,11 +99,19 @@ export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promis
 			}) as ChatCompletionMessageParam
 	);
 
+	let token = get(settingsStore).openAiApiKey;
+	const runMode = get(mode);
+	if (runMode === 'middleware') {
+		const authService = await AuthService.getInstance();
+		token = get(authService.token);
+	}
+
 	const response = await fetch('/api/suggest-title', {
 		method: 'POST',
 		body: JSON.stringify({
 			messages: filteredMessages,
-			openAiKey: openAiApiKey
+			mode: runMode,
+			token
 		})
 	});
 	const { title }: { title: string } = await response.json();

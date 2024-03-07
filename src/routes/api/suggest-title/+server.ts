@@ -2,11 +2,12 @@ import type { Config } from '@sveltejs/adapter-vercel';
 import type {
 	ChatCompletionMessageParam,
 	ChatCompletionCreateParamsNonStreaming
-} from 'openai/resources/chat';
+} from 'openai/resources/chat/completions';
 import type { RequestHandler } from './$types';
 import { OpenAiModel, defaultOpenAiSettings, type OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
 import { getErrorMessage, respondToClient, throwIfUnset } from '$misc/error';
+import { MIDDLEWARE_API_URL, OPENAI_API_URL } from '$env/static/private';
 
 // this tells Vercel to run this function as https://vercel.com/docs/concepts/functions/edge-functions
 export const config: Config = {
@@ -36,8 +37,11 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			model: OpenAiModel.Gpt35Turbo
 		};
 
-		const openAiKey: string = requestData.openAiKey;
-		throwIfUnset('OpenAI API key', openAiKey);
+		const token: string = requestData.token;
+		throwIfUnset('Token', token);
+
+		const mode: 'direct' | 'middleware' = requestData.mode;
+		throwIfUnset('mode', mode);
 
 		const completionOpts: ChatCompletionCreateParamsNonStreaming = {
 			...settings,
@@ -45,11 +49,11 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			stream: false
 		};
 
-		const apiUrl = 'https://api.openai.com/v1/chat/completions';
+		const apiUrl = mode === 'direct' ? OPENAI_API_URL : MIDDLEWARE_API_URL;
 
 		const response = await fetch(apiUrl, {
 			headers: {
-				Authorization: `Bearer ${openAiKey}`,
+				Authorization: `Bearer ${token}`,
 				'Content-Type': 'application/json'
 			},
 			method: 'POST',

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import 'highlightjs-copy/dist/highlightjs-copy.min.css';
 	import '../app.postcss';
 	import { inject } from '@vercel/analytics';
@@ -29,8 +28,6 @@
 	import CostModal from '$lib/Modals/CostModal.svelte';
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
 	import UserModal from '$lib/Modals/UserModal.svelte';
-	import { AuthService } from '$misc/authService';
-	import { authType } from '$misc/stores';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -38,15 +35,6 @@
 
 	initializeStores();
 	setupSkeleton();
-
-	let authService: AuthService;
-
-	onMount(async () => {
-		if ($authType === 'fixedPrice') {
-			authService = await AuthService.getInstance();
-			await authService.login();
-		}
-	});
 
 	// see https://www.skeleton.dev/utilities/modals
 	const modalComponentRegistry: Record<string, ModalComponent> = {
@@ -63,7 +51,7 @@
 		title: 'SlickGPT',
 		url: 'https://slickgpt.vercel.app/',
 		description:
-			'SlickGPT is a light-weight "use-your-own-API-key" ChatGPT client written in Svelte. It offers GPT-4 integration, a userless share feature and other superpowers.',
+			'SlickGPT is a light-weight ChatGPT client written in Svelte. It offers GPT-4 integration, a userless share feature and other superpowers. Bring your own API key or use our cloud infrastructure.',
 		image: '/logo-slickgpt.svg',
 		imageAlt: 'SlickGPT Logo'
 	};
@@ -90,6 +78,8 @@
 	<meta name="twitter:image" content={meta.image} />
 	<meta name="twitter:image:alt" content={meta.imageAlt} />
 	<title>{meta.title}</title>
+
+	<script async src="https://js.stripe.com/v3/buy-button.js"></script>
 </svelte:head>
 
 <AppShell

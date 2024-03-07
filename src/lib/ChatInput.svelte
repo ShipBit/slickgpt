@@ -16,9 +16,13 @@
 		eventSourceStore,
 		isLoadingAnswerStore,
 		liveAnswerStore,
+		enhancedLiveAnswerStore,
 		settingsStore,
+		mode
 	} from '$misc/stores';
 	import { countTokens } from '$misc/openai';
+	import { AuthService } from '$misc/authService';
+	import { get } from 'svelte/store';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -61,7 +65,7 @@
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
-	function handleSubmit() {
+	async function handleSubmit() {
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
 
@@ -81,7 +85,16 @@
 		// message now has an id
 		lastUserMessage = message;
 
+		let token = $settingsStore.openAiApiKey;
+		if ($mode === 'middleware') {
+			const authService = await AuthService.getInstance();
+			token = get(authService.token);
+		}
+
 		const payload = {
+			token,
+			mode: $mode,
+			settings: chat.settings,
 			// OpenAI API complains if we send additionale props
 			messages: currentMessages?.map(
 				(m) =>
@@ -90,12 +103,10 @@
 						content: m.content,
 						name: m.name
 					}) as ChatCompletionMessageParam
-			),
-			settings: chat.settings,
-			openAiKey: $settingsStore.openAiApiKey
+			)
 		};
 
-		$eventSourceStore.start(payload, handleAnswer, handleError, handleAbort);
+		await $eventSourceStore.start(payload, handleAnswer, handleError, handleAbort);
 		input = '';
 	}
 

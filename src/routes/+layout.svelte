@@ -86,6 +86,7 @@
 	<svelte:fragment slot="header">
 		<Header />
 	</svelte:fragment>
+
 	<slot />
 
 	<svelte:fragment slot="footer">

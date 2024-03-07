@@ -4,7 +4,7 @@
 	import snarkdown from 'snarkdown';
 	import { afterNavigate } from '$app/navigation';
 	import type { Chat } from '$misc/shared';
-	import { chatStore, enhancedLiveAnswerStore, isLoadingAnswerStore } from '$misc/stores';
+	import { chatStore, isLoadingAnswerStore, liveAnswerStore } from '$misc/stores';
 	import ChatMessages from './ChatMessages.svelte';
 
 	export let slug: string;
@@ -26,6 +26,12 @@
 		div = document.getElementById('page');
 	});
 
+	function scrollToBottom() {
+		setTimeout(() => {
+			div?.scrollTo({ top: div.scrollHeight + 999, behavior: 'smooth' });
+		}, 50);
+	}
+
 	// beforeUpdate(() => {
 	// TODO: This isn't working anymore. Disabled the check for now and always auto-scroll
 	// autoscroll = div ? div.scrollTop === div.scrollHeight - div.offsetHeight : false;
@@ -33,13 +39,13 @@
 
 	afterUpdate(() => {
 		// if (autoscroll) {
-		div?.scrollTo({ top: div.scrollHeight, behavior: 'smooth' });
+		scrollToBottom();
 		// }
 	});
 
 	// autoscroll to bottom after navigation
 	afterNavigate(() => {
-		div?.scrollTo({ top: div.scrollHeight, behavior: 'smooth' });
+		scrollToBottom();
 	});
 </script>
 
@@ -55,7 +61,7 @@
 			{#if $isLoadingAnswerStore}
 				<div class="place-self-start">
 					<div class="p-5 rounded-2xl variant-ghost-tertiary rounded-tl-none">
-						{@html snarkdown($enhancedLiveAnswerStore.content)}
+						{@html snarkdown($liveAnswerStore.content)}
 					</div>
 				</div>
 			{/if}

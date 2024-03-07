@@ -38,7 +38,7 @@
 </script>
 
 <div
-	class="grid px-5 py-2 rounded-2xl {message.role === 'assistant'
+	class="flex flex-col max-w-[90%] px-5 py-2 rounded-2xl {message.role === 'assistant'
 		? 'md:place-self-start'
 		: 'md:place-self-end'}"
 	class:variant-ghost-surface={message.role === 'user'}
@@ -76,6 +76,7 @@
 	<!-- Message Content -->
 	<div>
 		{@html snarkdown(message.content)}
+		<!-- {@html message.content} -->
 	</div>
 </div>
 

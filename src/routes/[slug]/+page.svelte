@@ -49,6 +49,10 @@
 		await highlightCode();
 	});
 
+	const unsubscribeLiveAnswerStore = liveAnswerStore.subscribe(async () => {
+		await highlightCode();
+	});
+
 	onDestroy(() => {
 		unsubscribeChatStore();
 		unsubscribeisLoadingAnswerStore();

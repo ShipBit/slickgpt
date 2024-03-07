@@ -14,20 +14,6 @@ export const liveAnswerStore: Writable<ChatCompletionMessageParam> = writable({
 	content: ''
 });
 
-export const enhancedLiveAnswerStore = derived(liveAnswerStore, ($liveAnswer) => {
-	if (!$liveAnswer?.content) {
-		return $liveAnswer;
-	}
-
-	let { content } = $liveAnswer;
-	content = closeOpenedCodeTicks(content);
-
-	return {
-		...$liveAnswer,
-		content
-	} as ChatCompletionMessageParam;
-});
-
 export const isLoadingAnswerStore: Writable<boolean> = writable(false);
 
 export const isTimeagoInitializedStore: Writable<boolean> = writable(false);

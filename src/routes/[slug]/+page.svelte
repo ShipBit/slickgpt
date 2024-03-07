@@ -10,9 +10,8 @@
 		mode,
 		chatStore,
 		isLoadingAnswerStore,
-        liveAnswerStore,
-		settingsStore,
-		liveAnswerStore
+		liveAnswerStore,
+		settingsStore
 	} from '$misc/stores';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import ChatInput from '$lib/ChatInput.svelte';

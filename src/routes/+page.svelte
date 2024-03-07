@@ -89,39 +89,32 @@
 	<button class="card p-4 grid variant-ghost-primary" on:click={() => createNewChat()}>
 		<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
 			<PlusCircle class="w-10 h-10" />
-			<span class="text-xl">New Chat</span>
+			<span class="text-lg">New Chat</span>
 		</div>
 	</button>
 
 	<!-- Saved chats -->
 	{#each sortedChats as [slug, chat]}
-		<a href={`/${slug}`} class="card p-4 flex flex-col variant-ghost-surface justify-end">
-			<div class="flex flex-col">
-				<div class="flex items-center space-x-2">
-					<div>
-						{#if chat.updateToken}
-							<!-- Shared -->
-							<Share class="w-10 h-10" />
-						{:else}
-							<!-- Local -->
-							<ChatBubbleLeftRight class="w-10 h-10" />
-						{/if}
-					</div>
-					<h2 class="h2 line-clamp-2 text-lg font-bold">{chat.title}</h2>
+		<a href={`/${slug}`} class="card p-4 flex flex-col variant-ghost-surface gap-4 justify-between">
+			<div class="flex items-center space-x-2">
+				<div>
+					{#if chat.updateToken}
+						<!-- Shared -->
+						<Share class="w-10 h-10" />
+					{:else}
+						<!-- Local -->
+						<ChatBubbleLeftRight class="w-10 h-10" />
+					{/if}
 				</div>
+				<span class="line-clamp-2 text-lg">{chat.title}</span>
 			</div>
-			<hr class="my-4" />
-			<footer class="flex justify-evenly space-x-2">
+			<footer class="flex justify-between space-x-2">
 				<div class="badge variant-filled-surface flex items-center space-x-1">
-					<ChatBubbleBottomCenter class="w-6 h-6" />
+					<span><ChatBubbleBottomCenter class="w-4 h-4" /></span>
 					<span>{chatStore.countAllMessages(chat)}</span>
 				</div>
 				<div class="badge variant-filled-surface flex items-center space-x-1">
-					<AcademicCap class="w-6 h-6" />
-					<span>{chat.settings.model}</span>
-				</div>
-				<div class="badge variant-filled-surface flex items-center space-x-1">
-					<Clock class="w-6 h-6" />
+					<span><Clock class="w-4 h-4" /></span>
 					{#if timeAgo}
 						<span class="self-center">
 							{timeAgo.format(new Date(chat.created), 'twitter-minute-now')}
@@ -145,7 +138,7 @@
 					style="fill: currentColor;"
 				/>
 			</svg>
-			<span class="text-xl">Join our Discord</span>
+			<span class="text-lg">Join our Discord</span>
 		</div>
 	</a>
 
@@ -162,7 +155,7 @@
 					style="fill: currentColor;"
 				/>
 			</svg>
-			<span class="text-xl">Support us</span>
+			<span class="text-lg">Support us</span>
 		</div>
 	</a>
 
@@ -171,7 +164,7 @@
 		<button class="card p-4 grid variant-ghost-error" on:click={modalConfirmDelete}>
 			<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
 				<Trash class="w-10 h-10" />
-				<span class="text-xl">Clear storage</span>
+				<span class="text-lg">Delete Chats</span>
 			</div>
 		</button>
 	{/if}

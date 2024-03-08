@@ -16,8 +16,7 @@
 		eventSourceStore,
 		isLoadingAnswerStore,
 		liveAnswerStore,
-		enhancedLiveAnswerStore,
-		settingsStore
+		settingsStore,
 	} from '$misc/stores';
 	import { countTokens } from '$misc/openai';
 
@@ -100,21 +99,30 @@
 		input = '';
 	}
 
+	let rawAnswer: string = '';
 	function handleAnswer(event: MessageEvent<any>) {
 		try {
 			// streaming...
-			if (event.data !== '[DONE]') {
-				// todo What's the correct type for this? It's not CreateChatCompletionResponse... maybe still missing in TypeDefs?
-				const completionResponse: any = JSON.parse(event.data);
-				const delta = completionResponse.choices[0].delta.content || '';
+			const completionResponse: any = JSON.parse(event.data);
+			const isFinished = completionResponse.choices[0].finish_reason === 'stop';
+			if (event.data !== '[DONE]' && !isFinished) {
+				const delta: string = completionResponse.choices[0].delta.content || '';
 				liveAnswerStore.update((store) => {
 					const answer = { ...store };
-					answer.content += delta;
+					rawAnswer += delta;
+					const codeBlocks = rawAnswer.match(/```/g) || [];
+					const openCodeBlockWithoutClose = codeBlocks.length % 2 !== 0;
+					if (openCodeBlockWithoutClose) {
+						answer.content = rawAnswer + '\n```';
+					} else {
+						answer.content = rawAnswer;
+					}
 					return answer;
 				});
 			}
-			// streaming completed
+			// streaming completed or message indicates to stop
 			else {
+				// Handle completion of text streaming
 				addCompletionToChat();
 			}
 		} catch (err) {
@@ -153,7 +161,7 @@
 	function addCompletionToChat(isAborted = false) {
 		const messageToAdd: ChatMessage = !isAborted
 			? { ...$liveAnswerStore }
-			: { ...$enhancedLiveAnswerStore, isAborted: true };
+			: { ...$liveAnswerStore, isAborted: true };
 
 		chatStore.addMessageToChat(slug, messageToAdd, lastUserMessage || undefined);
 		$isLoadingAnswerStore = false;
@@ -170,6 +178,7 @@
 			answer.content = '';
 			return answer;
 		});
+		rawAnswer = '';
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {

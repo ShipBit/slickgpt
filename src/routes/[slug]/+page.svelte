@@ -6,7 +6,7 @@
 	import { Trash, Cog6Tooth, Share } from '@inqling/svelte-icons/heroicon-24-outline';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { chatStore, isLoadingAnswerStore, settingsStore } from '$misc/stores';
+	import { chatStore, isLoadingAnswerStore, liveAnswerStore, settingsStore } from '$misc/stores';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import ChatInput from '$lib/ChatInput.svelte';
 	import Chat from '$lib/Chat.svelte';
@@ -46,6 +46,10 @@
 	});
 
 	const unsubscribeisLoadingAnswerStore = isLoadingAnswerStore.subscribe(async () => {
+		await highlightCode();
+	});
+
+	const unsubscribeLiveAnswerStore = liveAnswerStore.subscribe(async () => {
 		await highlightCode();
 	});
 

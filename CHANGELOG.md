@@ -2,6 +2,11 @@
 
 Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
 
+## March 08, 2024
+
+- incomplete code blocks in completions should no longer overflow their containers
+- fixed dashboard layout on smaller screens/resolutions
+
 ## March 04, 2024
 
 - add CommandBar to search and jump to chats (thanks @th8m0z)

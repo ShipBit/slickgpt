@@ -15,8 +15,8 @@
 		Clock
 	} from '@inqling/svelte-icons/heroicon-24-outline';
 	import { goto } from '$app/navigation';
-	import { createNewChat, showToast } from '$misc/shared';
-	import { chatStore, isTimeagoInitializedStore } from '$misc/stores';
+	import { createNewChat, showModalComponent, showToast } from '$misc/shared';
+	import { chatStore, isTimeagoInitializedStore, hasSeenProPrompt } from '$misc/stores';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -34,6 +34,11 @@
 			$isTimeagoInitializedStore = true;
 		}
 		timeAgo = new TimeAgo('en-US');
+
+		if (!$hasSeenProPrompt) {
+			$hasSeenProPrompt = true;
+			showModalComponent(modalStore, 'UserModal');
+		}
 	});
 
 	async function modalConfirmDelete() {

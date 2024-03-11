@@ -1,4 +1,4 @@
-import type { ChatCompletionMessageParam } from 'openai/resources/chat';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { writable, type Readable, type Writable, readable, get, derived } from 'svelte/store';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,6 +10,11 @@ import type { AccountInfo } from '@azure/msal-browser';
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
 
 export const mode: Writable<'direct' | 'middleware'> = localStorageStore('slickgpt.mode', 'direct');
+
+export const hasSeenProPrompt: Writable<boolean> = localStorageStore(
+	'slickgpt.hasSeenProPrompt',
+	false
+);
 
 export const liveAnswerStore: Writable<ChatCompletionMessageParam> = writable({
 	role: 'assistant',

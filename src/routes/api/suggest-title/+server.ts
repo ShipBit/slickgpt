@@ -37,11 +37,8 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			model: OpenAiModel.Gpt35Turbo
 		};
 
-		const token: string = requestData.token;
-		throwIfUnset('Token', token);
-
-		const mode: 'direct' | 'middleware' = requestData.mode;
-		throwIfUnset('mode', mode);
+		const openAiKey: string = requestData.openAiKey;
+		throwIfUnset('OpenAI API key', openAiKey);
 
 		const completionOpts: ChatCompletionCreateParamsNonStreaming = {
 			...settings,
@@ -49,11 +46,9 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			stream: false
 		};
 
-		const apiUrl = mode === 'direct' ? PUBLIC_OPENAI_API_URL : PUBLIC_MIDDLEWARE_API_URL;
-
-		const response = await fetch(apiUrl, {
+		const response = await fetch(PUBLIC_OPENAI_API_URL, {
 			headers: {
-				Authorization: `Bearer ${token}`,
+				Authorization: `Bearer ${openAiKey}`,
 				'Content-Type': 'application/json'
 			},
 			method: 'POST',

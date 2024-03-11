@@ -91,18 +91,29 @@
 
 			const moderationJson = await moderationResponse.json();
 
-			moderationJson.results.forEach((result: Moderation, index: number) => {
+			for (let index = 0; index < moderationJson.results.length; index++) {
+				const result = moderationJson.results[index];
+
 				if (result.flagged) {
-					throw new Error(`Message ${index + 1} is globally flagged for moderation.`);
+					handleError({
+						data: JSON.stringify({
+							message: `Message ${index + 1} is globally flagged for moderation.`
+						})
+					});
+					return false;
 				}
 
 				for (const [category, flagged] of Object.entries(result.categories)) {
 					if (flagged) {
-						throw new Error(`Message ${index + 1} is flagged for ${category}.`);
+						handleError({
+							data: JSON.stringify({ message: `Message ${index + 1} is flagged for ${category}.` })
+						});
+						return false;
 					}
 				}
-			});
+			}
 		}
+		return true;
 	}
 
 	async function handleSubmit() {
@@ -159,7 +170,10 @@
 			url = PUBLIC_OPENAI_API_URL;
 
 			if (messages) {
-				await checkModerationApi(messages, token);
+				const moderationOk = await checkModerationApi(messages, token);
+				if (!moderationOk) {
+					return;
+				}
 			}
 
 			payload = {

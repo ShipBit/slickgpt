@@ -117,6 +117,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 	let body: any;
 	let headers: Record<string, string>;
 	const runMode = get(mode);
+
 	if (runMode === 'middleware') {
 		const authService = await AuthService.getInstance();
 		token = get(authService.token);

@@ -31,7 +31,7 @@ export const account = writable<AccountInfo | null>(null);
 
 export const isPro = derived(account, ($account) => {
 	// TODO: check claim here!
-	return false;
+	return $account != null;
 });
 
 /**

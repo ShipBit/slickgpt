@@ -21,10 +21,15 @@
 	function showUserModal() {
 		showModalComponent(modalStore, 'UserModal');
 	}
+
+	function logout() {
+		$mode === 'direct';
+		authService.logout();
+	}
 </script>
 
 <!-- User profile popup -->
-<div class="card p-2 shadow-xl z-20" data-popup="popupActions-user">
+<div class="card p-2 shadow-xl z-50" data-popup="popupActions-user">
 	<nav class="list-nav">
 		<!-- Edit account profile -->
 		<button
@@ -47,7 +52,7 @@
 		<button
 			type="button"
 			class="btn hover:text-gray-500 dark:hover:text-gray-400"
-			on:click={() => authService.logout()}
+			on:click={() => logout()}
 		>
 			<span><BxLogOut class="w-4 h-4" /></span>
 			<span>Logout</span>

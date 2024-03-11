@@ -19,7 +19,7 @@
 		settingsStore,
 		mode
 	} from '$misc/stores';
-	import { countTokens } from '$misc/openai';
+	import { countTokens, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
 	import { get } from 'svelte/store';
 	import { PUBLIC_MIDDLEWARE_API_URL } from '$env/static/public';
@@ -97,7 +97,7 @@
 			$mode === 'middleware'
 				? {
 						stream: true,
-						model: chat.settings.model,
+						model: models[chat.settings.model].middlewareDeploymentName || chat.settings.model,
 						settings: {
 							maxTokens: chat.settings.max_tokens,
 							temperature: chat.settings.temperature,

@@ -115,8 +115,12 @@
 							</a>
 						</div>
 						<select class="select" bind:value={settings.model}>
-							{#each Object.values(OpenAiModel) as model}
-								<option value={model}>{model}</option>
+							{#each Object.entries(models) as [name, model]}
+								{#if !model.hidden}
+									<option value={name}>
+										{$mode === 'middleware' ? model.middlewareDeploymentName || name : name}
+									</option>
+								{/if}
 							{/each}
 						</select>
 					</label>

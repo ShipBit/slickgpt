@@ -37,33 +37,39 @@ export interface OpenAiModelStats {
 	// $ per 1k tokens, see https://openai.com/pricing:
 	costPrompt: number;
 	costCompletion: number;
+	middlewareDeploymentName?: string;
+	hidden?: boolean;
 }
 
 export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
-	'gpt-3.5-turbo': {
+	[OpenAiModel.Gpt35Turbo]: {
 		maxTokens: 4096,
 		costPrompt: 0.0005,
-		costCompletion: 0.0015
+		costCompletion: 0.0015,
+		middlewareDeploymentName: 'gpt-35-turbo'
 	},
-	'gpt-4': {
+	[OpenAiModel.Gpt4]: {
 		maxTokens: 8192,
 		costPrompt: 0.03,
 		costCompletion: 0.06
 	},
-	'gpt-4-32k': {
+	[OpenAiModel.Gpt432k]: {
 		maxTokens: 32768,
 		costPrompt: 0.06,
 		costCompletion: 0.12
 	},
-	'gpt-4-1106-preview': {
-		maxTokens: 4096,
+	[OpenAiModel.Gpt4Turbo]: {
+		maxTokens: 128000,
 		costPrompt: 0.01,
-		costCompletion: 0.03
+		costCompletion: 0.03,
+		middlewareDeploymentName: 'gpt-4-turbo'
 	},
-	'gpt-4-turbo-preview': {
+	// deprecated, only here for backwards compatibility
+	[OpenAiModel.Gpt41106preview]: {
 		maxTokens: 4096,
 		costPrompt: 0.01,
-		costCompletion: 0.03
+		costCompletion: 0.03,
+		hidden: true
 	}
 };
 /**

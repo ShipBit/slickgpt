@@ -7,7 +7,7 @@ import type { RequestHandler } from './$types';
 import { OpenAiModel, defaultOpenAiSettings, type OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
 import { getErrorMessage, respondToClient, throwIfUnset } from '$misc/error';
-import { MIDDLEWARE_API_URL, OPENAI_API_URL } from '$env/static/private';
+import { PUBLIC_MIDDLEWARE_API_URL, PUBLIC_OPENAI_API_URL } from '$env/static/public';
 
 // this tells Vercel to run this function as https://vercel.com/docs/concepts/functions/edge-functions
 export const config: Config = {
@@ -49,7 +49,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			stream: false
 		};
 
-		const apiUrl = mode === 'direct' ? OPENAI_API_URL : MIDDLEWARE_API_URL;
+		const apiUrl = mode === 'direct' ? PUBLIC_OPENAI_API_URL : PUBLIC_MIDDLEWARE_API_URL;
 
 		const response = await fetch(apiUrl, {
 			headers: {

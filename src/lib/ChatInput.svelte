@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ChatCompletionMessageParam } from 'openai/resources/chat';
+	import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
@@ -22,6 +22,7 @@
 	import { countTokens } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
 	import { get } from 'svelte/store';
+	import { PUBLIC_MIDDLEWARE_API_URL } from '$env/static/public';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -84,102 +85,95 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		let token = $settingsStore.openAiApiKey;
-		let payload: any;
+		const messages = currentMessages?.map(
+			(m) =>
+				({
+					role: m.role,
+					content: m.content
+				}) as ChatCompletionMessageParam
+		);
+
+		const payload =
+			$mode === 'middleware'
+				? {
+						stream: true,
+						model: chat.settings.model,
+						settings: {
+							maxTokens: chat.settings.max_tokens,
+							temperature: chat.settings.temperature,
+							topP: chat.settings.top_p,
+							stopSequences:
+								chat.settings.stop === undefined
+									? []
+									: [
+											...(Array.isArray(chat.settings.stop)
+												? chat.settings.stop
+												: [chat.settings.stop])
+										]
+						},
+						messages
+					}
+				: {
+						openAiKey: $settingsStore.openAiApiKey,
+						settings: chat.settings,
+						messages
+					};
+
+		let token;
 		if ($mode === 'middleware') {
 			const authService = await AuthService.getInstance();
 			token = get(authService.token);
-			payload = {
-				token,
-				stream: true,
-				model: 'gpt-35-turbo',
-				messages: currentMessages?.map(
-					(m) =>
-						({
-							role: m.role,
-							content: m.content
-						}) as ChatCompletionMessageParam
-				)
-			};
-		} else {
-			payload = {
-				token,
-				mode: $mode,
-				settings: chat.settings,
-				// OpenAI API complains if we send additionale props
-				messages: currentMessages?.map(
-					(m) =>
-						({
-							role: m.role,
-							content: m.content,
-							name: m.name
-						}) as ChatCompletionMessageParam
-				)
-			};
 		}
+		const url = $mode === 'middleware' ? PUBLIC_MIDDLEWARE_API_URL : 'api/ask';
 
-		await $eventSourceStore.start(payload, handleAnswer, handleError, handleAbort);
+		await $eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
 		input = '';
 	}
 
 	let rawAnswer: string = '';
+
+	function showLiveResponse(delta: string) {
+		liveAnswerStore.update((store) => {
+			const answer = { ...store };
+			rawAnswer += delta;
+			const codeBlocks = rawAnswer.match(/```/g) || [];
+			const openCodeBlockWithoutClose = codeBlocks.length % 2 !== 0;
+			if (openCodeBlockWithoutClose) {
+				answer.content = rawAnswer + '\n```';
+			} else {
+				answer.content = rawAnswer;
+			}
+			return answer;
+		});
+	}
+
 	function handleAnswer(event: MessageEvent<any>) {
 		try {
-			if (event.data) {
+			if ($mode === 'middleware') {
+				if (event.data) {
+					const completionResponse: any = JSON.parse(event.data);
+					const delta = completionResponse?.ContentUpdate;
+					showLiveResponse(delta);
+				} else {
+					addCompletionToChat();
+				}
+			} else {
 				const completionResponse: any = JSON.parse(event.data);
-				const delta = completionResponse?.ContentUpdate;
-				if (delta) {
-					liveAnswerStore.update((store) => {
-						const answer = { ...store };
-						rawAnswer += delta;
-						const codeBlocks = rawAnswer.match(/```/g) || [];
-						const openCodeBlockWithoutClose = codeBlocks.length % 2 !== 0;
-						if (openCodeBlockWithoutClose) {
-							answer.content = rawAnswer + '\n```';
-						} else {
-							answer.content = rawAnswer;
-						}
-						return answer;
-					});
+				const isFinished = completionResponse.choices[0].finish_reason === 'stop';
+				if (event.data !== '[DONE]' && !isFinished) {
+					const delta: string = completionResponse.choices[0].delta.content || '';
+					showLiveResponse(delta);
+				} else {
+					addCompletionToChat();
 				}
 			}
-			// streaming completed or message indicates to stop
-			else {
-				// Handle completion of text streaming
-				addCompletionToChat();
-			}
-
-
-			// streaming...
-			/* const completionResponse: any = JSON.parse(event.data);
-			const isFinished = completionResponse.choices[0].finish_reason === 'stop';
-			if (event.data !== '[DONE]' && !isFinished) {
-				const delta: string = completionResponse.choices[0].delta.content || '';
-				liveAnswerStore.update((store) => {
-					const answer = { ...store };
-					rawAnswer += delta;
-					const codeBlocks = rawAnswer.match(/```/g) || [];
-					const openCodeBlockWithoutClose = codeBlocks.length % 2 !== 0;
-					if (openCodeBlockWithoutClose) {
-						answer.content = rawAnswer + '\n```';
-					} else {
-						answer.content = rawAnswer;
-					}
-					return answer;
-				});
-			}
-			// streaming completed or message indicates to stop
-			else {
-				// Handle completion of text streaming
-				addCompletionToChat();
-			} */
 		} catch (err) {
 			handleError(err);
 		}
 	}
 
 	function handleAbort(_event: MessageEvent<any>) {
-		// th message we're adding is incomplete, so HLJS probably can't highlight it correctly
+		// the message we're adding is incomplete, so HLJS probably can't highlight it correctly
 		addCompletionToChat(true);
 	}
 

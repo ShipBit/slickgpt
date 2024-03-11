@@ -9,7 +9,8 @@ import type { RequestHandler } from './$types';
 import type { OpenAiSettings } from '$misc/openai';
 import { error } from '@sveltejs/kit';
 import { getErrorMessage, throwIfUnset } from '$misc/error';
-import { MODERATION, OPENAI_API_URL, MIDDLEWARE_API_URL } from '$env/static/private';
+import { MODERATION } from '$env/static/private';
+import { PUBLIC_MODERATION_API_URL, PUBLIC_OPENAI_API_URL } from '$env/static/public';
 
 // this tells Vercel to run this function as https://vercel.com/docs/concepts/functions/edge-functions
 export const config: Config = {
@@ -27,24 +28,17 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		const settings: OpenAiSettings = requestData.settings;
 		throwIfUnset('settings', settings);
 
-		const token: string = requestData.token;
-		throwIfUnset('token', token);
+		const openAiKey: string = requestData.openAiKey;
+		throwIfUnset('OpenAI API key', openAiKey);
 
-		const mode: 'direct' | 'middleware' = requestData.mode;
-		throwIfUnset('mode', mode);
-
-		// TODO: Disabled for middleware for now
-		if (mode === 'direct' && MODERATION === 'true') {
-			// Handle moderation
-			const moderationUrl = 'https://api.openai.com/v1/moderations';
-
+		if (MODERATION === 'true') {
 			const textMessages = messages.map((msg) => msg.content);
 
-			const moderationResponse = await fetch(moderationUrl, {
+			const moderationResponse = await fetch(PUBLIC_MODERATION_API_URL, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`
+					Authorization: `Bearer ${openAiKey}`
 				},
 				body: JSON.stringify({ input: textMessages })
 			});
@@ -75,25 +69,13 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			stream: true
 		};
 
-		const apiUrl = mode === 'direct' ? OPENAI_API_URL : MIDDLEWARE_API_URL;
-
-		let body = completionOpts;
-		// TODO: Our API does not support the additional settings (yet)
-		if (mode === 'middleware') {
-			body = {
-				messages,
-				stream: true,
-				model: 'gpt-35-turbo' // settings.model
-			};
-		}
-
-		const response = await fetch(apiUrl, {
+		const response = await fetch(PUBLIC_OPENAI_API_URL, {
 			headers: {
-				Authorization: `Bearer ${token}`,
+				Authorization: `Bearer ${openAiKey}`,
 				'Content-Type': 'application/json'
 			},
 			method: 'POST',
-			body: JSON.stringify(body)
+			body: JSON.stringify(completionOpts)
 		});
 
 		if (!response.ok) {
@@ -101,9 +83,11 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			throw err.error;
 		}
 
-		console.log('Response:', response);
-
-		return response;
+		return new Response(response.body, {
+			headers: {
+				'Content-Type': 'text/event-stream'
+			}
+		});
 	} catch (err) {
 		throw error(500, getErrorMessage(err));
 	}

@@ -62,6 +62,7 @@
 	onDestroy(() => {
 		unsubscribeChatStore();
 		unsubscribeisLoadingAnswerStore();
+		unsubscribeLiveAnswerStore();
 	});
 
 	async function highlightCode() {

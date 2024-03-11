@@ -1,4 +1,3 @@
-import { PUBLIC_MIDDLEWARE_API_URL } from '$env/static/public';
 import { SSE } from 'sse.js';
 
 export class EventSource {
@@ -8,16 +7,23 @@ export class EventSource {
 	private handleAbort?: (event: MessageEvent<any>) => void;
 
 	start(
+		url: string,
 		payload: any,
 		handleAnswer: (event: MessageEvent<any>) => void,
 		handleError: (event: MessageEvent<any>) => void,
-		handleAbort: (event: MessageEvent<any>) => void
+		handleAbort: (event: MessageEvent<any>) => void,
+		token?: string
 	) {
-		this.eventSource = new SSE(PUBLIC_MIDDLEWARE_API_URL, {
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${payload.token}`
-			},
+		const headers: Record<string, string> = token
+			? {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				}
+			: {
+					'Content-Type': 'application/json'
+				};
+		this.eventSource = new SSE(url, {
+			headers,
 			payload: JSON.stringify(payload)
 		});
 		this.handleAnswer = handleAnswer;

@@ -21,8 +21,8 @@
 	$: stripePaymentLink =
 		tier.name === 'Pro'
 			? annual
-				? 'https://buy.stripe.com/test_cN203YeYgb37cNy7sy'
-				: 'https://buy.stripe.com/test_8wM8AucQ8gnrcNy149'
+				? 'https://buy.stripe.com/test_28o4kecQ88UZaFqaEM'
+				: 'https://buy.stripe.com/test_fZebMG8zSgnrdRC3cj'
 			: '';
 </script>
 

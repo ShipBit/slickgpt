@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+	import type { Moderation } from 'openai/resources/moderations';
 	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
@@ -22,7 +23,12 @@
 	import { countTokens, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
 	import { get } from 'svelte/store';
-	import { PUBLIC_MIDDLEWARE_API_URL } from '$env/static/public';
+	import {
+		PUBLIC_MIDDLEWARE_API_URL,
+		PUBLIC_MODERATION,
+		PUBLIC_MODERATION_API_URL,
+		PUBLIC_OPENAI_API_URL
+	} from '$env/static/public';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -65,6 +71,40 @@
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
+	async function checkModerationApi(messages: ChatCompletionMessageParam[], token: string) {
+		if (PUBLIC_MODERATION === 'true') {
+			const textMessages = messages.map((msg) => msg.content);
+
+			const moderationResponse = await fetch(PUBLIC_MODERATION_API_URL, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({ input: textMessages })
+			});
+
+			if (!moderationResponse.ok) {
+				const err = await moderationResponse.json();
+				throw new Error(err.error);
+			}
+
+			const moderationJson = await moderationResponse.json();
+
+			moderationJson.results.forEach((result: Moderation, index: number) => {
+				if (result.flagged) {
+					throw new Error(`Message ${index + 1} is globally flagged for moderation.`);
+				}
+
+				for (const [category, flagged] of Object.entries(result.categories)) {
+					if (flagged) {
+						throw new Error(`Message ${index + 1} is flagged for ${category}.`);
+					}
+				}
+			});
+		}
+	}
+
 	async function handleSubmit() {
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
@@ -93,38 +133,41 @@
 				}) as ChatCompletionMessageParam
 		);
 
-		const payload =
-			$mode === 'middleware'
-				? {
-						stream: true,
-						model: models[chat.settings.model].middlewareDeploymentName || chat.settings.model,
-						settings: {
-							maxTokens: chat.settings.max_tokens,
-							temperature: chat.settings.temperature,
-							topP: chat.settings.top_p,
-							stopSequences:
-								chat.settings.stop === undefined
-									? []
-									: [
-											...(Array.isArray(chat.settings.stop)
-												? chat.settings.stop
-												: [chat.settings.stop])
-										]
-						},
-						messages
-					}
-				: {
-						openAiKey: $settingsStore.openAiApiKey,
-						settings: chat.settings,
-						messages
-					};
-
-		let token;
+		let payload: any;
+		let token: string;
+		let url: string;
 		if ($mode === 'middleware') {
 			const authService = await AuthService.getInstance();
 			token = get(authService.token);
+			url = PUBLIC_MIDDLEWARE_API_URL;
+			payload = {
+				settings: {
+					maxTokens: chat.settings.max_tokens,
+					temperature: chat.settings.temperature,
+					topP: chat.settings.top_p,
+					stopSequences:
+						chat.settings.stop === undefined
+							? []
+							: [...(Array.isArray(chat.settings.stop) ? chat.settings.stop : [chat.settings.stop])]
+				},
+				model: models[chat.settings.model].middlewareDeploymentName || chat.settings.model,
+				messages,
+				stream: true
+			};
+		} else {
+			token = $settingsStore.openAiApiKey!;
+			url = PUBLIC_OPENAI_API_URL;
+
+			if (messages) {
+				await checkModerationApi(messages, token);
+			}
+
+			payload = {
+				...chat.settings,
+				messages,
+				stream: true
+			};
 		}
-		const url = $mode === 'middleware' ? PUBLIC_MIDDLEWARE_API_URL : 'api/ask';
 
 		await $eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
 		input = '';

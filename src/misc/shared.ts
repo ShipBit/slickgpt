@@ -7,7 +7,11 @@ import vercelAnalytics from '@vercel/analytics';
 
 import { goto } from '$app/navigation';
 import { mode, chatStore, settingsStore } from './stores';
-import { PUBLIC_DISABLE_TRACKING, PUBLIC_MIDDLEWARE_API_URL } from '$env/static/public';
+import {
+	PUBLIC_DISABLE_TRACKING,
+	PUBLIC_MIDDLEWARE_API_URL,
+	PUBLIC_OPENAI_API_URL
+} from '$env/static/public';
 import { AuthService } from './authService';
 
 export interface ChatMessage extends ChatCompletionMessageParam {
@@ -129,13 +133,21 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 				topP: 1,
 				stopSequences: []
 			},
-			model: models['gpt-3.5-turbo'].middlewareDeploymentName,
+			model: models[OpenAiModel.Gpt35Turbo].middlewareDeploymentName || OpenAiModel.Gpt35Turbo,
 			stream: false
 		};
 	} else {
-		url = '/api/suggest-title';
-		headers = { 'Content-Type': 'application/json' };
-		body = { messages: filteredMessages, openAiKey: get(settingsStore).openAiApiKey };
+		url = PUBLIC_OPENAI_API_URL;
+		headers = {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${get(settingsStore).openAiApiKey}`
+		};
+		body = {
+			messages: filteredMessages,
+			...defaultOpenAiSettings,
+			model: OpenAiModel.Gpt35Turbo,
+			stream: false
+		};
 	}
 
 	const response = await fetch(url, {
@@ -148,7 +160,8 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 	if (runMode === 'middleware') {
 		result = await response.text();
 	} else {
-		const { title }: { title: string } = await response.json();
+		const res = await response.json();
+		const title = res.choices[0].message.content.replace(/(^['"])|(['"]$)/g, '').trim();
 		result = title;
 	}
 

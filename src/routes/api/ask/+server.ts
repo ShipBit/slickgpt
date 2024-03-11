@@ -83,7 +83,7 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			body = {
 				messages,
 				stream: true,
-				model: 'gpt-4-turbo-preview' // settings.model
+				model: 'gpt-35-turbo' // settings.model
 			};
 		}
 
@@ -100,6 +100,8 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			const err = await response.json();
 			throw err.error;
 		}
+
+		console.log('Response:', response);
 
 		return response;
 	} catch (err) {

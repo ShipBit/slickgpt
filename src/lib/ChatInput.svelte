@@ -85,25 +85,38 @@
 		lastUserMessage = message;
 
 		let token = $settingsStore.openAiApiKey;
+		let payload: any;
 		if ($mode === 'middleware') {
 			const authService = await AuthService.getInstance();
 			token = get(authService.token);
+			payload = {
+				token,
+				stream: true,
+				model: 'gpt-35-turbo',
+				messages: currentMessages?.map(
+					(m) =>
+						({
+							role: m.role,
+							content: m.content
+						}) as ChatCompletionMessageParam
+				)
+			};
+		} else {
+			payload = {
+				token,
+				mode: $mode,
+				settings: chat.settings,
+				// OpenAI API complains if we send additionale props
+				messages: currentMessages?.map(
+					(m) =>
+						({
+							role: m.role,
+							content: m.content,
+							name: m.name
+						}) as ChatCompletionMessageParam
+				)
+			};
 		}
-
-		const payload = {
-			token,
-			mode: $mode,
-			settings: chat.settings,
-			// OpenAI API complains if we send additionale props
-			messages: currentMessages?.map(
-				(m) =>
-					({
-						role: m.role,
-						content: m.content,
-						name: m.name
-					}) as ChatCompletionMessageParam
-			)
-		};
 
 		await $eventSourceStore.start(payload, handleAnswer, handleError, handleAbort);
 		input = '';
@@ -112,8 +125,33 @@
 	let rawAnswer: string = '';
 	function handleAnswer(event: MessageEvent<any>) {
 		try {
+			if (event.data) {
+				const completionResponse: any = JSON.parse(event.data);
+				const delta = completionResponse?.ContentUpdate;
+				if (delta) {
+					liveAnswerStore.update((store) => {
+						const answer = { ...store };
+						rawAnswer += delta;
+						const codeBlocks = rawAnswer.match(/```/g) || [];
+						const openCodeBlockWithoutClose = codeBlocks.length % 2 !== 0;
+						if (openCodeBlockWithoutClose) {
+							answer.content = rawAnswer + '\n```';
+						} else {
+							answer.content = rawAnswer;
+						}
+						return answer;
+					});
+				}
+			}
+			// streaming completed or message indicates to stop
+			else {
+				// Handle completion of text streaming
+				addCompletionToChat();
+			}
+
+
 			// streaming...
-			const completionResponse: any = JSON.parse(event.data);
+			/* const completionResponse: any = JSON.parse(event.data);
 			const isFinished = completionResponse.choices[0].finish_reason === 'stop';
 			if (event.data !== '[DONE]' && !isFinished) {
 				const delta: string = completionResponse.choices[0].delta.content || '';
@@ -134,7 +172,7 @@
 			else {
 				// Handle completion of text streaming
 				addCompletionToChat();
-			}
+			} */
 		} catch (err) {
 			handleError(err);
 		}

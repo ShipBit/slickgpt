@@ -1,3 +1,4 @@
+import { PUBLIC_MIDDLEWARE_API_URL } from '$env/static/public';
 import { SSE } from 'sse.js';
 
 export class EventSource {
@@ -12,9 +13,10 @@ export class EventSource {
 		handleError: (event: MessageEvent<any>) => void,
 		handleAbort: (event: MessageEvent<any>) => void
 	) {
-		this.eventSource = new SSE('/api/ask', {
+		this.eventSource = new SSE(PUBLIC_MIDDLEWARE_API_URL, {
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${payload.token}`
 			},
 			payload: JSON.stringify(payload)
 		});

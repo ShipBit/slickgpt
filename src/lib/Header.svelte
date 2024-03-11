@@ -2,18 +2,18 @@
 	import { LightSwitch, getModalStore, popup } from '@skeletonlabs/skeleton';
 	import CommandBar from '$lib/CommandBar.svelte';
 	import { showModalComponent } from '$misc/shared';
-	import { account, mode } from '$misc/stores';
+	import { account, isPro, autoLogin } from '$misc/stores';
 	import { BxDiamond, BxLogOut } from '@inqling/svelte-icons/boxicons-regular';
-	import { onMount } from 'svelte';
 	import { AuthService } from '$misc/authService';
 	import { User } from '@inqling/svelte-icons/heroicon-24-outline';
+	import { onMount } from 'svelte';
 
 	const modalStore = getModalStore();
 
 	let authService: AuthService;
 
 	onMount(async () => {
-		if ($mode === 'middleware') {
+		if ($autoLogin) {
 			authService = await AuthService.getInstance();
 		}
 	});
@@ -23,7 +23,7 @@
 	}
 
 	function logout() {
-		$mode === 'direct';
+		$autoLogin = false;
 		authService.logout();
 	}
 </script>
@@ -40,14 +40,26 @@
 			<span><User class="w-4 h-4" /></span>
 			<span>Profile</span>
 		</button>
-		<!-- Manage subscription -->
-		<a
-			href="https://billing.stripe.com/p/login/test_00g7vOcOTgWb1hu000"
-			class="btn hover:text-gray-500 dark:hover:text-gray-400"
-		>
-			<span><BxDiamond class="w-4 h-4" /></span>
-			<span>Subscription</span>
-		</a>
+		{#if $isPro}
+			<!-- Manage subscription -->
+			<a
+				href="https://billing.stripe.com/p/login/test_00g7vOcOTgWb1hu000"
+				class="btn hover:text-gray-500 dark:hover:text-gray-400"
+			>
+				<span><BxDiamond class="w-4 h-4" /></span>
+				<span>Subscription</span>
+			</a>
+		{:else}
+			<!-- Upgrade to Pro -->
+			<button
+				type="button"
+				class="btn hover:text-gray-500 dark:hover:text-gray-400"
+				on:click={() => showUserModal()}
+			>
+				<span><BxDiamond class="w-4 h-4" /></span>
+				<span>Upgrade to Pro</span>
+			</button>
+		{/if}
 		<!-- Logout -->
 		<button
 			type="button"

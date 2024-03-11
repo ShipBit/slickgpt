@@ -9,12 +9,12 @@ import type { AccountInfo } from '@azure/msal-browser';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
 
-export const mode: Writable<'direct' | 'middleware'> = localStorageStore('slickgpt.mode', 'direct');
-
 export const hasSeenProPrompt: Writable<boolean> = localStorageStore(
 	'slickgpt.hasSeenProPrompt',
 	false
 );
+
+export const autoLogin: Writable<boolean> = localStorageStore('slickgpt.autoLogin', false);
 
 export const liveAnswerStore: Writable<ChatCompletionMessageParam> = writable({
 	role: 'assistant',
@@ -31,7 +31,7 @@ export const account = writable<AccountInfo | null>(null);
 
 export const isPro = derived(account, ($account) => {
 	// TODO: check claim here!
-	return $account != null;
+	return false;
 });
 
 /**

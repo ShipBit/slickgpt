@@ -18,7 +18,7 @@
 		isLoadingAnswerStore,
 		liveAnswerStore,
 		settingsStore,
-		mode
+		isPro
 	} from '$misc/stores';
 	import { countTokens, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
@@ -147,7 +147,7 @@
 		let payload: any;
 		let token: string;
 		let url: string;
-		if ($mode === 'middleware') {
+		if ($isPro) {
 			const authService = await AuthService.getInstance();
 			token = get(authService.token);
 			url = PUBLIC_MIDDLEWARE_API_URL;
@@ -206,7 +206,7 @@
 
 	function handleAnswer(event: MessageEvent<any>) {
 		try {
-			if ($mode === 'middleware') {
+			if ($isPro) {
 				if (event.data) {
 					const completionResponse: any = JSON.parse(event.data);
 					const delta = completionResponse?.ContentUpdate;

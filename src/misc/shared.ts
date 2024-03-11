@@ -6,7 +6,7 @@ import { generateSlug } from 'random-word-slugs';
 import vercelAnalytics from '@vercel/analytics';
 
 import { goto } from '$app/navigation';
-import { mode, chatStore, settingsStore } from './stores';
+import { isPro, chatStore, settingsStore } from './stores';
 import {
 	PUBLIC_DISABLE_TRACKING,
 	PUBLIC_MIDDLEWARE_API_URL,
@@ -116,9 +116,9 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 	let url: string;
 	let body: any;
 	let headers: Record<string, string>;
-	const runMode = get(mode);
+	const isUsingPro = get(isPro);
 
-	if (runMode === 'middleware') {
+	if (isUsingPro) {
 		const authService = await AuthService.getInstance();
 		token = get(authService.token);
 		url = PUBLIC_MIDDLEWARE_API_URL;
@@ -158,7 +158,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 	});
 
 	let result;
-	if (runMode === 'middleware') {
+	if (isUsingPro) {
 		result = await response.text();
 	} else {
 		const res = await response.json();

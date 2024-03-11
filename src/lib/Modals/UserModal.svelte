@@ -2,7 +2,7 @@
 	import TierFeatures from '$lib/TierFeatures.svelte';
 	import TierHeader from '$lib/TierHeader.svelte';
 	import { AuthService } from '$misc/authService';
-	import { account, mode } from '$misc/stores';
+	import { account, autoLogin } from '$misc/stores';
 	import { Key, User } from '@inqling/svelte-icons/heroicon-24-outline';
 	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 
@@ -54,13 +54,8 @@
 		]
 	};
 
-	function useDirectMode() {
-		$mode = 'direct';
-		modalStore.close();
-	}
-
 	async function login() {
-		$mode = 'middleware';
+		$autoLogin = true;
 		const authService = await AuthService.getInstance();
 		await authService.login();
 	}
@@ -132,7 +127,7 @@
 	</div>
 
 	<div class="flex gap-4 self-end">
-		<button type="button" class="btn variant-ghost" on:click={useDirectMode}>
+		<button type="button" class="btn variant-ghost" on:click={() => modalStore.close()}>
 			<span><Key class="w-6 h-6" /></span>
 			<span>I'll use my own API key</span>
 		</button>

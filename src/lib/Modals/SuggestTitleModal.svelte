@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getModalStore, ProgressRadial } from '@skeletonlabs/skeleton';
 	import { confettiAction } from 'svelte-legos';
-	import { chatStore, mode, settingsStore } from '$misc/stores';
+	import { chatStore, settingsStore, isPro } from '$misc/stores';
 	import { canSuggestTitle, suggestChatTitle, track } from '$misc/shared';
 
 	const modalStore = getModalStore();
@@ -12,10 +12,10 @@
 	let title = $chatStore[slug].title;
 
 	$: showAiSuggestOptions =
-		($mode === 'middleware' || $settingsStore.openAiApiKey) && canSuggestTitle($chatStore[slug]);
+		($isPro || $settingsStore.openAiApiKey) && canSuggestTitle($chatStore[slug]);
 
 	async function handleSuggestTitle() {
-		if ($mode === 'direct' && !$settingsStore.openAiApiKey) {
+		if (!$isPro && !$settingsStore.openAiApiKey) {
 			return;
 		}
 		isLoading = true;

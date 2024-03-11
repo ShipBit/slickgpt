@@ -7,7 +7,7 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import {
-		mode,
+		isPro,
 		chatStore,
 		isLoadingAnswerStore,
 		liveAnswerStore,
@@ -115,7 +115,7 @@
 
 		// has no title
 		if ($settingsStore.useTitleSuggestions) {
-			if ($mode === 'middleware' || $settingsStore.openAiApiKey) {
+			if ($isPro || $settingsStore.openAiApiKey) {
 				const title = await suggestChatTitle(chat);
 				chatStore.updateChat(slug, { title });
 				showToast(toastStore, `Chat title set to: '${title}'`, 'secondary');
@@ -160,7 +160,7 @@
 				>
 					<Cog6Tooth class="w-6 h-6" />
 				</button>
-				{#if $mode === 'direct' && !$settingsStore.openAiApiKey}
+				{#if !$isPro && !$settingsStore.openAiApiKey}
 					<span class="relative flex h-3 w-3">
 						<span
 							style="left: -10px;"
@@ -177,7 +177,7 @@
 			<!-- Share -->
 			<span
 				class="relative inline-flex"
-				style={$mode === 'direct' && !$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
+				style={!$isPro && !$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
 			>
 				<button
 					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}

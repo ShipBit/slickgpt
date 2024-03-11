@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Accordion, AccordionItem, getModalStore } from '@skeletonlabs/skeleton';
-	import { chatStore, mode, settingsStore } from '$misc/stores';
-	import { models, OpenAiModel } from '$misc/openai';
+	import { chatStore, settingsStore, isPro } from '$misc/stores';
+	import { models } from '$misc/openai';
 	import { track } from '$misc/shared';
 
 	const modalStore = getModalStore();
@@ -58,7 +58,7 @@
 	<form>
 		<h3 class="h3 mb-4">Settings</h3>
 		<div class="flex-row space-y-6">
-			{#if $mode === 'direct'}
+			{#if !$isPro}
 				<!-- API key -->
 				{#if editApiKey || !$settingsStore.openAiApiKey}
 					<label class="label">
@@ -100,7 +100,7 @@
 			{/if}
 
 			<!-- Model -->
-			{#if $mode === 'middleware' || $settingsStore.openAiApiKey}
+			{#if $isPro || $settingsStore.openAiApiKey}
 				<div class="flex flex-col space-y-2">
 					<label class="label">
 						<div class="flex justify-between space-x-12">
@@ -118,7 +118,7 @@
 							{#each Object.entries(models) as [name, model]}
 								{#if !model.hidden}
 									<option value={name}>
-										{$mode === 'middleware' ? model.middlewareDeploymentName || name : name}
+										{$isPro ? model.middlewareDeploymentName || name : name}
 									</option>
 								{/if}
 							{/each}

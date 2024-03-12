@@ -30,8 +30,10 @@ export const eventSourceStore: Readable<EventSource> = readable(new EventSource(
 export const account = writable<AccountInfo | null>(null);
 
 export const isPro = derived(account, ($account) => {
-	// TODO: check claim here!
-	return $account != null;
+	return (
+		$account?.idTokenClaims &&
+		$account.idTokenClaims['extension_SlickGPTSubscriptionPlan'] === 'Pro'
+	);
 });
 
 /**

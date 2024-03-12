@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PUBLIC_STRIPE_PRO_YEARLY, PUBLIC_STRIPE_PRO_MONTHLY } from '$env/static/public';
 	import { account } from '$misc/stores';
 
 	export let tier: {
@@ -19,11 +20,7 @@
 	});
 
 	$: stripePaymentLink =
-		tier.name === 'Pro'
-			? annual
-				? 'https://buy.stripe.com/test_28o4kecQ88UZaFqaEM'
-				: 'https://buy.stripe.com/test_fZebMG8zSgnrdRC3cj'
-			: '';
+		tier.name === 'Pro' ? (annual ? PUBLIC_STRIPE_PRO_YEARLY : PUBLIC_STRIPE_PRO_MONTHLY) : '';
 </script>
 
 <div class="px-6 flex flex-col justify-end">

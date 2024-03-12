@@ -7,6 +7,7 @@
 	import { AuthService } from '$misc/authService';
 	import { User } from '@inqling/svelte-icons/heroicon-24-outline';
 	import { onMount } from 'svelte';
+	import { PUBLIC_STRIPE_PRO_PORTAL } from '$env/static/public';
 
 	const modalStore = getModalStore();
 
@@ -42,10 +43,7 @@
 		</button>
 		{#if $isPro}
 			<!-- Manage subscription -->
-			<a
-				href="https://billing.stripe.com/p/login/test_00g7vOcOTgWb1hu000"
-				class="btn hover:text-gray-500 dark:hover:text-gray-400"
-			>
+			<a href={PUBLIC_STRIPE_PRO_PORTAL} class="btn hover:text-gray-500 dark:hover:text-gray-400">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					xml:space="preserve"

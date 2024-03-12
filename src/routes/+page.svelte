@@ -163,6 +163,21 @@
 		</button>
 	{/if}
 
+	<!-- Wingman -->
+	<a
+		href="https://wingman-ai.com"
+		class="card p-4 grid variant-ghost-surface shadow-lg"
+		target="_blank"
+	>
+		<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
+			<img src="/wingman-ai.png" class="w-16 h-16" alt="Wingman AI logo" />
+			<div class="flex flex-col items-center gap-2">
+				<span class="text-gray-300 text-sm">Discover our</span>
+				<span class="text-lg">Wingman AI</span>
+			</div>
+		</div>
+	</a>
+
 	<!-- Clear button -->
 	{#if Object.entries($chatStore)?.length}
 		<button class="card p-4 grid variant-ghost-error shadow-lg" on:click={modalConfirmDelete}>

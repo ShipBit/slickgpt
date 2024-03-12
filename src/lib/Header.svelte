@@ -3,7 +3,7 @@
 	import CommandBar from '$lib/CommandBar.svelte';
 	import { showModalComponent } from '$misc/shared';
 	import { account, isPro, autoLogin } from '$misc/stores';
-	import { BxDiamond, BxLogOut } from '@inqling/svelte-icons/boxicons-regular';
+	import { BxLogOut } from '@inqling/svelte-icons/boxicons-regular';
 	import { AuthService } from '$misc/authService';
 	import { User } from '@inqling/svelte-icons/heroicon-24-outline';
 	import { onMount } from 'svelte';
@@ -46,7 +46,19 @@
 				href="https://billing.stripe.com/p/login/test_00g7vOcOTgWb1hu000"
 				class="btn hover:text-gray-500 dark:hover:text-gray-400"
 			>
-				<span><BxDiamond class="w-4 h-4" /></span>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					xml:space="preserve"
+					style="enable-background:new 0 0 122.88 96.04"
+					viewBox="0 0 122.88 96.04"
+					class="w-4 h-4"
+					fill="currentColor"
+				>
+					<path
+						d="M59.07 96.03 1.15 29.77h38.01l19.91 66.26zM61.18.11 45.89 25.24H77.6L61.18.11zm21 24.96L65.17 0h31.45L82.18 25.07zm-40.53.24L56.55 0H24.61l17.04 25.31zm60.06-22.33L86.67 25.24h36.21L101.71 2.98zm-79.45 0 15.81 22.26H0L22.26 2.98zm22.47 26.59h33.63L62.04 95.04 44.73 29.57zm20.18 66.47 57.23-66.27H84.13L64.91 96.04z"
+						style="fill-rule:evenodd;clip-rule:evenodd"
+					/>
+				</svg>
 				<span>Subscription</span>
 			</a>
 		{:else}
@@ -56,7 +68,21 @@
 				class="btn hover:text-gray-500 dark:hover:text-gray-400"
 				on:click={() => showUserModal()}
 			>
-				<span><BxDiamond class="w-4 h-4" /></span>
+				<span>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						xml:space="preserve"
+						style="enable-background:new 0 0 122.88 96.04"
+						viewBox="0 0 122.88 96.04"
+						class="w-4 h-4"
+						fill="currentColor"
+					>
+						<path
+							d="M59.07 96.03 1.15 29.77h38.01l19.91 66.26zM61.18.11 45.89 25.24H77.6L61.18.11zm21 24.96L65.17 0h31.45L82.18 25.07zm-40.53.24L56.55 0H24.61l17.04 25.31zm60.06-22.33L86.67 25.24h36.21L101.71 2.98zm-79.45 0 15.81 22.26H0L22.26 2.98zm22.47 26.59h33.63L62.04 95.04 44.73 29.57zm20.18 66.47 57.23-66.27H84.13L64.91 96.04z"
+							style="fill-rule:evenodd;clip-rule:evenodd"
+						/>
+					</svg></span
+				>
 				<span>Upgrade to Pro</span>
 			</button>
 		{/if}
@@ -97,9 +123,9 @@
 				<span>{$account.name}</span>
 			</button>
 		{:else}
-			<button type="button" class="btn btn-sm variant-ghost-primary" on:click={showUserModal}>
-				<span><BxDiamond class="w-4 h-4" /></span>
-				<span>Pro</span>
+			<button type="button" class="btn btn-sm variant-filled-secondary" on:click={showUserModal}>
+				<span><User class="w-4 h-4" /></span>
+				<span>Login</span>
 			</button>
 		{/if}
 	</div>

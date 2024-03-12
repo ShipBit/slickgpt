@@ -61,7 +61,7 @@
 	}
 </script>
 
-<div class="card flex flex-col gap-4 variant-filled-surface-700 p-8">
+<div class="card flex flex-col gap-4 variant-filled-surface-700 p-4 md:p-6 lg:p-8 max-w-[100]">
 	<h3 class="h3">How do you want to use SlickGPT?</h3>
 	<p>
 		You can use SlickGPT with your own Open AI API key without user registration. You'll "pay per
@@ -70,7 +70,7 @@
 		for you.
 	</p>
 
-	<div class="max-w-6xl mx-auto px-4 sm:px-6 mb-16 flex flex-col gap-12 items-center mt-8">
+	<div class="max-w-6xl mx-auto flex flex-col gap-4 md:gap-8 lg:gap-12 items-center mt-8">
 		<div>
 			<!-- Pricing tabs -->
 			<div class="relative">
@@ -126,7 +126,7 @@
 		</div>
 	</div>
 
-	<div class="flex gap-4 self-end">
+	<div class="flex flex-col md:flex-row gap-4 self-center md:self-end">
 		<button type="button" class="btn variant-ghost" on:click={() => modalStore.close()}>
 			<span><Key class="w-6 h-6" /></span>
 			<span>I'll use my own API key</span>
@@ -134,7 +134,7 @@
 		{#if !$account}
 			<button type="button" class="btn variant-filled-secondary" on:click={login}>
 				<span><User class="w-6 h-6" /></span>
-				<span>I'll register / login</span>
+				<span>Register / Login</span>
 			</button>
 		{/if}
 	</div>

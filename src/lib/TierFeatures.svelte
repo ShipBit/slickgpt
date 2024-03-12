@@ -10,23 +10,23 @@
 </script>
 
 {#each Object.entries(features) as [category, subfeatures]}
-	<div class="px-6 flex flex-col justify-end">
+	<div class="px-6 flex-col justify-end hidden md:flex">
 		<div class="py-2 text-slate-50 font-medium mt-4">{category}</div>
 	</div>
-	<div class="px-6 flex flex-col justify-end">
+	<div class="px-6 hidden md:flex flex-col justify-end">
 		<div class="py-2 text-slate-50 font-medium mt-4 md:hidden">{category}</div>
 	</div>
-	<div class="px-6 flex flex-col justify-end">
+	<div class="px-6 hidden md:flex flex-col justify-end">
 		<div class="py-2 text-slate-50 font-medium mt-4 md:hidden">{category}</div>
 	</div>
 
 	{#each subfeatures as feature}
-		<div class="px-6 flex flex-col justify-end">
+		<div class="px-6 hidden md:flex flex-col justify-end">
 			<div class="py-2 text-slate-400 border-b border-slate-700" class:font-bold={feature.bold}>
 				{feature.name}
 			</div>
 		</div>
-		<div class="px-6 flex flex-col justify-end">
+		<div class="px-6 hidden md:flex flex-col justify-end">
 			<div class="flex items-center h-full border-b border-slate-700 py-2 text-slate-400">
 				{#if feature.free === true}
 					<svg
@@ -45,7 +45,7 @@
 				<span><span class="md:hidden">{feature.name}</span></span>
 			</div>
 		</div>
-		<div class="px-6 flex flex-col justify-end">
+		<div class="px-6 hidden md:flex flex-col justify-end">
 			<div class="flex items-center h-full border-b border-slate-700 py-2 text-slate-400">
 				{#if feature.pro === true}
 					<!-- content here -->

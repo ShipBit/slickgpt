@@ -1,4 +1,4 @@
-<div class="flex justify-between items-center">
+<div class="flex gap-2 justify-between items-center">
 	<!-- Icons -->
 	<div class="flex justify-self-center md:justify-self-start space-x-4">
 		<!-- GitHub -->
@@ -38,7 +38,7 @@
 	</div>
 
 	<div class="flex gap-2">
-		<a href="/imprint">Imprint</a>
+		<a href="/legal">Legal</a>
 		<span>|</span>
 		<!-- Copyrights -->
 		<a

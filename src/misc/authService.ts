@@ -1,4 +1,4 @@
-import { writable, type Writable } from 'svelte/store';
+import { get, writable, type Writable } from 'svelte/store';
 import {
 	PublicClientApplication,
 	type PopupRequest,
@@ -10,7 +10,8 @@ import {
 	type EndSessionRequest
 } from '@azure/msal-browser';
 import { b2cPolicies, msalConfig } from './authConfig';
-import { account } from './stores';
+import { account, hasAcceptedTerms } from './stores';
+import { PUBLIC_AZURE_CHECK_TERMS_CONSENT } from '$env/static/public';
 
 export class AuthService {
 	private static instance: Promise<AuthService> | null = null;
@@ -53,6 +54,9 @@ export class AuthService {
 					} else {
 						await this.login();
 					}
+					// Check if user has accepted terms
+					const hasAccepted = await this.hasAcceptedTerms();
+					hasAcceptedTerms.set(hasAccepted);
 				}
 			})
 			.catch(async (error) => {
@@ -77,6 +81,20 @@ export class AuthService {
 			},
 			1000 * 60 * 30
 		);
+	}
+
+	private async hasAcceptedTerms() {
+		const isValidResponse = await fetch(`${PUBLIC_AZURE_CHECK_TERMS_CONSENT}?app=SlickGPT`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${get(this.token)}`
+			}
+		});
+
+		const isValid = await isValidResponse.json();
+
+		return isValid === true;
 	}
 
 	public static getInstance(): Promise<AuthService> {

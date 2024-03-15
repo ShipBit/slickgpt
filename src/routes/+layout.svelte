@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onDestroy, onMount } from 'svelte';
+	import type { Unsubscriber } from 'svelte/store';
 	import 'highlightjs-copy/dist/highlightjs-copy.min.css';
 	import '../app.postcss';
 	import { inject } from '@vercel/analytics';
@@ -12,7 +14,9 @@
 		Toast,
 		storePopup,
 		setInitialClassState,
-		initializeStores
+		initializeStores,
+		type ModalSettings,
+		getModalStore
 	} from '@skeletonlabs/skeleton';
 	import hljs from 'highlight.js';
 	import CopyButtonPlugin from 'highlightjs-copy';
@@ -28,6 +32,8 @@
 	import CostModal from '$lib/Modals/CostModal.svelte';
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
 	import UserModal from '$lib/Modals/UserModal.svelte';
+	import AcceptTerms from '$lib/Modals/AcceptTerms.svelte';
+	import { hasAcceptedTerms } from '$misc/stores';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -36,6 +42,35 @@
 	initializeStores();
 	setupSkeleton();
 
+	const modalStore = getModalStore();
+
+	let unsubscribeHasAcceptedTerms: Unsubscriber;
+
+	onMount(() => {
+		unsubscribeHasAcceptedTerms = hasAcceptedTerms.subscribe((accepted) => {
+			if (!accepted) {
+				const modal: ModalSettings = {
+					type: 'component',
+					component: 'AcceptTermsModal',
+					response: (accepted) => {
+						if (!accepted) {
+							// Skeleton modals can always be closed with Esc.
+							// If the user did that, we show the modal again.
+							modalStore.trigger(modal);
+						}
+					}
+				};
+				modalStore.trigger(modal);
+			}
+		});
+	});
+
+	onDestroy(() => {
+		if (unsubscribeHasAcceptedTerms) {
+			unsubscribeHasAcceptedTerms();
+		}
+	});
+
 	// see https://www.skeleton.dev/utilities/modals
 	const modalComponentRegistry: Record<string, ModalComponent> = {
 		SettingsModal: { ref: SettingsModal },
@@ -43,7 +78,8 @@
 		ShareModal: { ref: ShareModal },
 		CostModal: { ref: CostModal },
 		SuggestTitleModal: { ref: SuggestTitleModal },
-		UserModal: { ref: UserModal }
+		UserModal: { ref: UserModal },
+		AcceptTermsModal: { ref: AcceptTerms }
 	};
 
 	const meta = {

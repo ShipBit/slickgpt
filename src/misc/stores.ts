@@ -36,6 +36,8 @@ export const isPro = derived(account, ($account) => {
 	);
 });
 
+export const hasAcceptedTerms = writable(true);
+
 /**
  * Custom chat store
  **/

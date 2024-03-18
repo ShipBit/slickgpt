@@ -43,7 +43,11 @@
 		</button>
 		{#if $isPro}
 			<!-- Manage subscription -->
-			<a href={PUBLIC_STRIPE_PRO_PORTAL} class="btn hover:text-gray-500 dark:hover:text-gray-400">
+			<a
+				href={PUBLIC_STRIPE_PRO_PORTAL}
+				class="btn hover:text-gray-500 dark:hover:text-gray-400"
+				target="_blank"
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					xml:space="preserve"

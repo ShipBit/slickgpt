@@ -33,7 +33,8 @@
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
 	import UserModal from '$lib/Modals/UserModal.svelte';
 	import AcceptTerms from '$lib/Modals/AcceptTerms.svelte';
-	import { hasAcceptedTerms } from '$misc/stores';
+	import { hasAcceptedTerms, hasSubscriptionChanged } from '$misc/stores';
+	import CheckoutComplete from '$lib/Modals/CheckoutComplete.svelte';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -45,6 +46,7 @@
 	const modalStore = getModalStore();
 
 	let unsubscribeHasAcceptedTerms: Unsubscriber;
+	let unsubscribeHasSubscriptionChanged: Unsubscriber;
 
 	onMount(() => {
 		unsubscribeHasAcceptedTerms = hasAcceptedTerms.subscribe((accepted) => {
@@ -63,11 +65,31 @@
 				modalStore.trigger(modal);
 			}
 		});
+
+		unsubscribeHasSubscriptionChanged = hasSubscriptionChanged.subscribe((changed) => {
+			if (changed) {
+				const modal: ModalSettings = {
+					type: 'component',
+					component: 'ModalCheckoutComplete',
+					response: (accepted) => {
+						if (!accepted) {
+							// Skeleton modals can always be closed with Esc.
+							// If the user did that, we show the modal again.
+							modalStore.trigger(modal);
+						}
+					}
+				};
+				modalStore.trigger(modal);
+			}
+		});
 	});
 
 	onDestroy(() => {
 		if (unsubscribeHasAcceptedTerms) {
 			unsubscribeHasAcceptedTerms();
+		}
+		if (unsubscribeHasSubscriptionChanged) {
+			unsubscribeHasSubscriptionChanged();
 		}
 	});
 
@@ -79,7 +101,8 @@
 		CostModal: { ref: CostModal },
 		SuggestTitleModal: { ref: SuggestTitleModal },
 		UserModal: { ref: UserModal },
-		AcceptTermsModal: { ref: AcceptTerms }
+		AcceptTermsModal: { ref: AcceptTerms },
+		ModalCheckoutComplete: { ref: CheckoutComplete }
 	};
 
 	const meta = {

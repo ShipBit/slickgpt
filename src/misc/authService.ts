@@ -10,7 +10,7 @@ import {
 	type EndSessionRequest
 } from '@azure/msal-browser';
 import { b2cPolicies, msalConfig } from './authConfig';
-import { account, hasAcceptedTerms } from './stores';
+import { account, hasAcceptedTerms, hasSubscriptionChanged } from './stores';
 import { PUBLIC_AZURE_CHECK_TERMS_CONSENT } from '$env/static/public';
 
 export class AuthService {
@@ -44,13 +44,19 @@ export class AuthService {
 			.then(async (response) => {
 				if (response) {
 					// Coming from a redirect
-					account.set(response.account);
-					this.updateToken(response.accessToken);
+					await this.refreshToken(true);
 				} else {
 					// Normal page load
 					const firstAccount = this.getAccount();
 					if (firstAccount) {
 						await this.refreshToken(true);
+						const params = new URLSearchParams(window.location.search);
+						if (params.has('referrer')) {
+							const referrer = params.get('referrer');
+							if (referrer === 'stripe-checkout') {
+								hasSubscriptionChanged.set(true);
+							}
+						}
 					} else {
 						await this.login();
 					}
@@ -68,7 +74,7 @@ export class AuthService {
 				}
 				const firstAccount = this.getAccount();
 				if (firstAccount) {
-					await this.refreshToken(false);
+					await this.refreshToken(true);
 				} else {
 					await this.login();
 				}
@@ -88,7 +94,7 @@ export class AuthService {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: `Bearer ${get(this.token)}`
+				'Authorization': `Bearer ${get(this.token)}`
 			}
 		});
 
@@ -139,9 +145,9 @@ export class AuthService {
 		this.silentRequest.account = userAccount;
 		this.silentRequest.forceRefresh = forceRefresh;
 
-		if (forceRefresh) {
+		/* if (forceRefresh) {
 			this.msal.clearCache();
-		}
+		} */
 
 		try {
 			const response = await this.msal.acquireTokenSilent(this.silentRequest);
@@ -176,6 +182,7 @@ export class AuthService {
 
 		account.set(null);
 		this.updateToken('');
+		this.msal.clearCache();
 		await this.msal.logoutRedirect(logoutRequest);
 	}
 

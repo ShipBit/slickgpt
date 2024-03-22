@@ -102,13 +102,15 @@
 							<!-- Toggle switch -->
 							<div class="max-md:text-center">
 								<div class="inline-flex items-center whitespace-nowrap">
-									<div class="text-sm text-slate-500 font-medium mr-2 md:max-lg:hidden">
+									<div
+										class="text-sm text-slate-700 dark:text-slate-100 font-medium mr-2 md:max-lg:hidden"
+									>
 										Monthly
 									</div>
 									<div class="relative">
 										<SlideToggle name="payment-interval" bind:checked={annual} />
 									</div>
-									<div class="text-sm text-slate-500 font-medium ml-2">
+									<div class="text-sm text-slate-700 dark:text-slate-100 font-medium ml-2">
 										Yearly <span class="text-teal-500">(-%)</span>
 									</div>
 								</div>

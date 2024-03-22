@@ -9,15 +9,10 @@
 		Share,
 		Trash
 	} from '@inqling/svelte-icons/heroicon-24-solid';
-	import {
-		ChatBubbleBottomCenter,
-		AcademicCap,
-		Clock
-	} from '@inqling/svelte-icons/heroicon-24-outline';
+	import { ChatBubbleBottomCenter, Clock } from '@inqling/svelte-icons/heroicon-24-outline';
 	import { goto } from '$app/navigation';
 	import { createNewChat, showModalComponent, showToast } from '$misc/shared';
 	import { chatStore, isTimeagoInitializedStore, hasSeenProPrompt, isPro } from '$misc/stores';
-	import { BxsDiamond } from '@inqling/svelte-icons/boxicons-solid';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -156,7 +151,7 @@
 					/>
 				</svg>
 				<div class="flex flex-col items-center gap-2">
-					<span class="text-gray-300 text-sm">No API key?</span>
+					<span class="text-gray-700 dark:text-gray-300 text-sm">No API key?</span>
 					<span class="text-lg">Try SlickGPT Pro</span>
 				</div>
 			</div>
@@ -172,7 +167,7 @@
 		<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
 			<img src="/wingman-ai.png" class="w-16 h-16" alt="Wingman AI logo" />
 			<div class="flex flex-col items-center gap-2">
-				<span class="text-gray-300 text-sm">Discover our</span>
+				<span class="text-gray-700 dark:text-gray-300 text-sm">Discover our</span>
 				<span class="text-lg">Wingman AI</span>
 			</div>
 		</div>

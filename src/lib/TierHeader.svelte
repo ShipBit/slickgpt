@@ -31,17 +31,17 @@
 			{tier.name}
 		</div>
 		<div class="mb-1">
-			<span class="text-3xl font-bold text-slate-50">
+			<span class="text-3xl font-bold">
 				{annual ? formatter.format(tier.pricePerYear) : formatter.format(tier.pricePerMonth)}
 			</span>
 			{#if tier.pricePerMonth > 0}
-				<span class="text-sm text-slate-300 font-medium">/ {annual ? 'year' : 'month'}</span>
+				<span class="text-sm font-medium">/ {annual ? 'year' : 'month'}</span>
 			{/if}
 			{#if annual && tier.yearlyDiscount > 0}
 				<span class="text-teal-500 font-bold">(-{tier.yearlyDiscount}%)</span>
 			{/if}
 		</div>
-		<div class="text-slate-300">
+		<div class="text-slate-700 dark:text-slate-300">
 			{@html tier.description}
 		</div>
 	</div>

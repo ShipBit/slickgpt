@@ -32,7 +32,8 @@ export const account = writable<AccountInfo | null>(null);
 export const isPro = derived(account, ($account) => {
 	return (
 		$account?.idTokenClaims &&
-		$account.idTokenClaims['extension_SlickGPTSubscriptionPlan'] === 'Pro'
+		($account.idTokenClaims['extension_SlickGPTSubscriptionPlan'] === 'Pro' || 
+			$account?.idTokenClaims['extension_WingmanSubscriptionPlan'] === 'Ultra')
 	);
 });
 

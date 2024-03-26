@@ -1,13 +1,20 @@
-import type { ChatCompletionMessageParam } from 'openai/resources/chat';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { writable, type Readable, type Writable, readable, get, derived } from 'svelte/store';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { v4 as uuidv4 } from 'uuid';
 import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
 import type { Chat, ChatMessage, ClientSettings } from './shared';
-import { closeOpenedCodeTicks } from './markdownHelper';
+import type { AccountInfo } from '@azure/msal-browser';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
+
+export const hasSeenProPrompt: Writable<boolean> = localStorageStore(
+	'slickgpt.hasSeenProPrompt',
+	false
+);
+
+export const autoLogin: Writable<boolean> = localStorageStore('slickgpt.autoLogin', false);
 
 export const liveAnswerStore: Writable<ChatCompletionMessageParam> = writable({
 	role: 'assistant',
@@ -19,6 +26,19 @@ export const isLoadingAnswerStore: Writable<boolean> = writable(false);
 export const isTimeagoInitializedStore: Writable<boolean> = writable(false);
 
 export const eventSourceStore: Readable<EventSource> = readable(new EventSource());
+
+export const account = writable<AccountInfo | null>(null);
+
+export const isPro = derived(account, ($account) => {
+	return (
+		$account?.idTokenClaims &&
+		$account.idTokenClaims['extension_SlickGPTSubscriptionPlan'] === 'Pro'
+	);
+});
+
+export const hasAcceptedTerms = writable(true);
+
+export const hasSubscriptionChanged = writable(false);
 
 /**
  * Custom chat store

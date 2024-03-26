@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { ChatCompletionMessageParam } from 'openai/resources/chat';
+	import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+	import type { Moderation } from 'openai/resources/moderations';
 	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
@@ -17,8 +18,17 @@
 		isLoadingAnswerStore,
 		liveAnswerStore,
 		settingsStore,
+		isPro
 	} from '$misc/stores';
-	import { countTokens } from '$misc/openai';
+	import { countTokens, models } from '$misc/openai';
+	import { AuthService } from '$misc/authService';
+	import { get } from 'svelte/store';
+	import {
+		PUBLIC_MIDDLEWARE_API_URL,
+		PUBLIC_MODERATION,
+		PUBLIC_MODERATION_API_URL,
+		PUBLIC_OPENAI_API_URL
+	} from '$env/static/public';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -61,7 +71,52 @@
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
-	function handleSubmit() {
+	async function checkModerationApi(messages: ChatCompletionMessageParam[], token: string) {
+		if (PUBLIC_MODERATION === 'true') {
+			const textMessages = messages.map((msg) => msg.content);
+
+			const moderationResponse = await fetch(PUBLIC_MODERATION_API_URL, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({ input: textMessages })
+			});
+
+			if (!moderationResponse.ok) {
+				const err = await moderationResponse.json();
+				throw new Error(err.error);
+			}
+
+			const moderationJson = await moderationResponse.json();
+
+			for (let index = 0; index < moderationJson.results.length; index++) {
+				const result = moderationJson.results[index];
+
+				if (result.flagged) {
+					handleError({
+						data: JSON.stringify({
+							message: `Message ${index + 1} is globally flagged for moderation.`
+						})
+					});
+					return false;
+				}
+
+				for (const [category, flagged] of Object.entries(result.categories)) {
+					if (flagged) {
+						handleError({
+							data: JSON.stringify({ message: `Message ${index + 1} is flagged for ${category}.` })
+						});
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	async function handleSubmit() {
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
 
@@ -81,49 +136,93 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		const payload = {
-			// OpenAI API complains if we send additionale props
-			messages: currentMessages?.map(
-				(m) =>
-					({
-						role: m.role,
-						content: m.content,
-						name: m.name
-					}) as ChatCompletionMessageParam
-			),
-			settings: chat.settings,
-			openAiKey: $settingsStore.openAiApiKey
-		};
+		const messages = currentMessages?.map(
+			(m) =>
+				({
+					role: m.role,
+					content: m.content
+				}) as ChatCompletionMessageParam
+		);
 
-		$eventSourceStore.start(payload, handleAnswer, handleError, handleAbort);
+		let payload: any;
+		let token: string;
+		let url: string;
+		if ($isPro) {
+			const authService = await AuthService.getInstance();
+			token = get(authService.token);
+			url = PUBLIC_MIDDLEWARE_API_URL;
+			payload = {
+				settings: {
+					maxTokens: chat.settings.max_tokens,
+					temperature: chat.settings.temperature,
+					topP: chat.settings.top_p,
+					stopSequences:
+						chat.settings.stop === undefined
+							? []
+							: [...(Array.isArray(chat.settings.stop) ? chat.settings.stop : [chat.settings.stop])]
+				},
+				model: models[chat.settings.model].middlewareDeploymentName || chat.settings.model,
+				messages,
+				stream: true
+			};
+		} else {
+			token = $settingsStore.openAiApiKey!;
+			url = PUBLIC_OPENAI_API_URL;
+
+			if (messages) {
+				const moderationOk = await checkModerationApi(messages, token);
+				if (!moderationOk) {
+					return;
+				}
+			}
+
+			payload = {
+				...chat.settings,
+				messages,
+				stream: true
+			};
+		}
+
+		await $eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
 		input = '';
 	}
 
 	let rawAnswer: string = '';
+
+	function showLiveResponse(delta: string) {
+		liveAnswerStore.update((store) => {
+			const answer = { ...store };
+			rawAnswer += delta;
+			const codeBlocks = rawAnswer.match(/```/g) || [];
+			const openCodeBlockWithoutClose = codeBlocks.length % 2 !== 0;
+			if (openCodeBlockWithoutClose) {
+				answer.content = rawAnswer + '\n```';
+			} else {
+				answer.content = rawAnswer;
+			}
+			return answer;
+		});
+	}
+
 	function handleAnswer(event: MessageEvent<any>) {
 		try {
-			// streaming...
-			const completionResponse: any = JSON.parse(event.data);
-			const isFinished = completionResponse.choices[0].finish_reason === 'stop';
-			if (event.data !== '[DONE]' && !isFinished) {
-				const delta: string = completionResponse.choices[0].delta.content || '';
-				liveAnswerStore.update((store) => {
-					const answer = { ...store };
-					rawAnswer += delta;
-					const codeBlocks = rawAnswer.match(/```/g) || [];
-					const openCodeBlockWithoutClose = codeBlocks.length % 2 !== 0;
-					if (openCodeBlockWithoutClose) {
-						answer.content = rawAnswer + '\n```';
-					} else {
-						answer.content = rawAnswer;
-					}
-					return answer;
-				});
-			}
-			// streaming completed or message indicates to stop
-			else {
-				// Handle completion of text streaming
-				addCompletionToChat();
+			if ($isPro) {
+				if (event.data) {
+					const completionResponse: any = JSON.parse(event.data);
+					const delta = completionResponse?.ContentUpdate;
+					showLiveResponse(delta);
+				} else {
+					addCompletionToChat();
+				}
+			} else {
+				const completionResponse: any = JSON.parse(event.data);
+				const isFinished = completionResponse.choices[0].finish_reason === 'stop';
+				if (event.data !== '[DONE]' && !isFinished) {
+					const delta: string = completionResponse.choices[0].delta.content || '';
+					showLiveResponse(delta);
+				} else {
+					addCompletionToChat();
+				}
 			}
 		} catch (err) {
 			handleError(err);
@@ -131,7 +230,7 @@
 	}
 
 	function handleAbort(_event: MessageEvent<any>) {
-		// th message we're adding is incomplete, so HLJS probably can't highlight it correctly
+		// the message we're adding is incomplete, so HLJS probably can't highlight it correctly
 		addCompletionToChat(true);
 	}
 

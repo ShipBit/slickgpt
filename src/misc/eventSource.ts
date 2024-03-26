@@ -7,15 +7,23 @@ export class EventSource {
 	private handleAbort?: (event: MessageEvent<any>) => void;
 
 	start(
+		url: string,
 		payload: any,
 		handleAnswer: (event: MessageEvent<any>) => void,
 		handleError: (event: MessageEvent<any>) => void,
-		handleAbort: (event: MessageEvent<any>) => void
+		handleAbort: (event: MessageEvent<any>) => void,
+		token?: string
 	) {
-		this.eventSource = new SSE('/api/ask', {
-			headers: {
-				'Content-Type': 'application/json'
-			},
+		const headers: Record<string, string> = token
+			? {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				}
+			: {
+					'Content-Type': 'application/json'
+				};
+		this.eventSource = new SSE(url, {
+			headers,
 			payload: JSON.stringify(payload)
 		});
 		this.handleAnswer = handleAnswer;

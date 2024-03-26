@@ -6,7 +6,13 @@
 	import { Trash, Cog6Tooth, Share } from '@inqling/svelte-icons/heroicon-24-outline';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { chatStore, isLoadingAnswerStore, liveAnswerStore, settingsStore } from '$misc/stores';
+	import {
+		isPro,
+		chatStore,
+		isLoadingAnswerStore,
+		liveAnswerStore,
+		settingsStore
+	} from '$misc/stores';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import ChatInput from '$lib/ChatInput.svelte';
 	import Chat from '$lib/Chat.svelte';
@@ -56,6 +62,7 @@
 	onDestroy(() => {
 		unsubscribeChatStore();
 		unsubscribeisLoadingAnswerStore();
+		unsubscribeLiveAnswerStore();
 	});
 
 	async function highlightCode() {
@@ -108,8 +115,8 @@
 
 		// has no title
 		if ($settingsStore.useTitleSuggestions) {
-			if ($settingsStore.openAiApiKey) {
-				const title = await suggestChatTitle(chat, $settingsStore.openAiApiKey);
+			if ($isPro || $settingsStore.openAiApiKey) {
+				const title = await suggestChatTitle(chat);
 				chatStore.updateChat(slug, { title });
 				showToast(toastStore, `Chat title set to: '${title}'`, 'secondary');
 			}
@@ -153,7 +160,7 @@
 				>
 					<Cog6Tooth class="w-6 h-6" />
 				</button>
-				{#if !$settingsStore.openAiApiKey}
+				{#if !$isPro && !$settingsStore.openAiApiKey}
 					<span class="relative flex h-3 w-3">
 						<span
 							style="left: -10px;"
@@ -170,7 +177,7 @@
 			<!-- Share -->
 			<span
 				class="relative inline-flex"
-				style={!$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
+				style={!$isPro && !$settingsStore.openAiApiKey ? 'margin-left: -4px;' : ''}
 			>
 				<button
 					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}

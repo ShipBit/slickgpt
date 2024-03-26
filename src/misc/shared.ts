@@ -1,13 +1,18 @@
-import type { ChatCompletionMessageParam } from 'openai/resources/chat';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { get } from 'svelte/store';
-import { defaultOpenAiSettings, OpenAiModel, type OpenAiSettings } from './openai';
+import { defaultOpenAiSettings, models, OpenAiModel, type OpenAiSettings } from './openai';
 import type { ModalSettings, ToastSettings, ToastStore, ModalStore } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
 import vercelAnalytics from '@vercel/analytics';
 
 import { goto } from '$app/navigation';
-import { chatStore, settingsStore } from './stores';
-import { PUBLIC_DISABLE_TRACKING } from '$env/static/public';
+import { isPro, chatStore, settingsStore } from './stores';
+import {
+	PUBLIC_DISABLE_TRACKING,
+	PUBLIC_MIDDLEWARE_API_URL,
+	PUBLIC_OPENAI_API_URL
+} from '$env/static/public';
+import { AuthService } from './authService';
 
 export interface ChatMessage extends ChatCompletionMessageParam {
 	id?: string;
@@ -77,7 +82,7 @@ export function canSuggestTitle(chat: Chat) {
 	return chat.contextMessage?.content || chat.messages?.length > 0;
 }
 
-export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promise<string> {
+export async function suggestChatTitle(chat: Chat): Promise<string> {
 	if (!canSuggestTitle(chat)) {
 		return Promise.resolve(chat.title);
 	}
@@ -86,28 +91,82 @@ export async function suggestChatTitle(chat: Chat, openAiApiKey: string): Promis
 		chat.messages.length === 1
 			? chatStore.getCurrentMessageBranch(chat)
 			: chat.contextMessage?.content
-			? [chat.contextMessage, ...chat.messages]
-			: chat.messages;
+				? [chat.contextMessage, ...chat.messages]
+				: chat.messages;
+	if (!messages) {
+		return Promise.resolve(chat.title);
+	}
 
-	const filteredMessages = messages?.slice(0, chat.contextMessage?.content ? 3 : 2).map(
-		(m) =>
-			({
-				role: m.role,
-				content: m.content,
-				name: m.name
-			}) as ChatCompletionMessageParam
-	);
+	const filteredMessages = [
+		...messages.slice(0, chat.contextMessage?.content ? 3 : 2).map(
+			(m) =>
+				({
+					role: m.role,
+					content: m.content
+				}) as ChatCompletionMessageParam
+		),
+		{
+			role: 'user',
+			content:
+				"Suggest a short title for this chat, summarising its content. Take the 'system' message into account and the first prompt from me and your first answer. The title should not be longer than 100 chars. Answer with just the title. Don't use punctuation in the title."
+		} as ChatCompletionMessageParam
+	];
 
-	const response = await fetch('/api/suggest-title', {
-		method: 'POST',
-		body: JSON.stringify({
+	let token: string;
+	let url: string;
+	let body: any;
+	let headers: Record<string, string>;
+	const isUsingPro = get(isPro);
+
+	if (isUsingPro) {
+		const authService = await AuthService.getInstance();
+		token = get(authService.token);
+		url = PUBLIC_MIDDLEWARE_API_URL;
+		headers = {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		};
+		body = {
 			messages: filteredMessages,
-			openAiKey: openAiApiKey
-		})
-	});
-	const { title }: { title: string } = await response.json();
+			settings: {
+				maxTokens: 1024,
+				temperature: 1,
+				topP: 1,
+				stopSequences: []
+			},
+			model: models[OpenAiModel.Gpt35Turbo].middlewareDeploymentName || OpenAiModel.Gpt35Turbo,
+			stream: false
+		};
+	} else {
+		url = PUBLIC_OPENAI_API_URL;
+		headers = {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${get(settingsStore).openAiApiKey}`
+		};
+		body = {
+			messages: filteredMessages,
+			...defaultOpenAiSettings,
+			model: OpenAiModel.Gpt35Turbo,
+			stream: false
+		};
+	}
 
-	return Promise.resolve(title);
+	const response = await fetch(url, {
+		method: 'POST',
+		headers,
+		body: JSON.stringify(body)
+	});
+
+	let result;
+	if (isUsingPro) {
+		result = await response.text();
+	} else {
+		const res = await response.json();
+		const title = res.choices[0].message.content.replace(/(^['"])|(['"]$)/g, '').trim();
+		result = title;
+	}
+
+	return Promise.resolve(result);
 }
 
 export function showModalComponent(

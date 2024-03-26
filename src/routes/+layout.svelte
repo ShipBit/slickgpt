@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onDestroy, onMount } from 'svelte';
+	import type { Unsubscriber } from 'svelte/store';
 	import 'highlightjs-copy/dist/highlightjs-copy.min.css';
 	import '../app.postcss';
 	import { inject } from '@vercel/analytics';
@@ -11,7 +13,10 @@
 		storeHighlightJs,
 		Toast,
 		storePopup,
-		setInitialClassState
+		setInitialClassState,
+		initializeStores,
+		type ModalSettings,
+		getModalStore
 	} from '@skeletonlabs/skeleton';
 	import hljs from 'highlight.js';
 	import CopyButtonPlugin from 'highlightjs-copy';
@@ -26,7 +31,10 @@
 	import ShareModal from '$lib/Modals/ShareModal.svelte';
 	import CostModal from '$lib/Modals/CostModal.svelte';
 	import SuggestTitleModal from '$lib/Modals/SuggestTitleModal.svelte';
-	import { initializeStores } from '@skeletonlabs/skeleton';
+	import UserModal from '$lib/Modals/UserModal.svelte';
+	import AcceptTerms from '$lib/Modals/AcceptTerms.svelte';
+	import { hasAcceptedTerms, hasSubscriptionChanged } from '$misc/stores';
+	import CheckoutComplete from '$lib/Modals/CheckoutComplete.svelte';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -35,13 +43,66 @@
 	initializeStores();
 	setupSkeleton();
 
+	const modalStore = getModalStore();
+
+	let unsubscribeHasAcceptedTerms: Unsubscriber;
+	let unsubscribeHasSubscriptionChanged: Unsubscriber;
+
+	onMount(() => {
+		unsubscribeHasAcceptedTerms = hasAcceptedTerms.subscribe((accepted) => {
+			if (!accepted) {
+				const modal: ModalSettings = {
+					type: 'component',
+					component: 'AcceptTermsModal',
+					response: (accepted) => {
+						if (!accepted) {
+							// Skeleton modals can always be closed with Esc.
+							// If the user did that, we show the modal again.
+							modalStore.trigger(modal);
+						}
+					}
+				};
+				modalStore.trigger(modal);
+			}
+		});
+
+		unsubscribeHasSubscriptionChanged = hasSubscriptionChanged.subscribe((changed) => {
+			if (changed) {
+				const modal: ModalSettings = {
+					type: 'component',
+					component: 'ModalCheckoutComplete',
+					response: (accepted) => {
+						if (!accepted) {
+							// Skeleton modals can always be closed with Esc.
+							// If the user did that, we show the modal again.
+							modalStore.trigger(modal);
+						}
+					}
+				};
+				modalStore.trigger(modal);
+			}
+		});
+	});
+
+	onDestroy(() => {
+		if (unsubscribeHasAcceptedTerms) {
+			unsubscribeHasAcceptedTerms();
+		}
+		if (unsubscribeHasSubscriptionChanged) {
+			unsubscribeHasSubscriptionChanged();
+		}
+	});
+
 	// see https://www.skeleton.dev/utilities/modals
 	const modalComponentRegistry: Record<string, ModalComponent> = {
 		SettingsModal: { ref: SettingsModal },
 		ContextModal: { ref: ContextModal },
 		ShareModal: { ref: ShareModal },
 		CostModal: { ref: CostModal },
-		SuggestTitleModal: { ref: SuggestTitleModal }
+		SuggestTitleModal: { ref: SuggestTitleModal },
+		UserModal: { ref: UserModal },
+		AcceptTermsModal: { ref: AcceptTerms },
+		ModalCheckoutComplete: { ref: CheckoutComplete }
 	};
 
 	const meta = {
@@ -49,7 +110,7 @@
 		title: 'SlickGPT',
 		url: 'https://slickgpt.vercel.app/',
 		description:
-			'SlickGPT is a light-weight "use-your-own-API-key" ChatGPT client written in Svelte. It offers GPT-4 integration, a userless share feature and other superpowers.',
+			'SlickGPT is a light-weight ChatGPT client written in Svelte. It offers GPT-4 integration, a userless share feature and other superpowers. Bring your own API key or use our cloud infrastructure.',
 		image: '/logo-slickgpt.svg',
 		imageAlt: 'SlickGPT Logo'
 	};
@@ -76,6 +137,8 @@
 	<meta name="twitter:image" content={meta.image} />
 	<meta name="twitter:image:alt" content={meta.imageAlt} />
 	<title>{meta.title}</title>
+
+	<script async src="https://js.stripe.com/v3/buy-button.js"></script>
 </svelte:head>
 
 <AppShell

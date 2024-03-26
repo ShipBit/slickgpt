@@ -1,4 +1,4 @@
-<div class="flex justify-between items-center">
+<div class="flex gap-2 justify-between items-center">
 	<!-- Icons -->
 	<div class="flex justify-self-center md:justify-self-start space-x-4">
 		<!-- GitHub -->
@@ -37,16 +37,20 @@
 		</a>
 	</div>
 
-	<!-- Copyrights -->
-	<a
-		class="text-black dark:text-slate-200 flex space-x-1 items-center"
-		href="https://shipbit.de/"
-		target="_blank"
-		rel="noreferrer"
-	>
-		<span class="hidden md:inline">made with</span>
-		<img src="/shipbit-logo.svg" class="w-5 h-5" alt="ShipBit Logo" />
-		<span class="hidden md:inline">by</span>
-		<span class="font-bold md:text-shipbit font-barlow">ShipBit</span>
-	</a>
+	<div class="flex gap-2">
+		<a href="/legal">Legal</a>
+		<span>|</span>
+		<!-- Copyrights -->
+		<a
+			class="text-black dark:text-slate-200 flex space-x-1 items-center"
+			href="https://shipbit.de/"
+			target="_blank"
+			rel="noreferrer"
+		>
+			<span class="hidden md:inline">made with</span>
+			<img src="/shipbit-logo.svg" class="w-5 h-5" alt="ShipBit Logo" />
+			<span class="hidden md:inline">by</span>
+			<span class="font-bold md:text-shipbit font-barlow">ShipBit</span>
+		</a>
+	</div>
 </div>

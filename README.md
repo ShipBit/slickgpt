@@ -14,7 +14,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://slickgpt.vercel.app/">
+  <a href="https://www.slickgpt.app/">
     <img src="static/logo-slickgpt.svg" alt="Logo" height="160">
   </a>
 
@@ -23,7 +23,7 @@
   <p align="center">
     An awesome ChatGPT Client - with Superpowers!
     <br />
-    <a href="https://slickgpt.vercel.app/"><strong>Try for yourself »</strong></a>
+    <a href="https://www.slickgpt.app/"><strong>Try for yourself »</strong></a>
     <br />
     <br />
     <a href="https://platform.openai.com/account/api-keys">Get your API key</a>
@@ -53,13 +53,19 @@
   </ol>
 </details>
 
-## Now upgraded to Svelte4, Skeleton 2.0 and OpenAI 4
+## New: SlickGPT Pro (use without API key)
+
+SlickGPT now offers an optional "Pro" plan for a fixed price. If you choose this, you can use our Azure cloud infrastructure to access all the OpenAI models and settings without worrying about having your own API key or usage limits. Yes, it's unlimited.
+
+There are currently no extra features in SlickGPT for Pro users. We don't log any data - the only thing we know is how many tokens were spent. It's just a way to support the project and get rid of the hassle of managing your own API key.
+
+If you're really into AI, you can also combine it with our other project, [Wingman AI](https://wingman-ai.com), and get **Wingman AI Ultimate** (which includes SlickGPT Pro) for a reduced price.
 
 ## About the project
 
 ![SlickGPT][slickgpt-screenshot]
 
-SlickGPT is a light-weight "use-your-own-API-key" web client for the OpenAI API written in Svelte. Users bring their own OpenAI API keys. SlickGPT offers them a very fancy user interface with a rich feature set like managing a local chat history (in the localStorage), a userless "Share" function for chats, a prominent context editor, and token cost calculation and distribution. You can run the client locally, host it yourself or use our public instance.
+SlickGPT is a light-weight "use-your-own-API-key" (or optional: subscription-based) web client for the OpenAI API written in Svelte. It offers them a very fancy user interface with a rich feature set like managing a local chat history (in the localStorage), a userless "Share" function for chats, a prominent context editor, and token cost calculation and distribution. You can run the client locally, host it yourself or use our public instance.
 
 ## Feature Overview
 
@@ -72,8 +78,8 @@ SlickGPT is a light-weight "use-your-own-API-key" web client for the OpenAI API 
 - **Set Context** <br> Provide your own context to guide the AI model while giving responses, ensuring relevant and focused outcomes.
 - **Cost Calculation** <br> Keep track of and control your API usage costs with an in-built token cost calculator for your chats.
 - **Full Configuration Power** <br> Customize OpenAI model settings to tailor the experience to your liking.
-- **No Registration or Login required** <br> Create and even share chats without the need for a login or registration - Simple, fast, and efficient.
-- **Use your own API Key** <br> Keep your API calls private and secure by using your own OpenAI API key.
+- **No Registration or Login required** <br> Create and even share chats without the need for a login or registration - Simple, fast, and efficient. Note that you'll have to register/login if you want to use the SlickGPT Pro subscription.
+- **Use your own API Key** <br> Keep your API calls private and secure by using your own OpenAI API key or use our cloud infrastructure if you don't want to have an API key or prefer a fixed price over a "pay-per-use" model.
 - **Host Yourself / Run Everywhere** <br> Run the instance locally on your machine or host it on your preferred cloud provider.
 
 See a **YouTube video** for more details:
@@ -138,21 +144,23 @@ SlickGPT offers a light and dark theme. You can switch between the two modes by 
 
 While ChatGPT offers a great conversational AI experience, it lacks some features many users desire.
 
-| Feature                     | SlickGPT | ChatGPT                |
-| --------------------------- | -------- | ---------------------- |
-| Use different models        | ✅       | ✅                     |
-| Chat history                | ✅       | ✅                     |
-| Highlight / Format code     | ✅       | ✅                     |
-| Use Your Own API Key        | ✅       | ✅                     |
-| Edit and branch messages    | ✅       | ✅                     |
-| Stop generation             | ✅       | ✅                     |
-| Share Chats                 | ✅       | ✅ (implemented later) |
-| Host Yourself / Run Locally | ✅       | ❌                     |
-| Set Context                 | ✅       | ❌                     |
-| Change model configuration  | ✅       | ❌                     |
-| No Login Required           | ✅       | ❌                     |
-| Token Cost Calculation      | ✅       | ❌                     |
-| Mobile-first design         | ✅       | ❌                     |
+| Feature                              | SlickGPT | ChatGPT Plus                 |
+| ------------------------------------ | -------- | ---------------------------- |
+| Use different models                 | ✅       | ✅                           |
+| Chat history                         | ✅       | ✅                           |
+| Highlight / Format code              | ✅       | ✅                           |
+| Use Your Own API Key                 | ✅       | ✅                           |
+| Edit and branch messages             | ✅       | ✅                           |
+| Stop generation                      | ✅       | ✅                           |
+| Share and continue chats             | ✅       | (✅) (can't import)          |
+| Host yourself / Run locally          | ✅       | ❌                           |
+| Set context / system message         | ✅       | ❌                           |
+| Change model configuration           | ✅       | ❌                           |
+| No Login Required                    | ✅       | ❌                           |
+| Token Cost Calculation               | ✅       | ❌                           |
+| Mobile-first design                  | ✅       | ❌                           |
+| internal context prompt (moderation) | ❌       | hard-coded, can't be changed |
+| Unlimited use subscription           | 5,99 €/m | 18,00 €/m                    |
 
 As you can see, SlickGPT includes several additional features that cater to a broad range of user needs, such as hosting the service yourself, using a local chat history, sharing chats, and customizing the chat configurations. Moreover, SlickGPT does not require a login, allowing for faster and more streamlined access. These added functionalities make SlickGPT a more versatile and convenient solution for users seeking an advanced ChatGPT experience.
 

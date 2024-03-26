@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Accordion, AccordionItem, getModalStore } from '@skeletonlabs/skeleton';
-	import { chatStore, settingsStore } from '$misc/stores';
-	import { models, OpenAiModel } from '$misc/openai';
+	import { chatStore, settingsStore, isPro } from '$misc/stores';
+	import { models } from '$misc/openai';
 	import { track } from '$misc/shared';
 
 	const modalStore = getModalStore();
@@ -58,40 +58,49 @@
 	<form>
 		<h3 class="h3 mb-4">Settings</h3>
 		<div class="flex-row space-y-6">
-			<!-- API key -->
-			{#if editApiKey || !$settingsStore.openAiApiKey}
-				<label class="label">
-					<div class="flex justify-between space-x-12">
-						<span>OpenAI API key</span>
-						<a target="_blank" rel="noreferrer" href="https://platform.openai.com/account/api-keys">
-							Get yours
-						</a>
-					</div>
-					<input
-						required
-						class="input"
-						class:input-error={!$settingsStore.openAiApiKey}
-						type="text"
-						bind:value={$settingsStore.openAiApiKey}
-						on:blur={() => (editApiKey = false)}
-					/>
-				</label>
-			{:else}
-				<div class="flex flex-col space-x-2">
-					<span class="label">OpenAI API key</span>
+			{#if !$isPro}
+				<!-- API key -->
+				{#if editApiKey || !$settingsStore.openAiApiKey}
+					<label class="label">
+						<div class="flex justify-between space-x-12">
+							<span>OpenAI API key</span>
+							<a
+								target="_blank"
+								rel="noreferrer"
+								href="https://platform.openai.com/account/api-keys"
+							>
+								Get yours
+							</a>
+						</div>
+						<input
+							required
+							class="input"
+							class:input-error={!$settingsStore.openAiApiKey}
+							type="text"
+							bind:value={$settingsStore.openAiApiKey}
+							on:blur={() => (editApiKey = false)}
+						/>
+					</label>
+				{:else}
+					<div class="flex flex-col space-x-2">
+						<span class="label">OpenAI API key</span>
 
-					<div class="flex justify-between items-center space-x-4">
-						<span>{maskString($settingsStore.openAiApiKey)}</span>
+						<div class="flex justify-between items-center space-x-4">
+							<span>{maskString($settingsStore.openAiApiKey)}</span>
 
-						<button class="btn btn-sm variant-ghost-secondary" on:click={() => (editApiKey = true)}>
-							Edit
-						</button>
+							<button
+								class="btn btn-sm variant-ghost-secondary"
+								on:click={() => (editApiKey = true)}
+							>
+								Edit
+							</button>
+						</div>
 					</div>
-				</div>
+				{/if}
 			{/if}
 
 			<!-- Model -->
-			{#if $settingsStore.openAiApiKey}
+			{#if $isPro || $settingsStore.openAiApiKey}
 				<div class="flex flex-col space-y-2">
 					<label class="label">
 						<div class="flex justify-between space-x-12">
@@ -106,8 +115,12 @@
 							</a>
 						</div>
 						<select class="select" bind:value={settings.model}>
-							{#each Object.values(OpenAiModel) as model}
-								<option value={model}>{model}</option>
+							{#each Object.entries(models) as [name, model]}
+								{#if !model.hidden}
+									<option value={name}>
+										{$isPro ? model.middlewareDeploymentName || name : name}
+									</option>
+								{/if}
 							{/each}
 						</select>
 					</label>

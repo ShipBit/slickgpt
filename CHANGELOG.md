@@ -1,6 +1,9 @@
 # Changelog
 
-Sorry folks, no semantic versioning, proper tagging or fancy automations yet. I'm just going to keep an old-sql manual changelog here for now.
+## March 18, 2024
+
+- SlickGPT now offers an optional "Pro" plan. If you choose this, you can use our Azure cloud infrastructure to access all the OpenAI models and settings without worrying about your own API key or usage limits. Yes, it's unlimited. We added a bunch of environment variables that you have to specify in your `.env` file to make this work. Check the `.env.example` file for details. You can leave all the values empty but you have to declare the variables if you want to self-host.
+- The Svelte endpoint layer for `/ask` and `/suggest-title` were removed. The client now communicates with Open AI (using your own API key) or our Azure backend (if you are on the Pro plan) directly. This should simplify self-hosting as you no longer need serverless/Edge functions to execute prompts.
 
 ## March 08, 2024
 

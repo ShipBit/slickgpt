@@ -49,7 +49,7 @@
 	let editApiKey = false;
 
 	$: {
-		maxTokensForModel = models[$chatStore[slug].settings.model].maxTokens;
+		maxTokensForModel = models[$chatStore[slug].settings.model].maxTokens; //Now: max reply length
 		settings.max_tokens = clamp(settings.max_tokens, 0, maxTokensForModel);
 	}
 </script>

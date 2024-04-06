@@ -27,13 +27,14 @@ export interface OpenAiSettings {
 
 export const defaultOpenAiSettings: OpenAiSettings = {
 	model: OpenAiModel.Gpt35Turbo,
-	max_tokens: 2048,
+	max_tokens: 4072, // Manually adjusted
 	temperature: 1,
 	top_p: 1
 };
 
 export interface OpenAiModelStats {
 	maxTokens: number; // The max tokens you allow GPT to respond with
+	contextWindow: number; // The max tokens an AI model can handle.
 	// $ per 1k tokens, see https://openai.com/pricing:
 	costPrompt: number;
 	costCompletion: number;
@@ -44,22 +45,26 @@ export interface OpenAiModelStats {
 export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 	[OpenAiModel.Gpt35Turbo]: {
 		maxTokens: 4096,
+		contextWindow: 16384,
 		costPrompt: 0.0005,
 		costCompletion: 0.0015,
 		middlewareDeploymentName: 'gpt-35-turbo'
 	},
 	[OpenAiModel.Gpt4]: {
-		maxTokens: 8192,
+		maxTokens: 4096,
+		contextWindow: 8192,
 		costPrompt: 0.03,
 		costCompletion: 0.06
 	},
 	[OpenAiModel.Gpt432k]: {
-		maxTokens: 32768,
+		maxTokens: 4096,
+		contextWindow: 32768,
 		costPrompt: 0.06,
 		costCompletion: 0.12
 	},
 	[OpenAiModel.Gpt4Turbo]: {
-		maxTokens: 128000,
+		maxTokens: 4096,
+		contextWindow: 128000,
 		costPrompt: 0.01,
 		costCompletion: 0.03,
 		middlewareDeploymentName: 'gpt-4-turbo'
@@ -67,6 +72,7 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 	// deprecated, only here for backwards compatibility
 	[OpenAiModel.Gpt41106preview]: {
 		maxTokens: 4096,
+		contextWindow: 128000,
 		costPrompt: 0.01,
 		costCompletion: 0.03,
 		hidden: true
@@ -115,7 +121,7 @@ export function estimateChatCost(chat: Chat): ChatCost {
 	// see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
 	const tokensTotal = tokensPrompt + tokensCompletion + 2; // every reply is primed with <im_start>assistant
 	const {
-		maxTokens,
+		contextWindow,
 		costPrompt: costPromptPer1k,
 		costCompletion: costCompletionPer1k
 	} = models[chat.settings.model];
@@ -129,6 +135,6 @@ export function estimateChatCost(chat: Chat): ChatCost {
 		costPrompt,
 		costCompletion,
 		costTotal: costPrompt + costCompletion,
-		maxTokensForModel: maxTokens
+		maxTokensForModel: contextWindow
 	};
 }

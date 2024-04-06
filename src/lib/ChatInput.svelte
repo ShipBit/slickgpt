@@ -65,7 +65,7 @@
 	let tokensLeft = -1;
 	$: {
 		tokensLeft = chatCost
-			? chatCost.maxTokensForModel - (chatCost.tokensTotal + messageTokens)
+			? models[chat.settings.model].contextWindow - (chatCost.tokensTotal + messageTokens)
 			: -1;
 	}
 	$: maxTokensCompletion = chat.settings.max_tokens;

@@ -38,6 +38,8 @@
 	</div>
 
 	<div class="flex gap-2">
+		<a href="/legal">Warning: not official slickgpt</a>
+		<span>|</span>
 		<a href="/legal">Legal</a>
 		<span>|</span>
 		<!-- Copyrights -->
@@ -47,7 +49,7 @@
 			target="_blank"
 			rel="noreferrer"
 		>
-			<span class="hidden md:inline">made with</span>
+			<span class="hidden md:inline">Originally made with</span>
 			<img src="/shipbit-logo.svg" class="w-5 h-5" alt="ShipBit Logo" />
 			<span class="hidden md:inline">by</span>
 			<span class="font-bold md:text-shipbit font-barlow">ShipBit</span>

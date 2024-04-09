@@ -14,6 +14,10 @@
 		maxTokensForModel - tokensPrompt - tokensCompletion - messageTokens,
 		maxTokensCompletion
 	);
+	const minSpareContextLeft = Math.max(
+		maxTokensForModel - tokensPrompt - tokensCompletion - messageTokens - maxCompletionLeft,
+		0
+	);
 
 	const messageTokensPercent = Math.round((messageTokens / maxTokensForModel) * 100);
 	const tokensCompletionPercent = Math.round((tokensCompletion / maxTokensForModel) * 100);
@@ -48,7 +52,7 @@
 			end: tokensPromptPercent + tokensCompletionPercent + messageTokensPercent + maxCompletionLeftPercent
 		},
 		{
-			label: `Spare Context (min. ${maxCompletionLeft})`,
+			label: `Spare Context (min. ${minSpareContextLeft})`,
 			color: 'rgb(var(--color-surface-300))',
 			start: tokensPromptPercent + tokensCompletionPercent + messageTokensPercent + maxCompletionLeftPercent,
 			end: Math.max(minSpareContextPercent, 100)

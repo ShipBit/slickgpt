@@ -9,66 +9,68 @@ import { ChatStorekeeper } from './chatStorekeeper';
 // Therefore, we initialize the tokenizer in the first call to countTokens().
 let tokenizer: GPT3Tokenizer;
 
-export enum OpenAiModel {
+export enum AiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
 	Gpt4o = 'gpt-4o',
 	Gpt4 = 'gpt-4',
 	Gpt432k = 'gpt-4-32k',
 	Gpt41106preview = 'gpt-4-1106-preview',
 	Gpt4Turbo = 'gpt-4-turbo',
-	Gpt4TurboPreview = 'gpt-4-turbo-preview'
+	Gpt4TurboPreview = 'gpt-4-turbo-preview',
+	MistralLarge = 'mistral-large',
+	Llama38b = 'llama3-8b',
+	Llama370b = 'llama3-70b'
 }
 
-export interface OpenAiSettings {
-	model: OpenAiModel;
+export interface AiSettings {
+	model: AiModel;
 	max_tokens: number; // just for completions
 	temperature: number; // 0-2
 	top_p: number; // 0-1
 	stop?: string | string[]; // max 4 entries in array
 }
 
-export const defaultOpenAiSettings: OpenAiSettings = {
-	model: OpenAiModel.Gpt35Turbo,
+export const defaultOpenAiSettings: AiSettings = {
+	model: AiModel.Gpt35Turbo,
 	max_tokens: 4072, // Manually adjusted
 	temperature: 1,
 	top_p: 1
 };
 
-export interface OpenAiModelStats {
+export interface AiModelStats {
 	maxTokens: number; // The max tokens you allow GPT to respond with
 	contextWindow: number; // The max tokens an AI model can handle.
-	// $ per 1k tokens, see https://openai.com/pricing:
-	costPrompt: number;
-	costCompletion: number;
-	middlewareDeploymentName?: string;
+	costInput: number; // $ per 1M tokens, see https://openai.com/pricing:
+	costOutput: number; // $ per 1M tokens, see https://openai.com/pricing:
+	middlewareDeploymentName?: string; // the "Azure" model
 	hidden?: boolean;
 }
 
-export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
-	[OpenAiModel.Gpt35Turbo]: {
+export const models: { [key in AiModel]: AiModelStats } = {
+	[AiModel.Gpt35Turbo]: {
 		maxTokens: 4096,
 		contextWindow: 16384,
-		costPrompt: 0.0005,
-		costCompletion: 0.0015,
+		costInput: 0.5,
+		costOutput: 1.5,
 		middlewareDeploymentName: 'gpt-35-turbo'
 	},
-	[OpenAiModel.Gpt4]: {
+	[AiModel.Gpt4]: {
 		maxTokens: 4096,
 		contextWindow: 8192,
-		costPrompt: 0.03,
-		costCompletion: 0.06
+		costInput: 30,
+		costOutput: 60
 	},
-	[OpenAiModel.Gpt432k]: {
+	[AiModel.Gpt432k]: {
 		maxTokens: 4096,
 		contextWindow: 32768,
-		costPrompt: 0.06,
-		costCompletion: 0.12
+		costInput: 60,
+		costOutput: 120
 	},
-	[OpenAiModel.Gpt4Turbo]: {
+	[AiModel.Gpt4Turbo]: {
 		maxTokens: 4096,
 		contextWindow: 128000,
-		costPrompt: 0.01,
-		costCompletion: 0.03,
+		costInput: 10,
+		costOutput: 30,
 		middlewareDeploymentName: 'gpt-4-turbo'
 	},
 	[OpenAiModel.Gpt4o]: {
@@ -76,6 +78,27 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 		contextWindow: 128000,
 		costPrompt: 0.005,
 		costCompletion: 0.015
+	},
+	[AiModel.MistralLarge]: {
+		maxTokens: 4096,
+		contextWindow: 32768,
+		costInput: 8,
+		costOutput: 24,
+		middlewareDeploymentName: 'mistral-large'
+	},
+	[AiModel.Llama38b]: {
+		maxTokens: 4096,
+		contextWindow: 128000,
+		costInput: 0.37,
+		costOutput: 1.1,
+		middlewareDeploymentName: 'llama3-8b'
+	},
+	[AiModel.Llama370b]: {
+		maxTokens: 4096,
+		contextWindow: 128000,
+		costInput: 1.54,
+		costOutput: 1.77,
+		middlewareDeploymentName: 'llama3-70b'
 	},
 	// deprecated, only here for backwards compatibility
 	[OpenAiModel.Gpt4TurboPreview]: {
@@ -89,8 +112,8 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 	[OpenAiModel.Gpt41106preview]: {
 		maxTokens: 4096,
 		contextWindow: 128000,
-		costPrompt: 0.01,
-		costCompletion: 0.03,
+		costInput: 10,
+		costOutput: 30,
 		hidden: true
 	}
 };
@@ -129,20 +152,15 @@ export function estimateChatCost(chat: Chat): ChatCost {
 		if (message.role === 'assistant') {
 			tokensCompletion += countTokens(message);
 		} else {
-			// context counts as prompt (I think...)
 			tokensPrompt += countTokens(message);
 		}
 	}
 
 	// see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
 	const tokensTotal = tokensPrompt + tokensCompletion + 2; // every reply is primed with <im_start>assistant
-	const {
-		contextWindow,
-		costPrompt: costPromptPer1k,
-		costCompletion: costCompletionPer1k
-	} = models[chat.settings.model];
-	const costPrompt = (costPromptPer1k / 1000.0) * tokensPrompt;
-	const costCompletion = (costCompletionPer1k / 1000.0) * tokensCompletion;
+	const { contextWindow, costInput, costOutput } = models[chat.settings.model];
+	const costPrompt = (costInput / 1000000.0) * tokensPrompt;
+	const costCompletion = (costOutput / 1000000.0) * tokensCompletion;
 
 	return {
 		tokensPrompt,

@@ -1,6 +1,6 @@
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { get } from 'svelte/store';
-import { defaultOpenAiSettings, models, OpenAiModel, type OpenAiSettings } from './openai';
+import { defaultOpenAiSettings, models, AiModel, type AiSettings } from './openai';
 import type { ModalSettings, ToastSettings, ToastStore, ModalStore } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
 import vercelAnalytics from '@vercel/analytics';
@@ -23,7 +23,7 @@ export interface ChatMessage extends ChatCompletionMessageParam {
 
 export interface Chat {
 	title: string;
-	settings: OpenAiSettings;
+	settings: AiSettings;
 	contextMessage: ChatCompletionMessageParam;
 	messages: ChatMessage[];
 	created: Date;
@@ -36,7 +36,7 @@ export interface ClientSettings {
 	openAiApiKey?: string;
 	hideLanguageHint?: boolean;
 	useTitleSuggestions?: boolean;
-	defaultModel?: OpenAiModel;
+	defaultModel?: AiModel;
 }
 
 export interface ChatCost {
@@ -52,7 +52,7 @@ export interface ChatCost {
 export function createNewChat(template?: {
 	context?: string | null;
 	title?: string;
-	settings?: OpenAiSettings;
+	settings?: AiSettings;
 	messages?: ChatCompletionMessageParam[];
 }) {
 	const settings = { ...(template?.settings || defaultOpenAiSettings) };
@@ -134,7 +134,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 				topP: 1,
 				stopSequences: []
 			},
-			model: models[OpenAiModel.Gpt35Turbo].middlewareDeploymentName || OpenAiModel.Gpt35Turbo,
+			model: models[AiModel.Gpt35Turbo].middlewareDeploymentName || AiModel.Gpt35Turbo,
 			stream: false
 		};
 	} else {
@@ -146,7 +146,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		body = {
 			messages: filteredMessages,
 			...defaultOpenAiSettings,
-			model: OpenAiModel.Gpt35Turbo,
+			model: AiModel.Gpt35Turbo,
 			stream: false
 		};
 	}

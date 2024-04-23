@@ -102,16 +102,16 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		provider: AiProvider.Meta,
 		maxTokens: 4096,
 		contextWindow: 128000,
-		costInput: 0.37,
-		costOutput: 1.1,
+		costInput: 0.05,
+		costOutput: 0.1,
 		middlewareDeploymentName: 'llama3-8b'
 	},
 	[AiModel.Llama370b]: {
 		provider: AiProvider.Meta,
 		maxTokens: 4096,
 		contextWindow: 128000,
-		costInput: 1.54,
-		costOutput: 1.77,
+		costInput: 0.59,
+		costOutput: 0.79,
 		middlewareDeploymentName: 'llama3-70b'
 	},
 	// deprecated, only here for backwards compatibility

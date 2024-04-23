@@ -91,7 +91,7 @@ export const models: { [key in AiModel]: AiModelStats } = {
 	},
 	[AiModel.Llama38b]: {
 		provider: AiProvider.Meta,
-		maxTokens: 4096,
+		maxTokens: 8192,
 		contextWindow: 128000,
 		costInput: 0.05,
 		costOutput: 0.1,
@@ -99,7 +99,7 @@ export const models: { [key in AiModel]: AiModelStats } = {
 	},
 	[AiModel.Llama370b]: {
 		provider: AiProvider.Meta,
-		maxTokens: 4096,
+		maxTokens: 8192,
 		contextWindow: 128000,
 		costInput: 0.59,
 		costOutput: 0.79,

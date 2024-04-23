@@ -1,4 +1,3 @@
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { writable, type Readable, type Writable, readable, get, derived } from 'svelte/store';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,7 +15,7 @@ export const hasSeenProPrompt: Writable<boolean> = localStorageStore(
 
 export const autoLogin: Writable<boolean> = localStorageStore('slickgpt.autoLogin', false);
 
-export const liveAnswerStore: Writable<ChatCompletionMessageParam> = writable({
+export const liveAnswerStore: Writable<ChatMessage> = writable({
 	role: 'assistant',
 	content: ''
 });
@@ -32,7 +31,7 @@ export const account = writable<AccountInfo | null>(null);
 export const isPro = derived(account, ($account) => {
 	return (
 		$account?.idTokenClaims &&
-		($account.idTokenClaims['extension_SlickGPTSubscriptionPlan'] === 'Pro' || 
+		($account.idTokenClaims['extension_SlickGPTSubscriptionPlan'] === 'Pro' ||
 			$account?.idTokenClaims['extension_WingmanSubscriptionPlan'] === 'Ultra')
 	);
 });

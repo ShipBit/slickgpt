@@ -1,6 +1,9 @@
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import type {
+	ChatCompletionMessageParam,
+	ChatCompletionSystemMessageParam
+} from 'openai/resources/chat/completions';
 import { get } from 'svelte/store';
-import { defaultOpenAiSettings, models, AiModel, type AiSettings } from './openai';
+import { defaultOpenAiSettings, models, AiModel, type AiSettings, AiProvider } from './openai';
 import type { ModalSettings, ToastSettings, ToastStore, ModalStore } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
 import vercelAnalytics from '@vercel/analytics';
@@ -14,7 +17,10 @@ import {
 } from '$env/static/public';
 import { AuthService } from './authService';
 
-export interface ChatMessage extends ChatCompletionMessageParam {
+export interface ChatMessage {
+	content: string;
+	role: 'system' | 'user' | 'assistant';
+	name?: string;
 	id?: string;
 	messages?: ChatMessage[];
 	isSelected?: boolean;
@@ -24,7 +30,7 @@ export interface ChatMessage extends ChatCompletionMessageParam {
 export interface Chat {
 	title: string;
 	settings: AiSettings;
-	contextMessage: ChatCompletionMessageParam;
+	contextMessage: ChatCompletionSystemMessageParam;
 	messages: ChatMessage[];
 	created: Date;
 
@@ -34,9 +40,12 @@ export interface Chat {
 
 export interface ClientSettings {
 	openAiApiKey?: string;
+	mistralApiKey?: string;
+	metaApiKey?: string;
 	hideLanguageHint?: boolean;
 	useTitleSuggestions?: boolean;
 	defaultModel?: AiModel;
+	defaultProvider?: AiProvider;
 }
 
 export interface ChatCost {
@@ -53,7 +62,7 @@ export function createNewChat(template?: {
 	context?: string | null;
 	title?: string;
 	settings?: AiSettings;
-	messages?: ChatCompletionMessageParam[];
+	messages?: ChatMessage[];
 }) {
 	const settings = { ...(template?.settings || defaultOpenAiSettings) };
 	const { defaultModel } = get(settingsStore);

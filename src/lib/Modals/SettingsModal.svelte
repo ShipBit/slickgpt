@@ -1,7 +1,13 @@
 <script lang="ts">
-	import { Accordion, AccordionItem, getModalStore } from '@skeletonlabs/skeleton';
+	import {
+		Accordion,
+		AccordionItem,
+		RadioGroup,
+		RadioItem,
+		getModalStore
+	} from '@skeletonlabs/skeleton';
 	import { chatStore, settingsStore, isPro } from '$misc/stores';
-	import { models } from '$misc/openai';
+	import { AiModel, AiProvider, getProviderForModel, models, providers } from '$misc/openai';
 	import { track } from '$misc/shared';
 
 	const modalStore = getModalStore();
@@ -33,7 +39,7 @@
 		return Math.max(min, Math.min(value, max));
 	}
 
-	function maskString(input: string, maxTotalLength = 20, visibleChars = 4) {
+	function maskString(input: string | undefined, maxTotalLength = 20, visibleChars = 4) {
 		if (!input || input.length < maxTotalLength) {
 			return input;
 		}
@@ -47,6 +53,7 @@
 
 	let maxTokensForModel = 0;
 	let editApiKey = false;
+	let currentProvider: AiProvider = getProviderForModel(settings.model);
 
 	$: {
 		maxTokensForModel = models[$chatStore[slug].settings.model].maxTokens; //Now: max reply length
@@ -58,9 +65,61 @@
 	<form>
 		<h3 class="h3 mb-4">Settings</h3>
 		<div class="flex-row space-y-6">
+			<!-- Provider -->
+			<RadioGroup>
+				{#each providers as provider}
+					<RadioItem bind:group={currentProvider} name={provider} value={provider}>
+						{provider}
+					</RadioItem>
+				{/each}
+			</RadioGroup>
 			{#if !$isPro}
-				<!-- API key -->
-				{#if editApiKey || !$settingsStore.openAiApiKey}
+				<!-- API keys -->
+				{#if currentProvider === AiProvider.Mistral && (!$settingsStore.mistralApiKey || editApiKey)}
+					<label class="label">
+						<div class="flex justify-between space-x-12">
+							<span>Mistral API key</span>
+							<a
+								target="_blank"
+								rel="noreferrer"
+								href="https://console.mistral.ai/api-keys/"
+								class="anchor"
+							>
+								Get yours
+							</a>
+						</div>
+						<input
+							required
+							class="input"
+							class:input-error={!$settingsStore.mistralApiKey}
+							type="text"
+							bind:value={$settingsStore.mistralApiKey}
+							on:blur={() => (editApiKey = false)}
+						/>
+					</label>
+				{:else if currentProvider === AiProvider.Meta && (!$settingsStore.metaApiKey || editApiKey)}
+					<label class="label">
+						<div class="flex justify-between space-x-12">
+							<span>Meta API key</span>
+							<a
+								target="_blank"
+								rel="noreferrer"
+								href="https://console.groq.com/keys"
+								class="anchor"
+							>
+								Get yours (Groq)
+							</a>
+						</div>
+						<input
+							required
+							class="input"
+							class:input-error={!$settingsStore.metaApiKey}
+							type="text"
+							bind:value={$settingsStore.metaApiKey}
+							on:blur={() => (editApiKey = false)}
+						/>
+					</label>
+				{:else if !$settingsStore.openAiApiKey || editApiKey}
 					<label class="label">
 						<div class="flex justify-between space-x-12">
 							<span>OpenAI API key</span>
@@ -68,6 +127,7 @@
 								target="_blank"
 								rel="noreferrer"
 								href="https://platform.openai.com/account/api-keys"
+								class="anchor"
 							>
 								Get yours
 							</a>
@@ -83,10 +143,24 @@
 					</label>
 				{:else}
 					<div class="flex flex-col space-x-2">
-						<span class="label">OpenAI API key</span>
+						<span class="label"
+							>{currentProvider === AiProvider.Mistral
+								? 'Mistral'
+								: currentProvider === AiProvider.Meta
+									? 'Meta'
+									: 'OpenAI'} API key</span
+						>
 
 						<div class="flex justify-between items-center space-x-4">
-							<span>{maskString($settingsStore.openAiApiKey)}</span>
+							<span>
+								{#if currentProvider === AiProvider.Mistral}
+									{maskString($settingsStore.mistralApiKey)}
+								{:else if currentProvider === AiProvider.Meta}
+									{maskString($settingsStore.metaApiKey)}
+								{:else}
+									{maskString($settingsStore.openAiApiKey)}
+								{/if}
+							</span>
 
 							<button
 								class="btn btn-sm variant-ghost-secondary"
@@ -100,22 +174,14 @@
 			{/if}
 
 			<!-- Model -->
-			{#if $isPro || $settingsStore.openAiApiKey}
+			{#if $isPro || (currentProvider === AiProvider.OpenAi && $settingsStore.openAiApiKey) || (currentProvider === AiProvider.Meta && $settingsStore.metaApiKey) || (currentProvider === AiProvider.Mistral && $settingsStore.mistralApiKey)}
 				<div class="flex flex-col space-y-2">
 					<label class="label">
 						<div class="flex justify-between space-x-12">
 							<span>Model</span>
-							<a
-								class="anchor"
-								target="_blank"
-								rel="noreferrer"
-								href="https://platform.openai.com/docs/api-reference/completions/create"
-							>
-								See docs
-							</a>
 						</div>
 						<select class="select" bind:value={settings.model}>
-							{#each Object.entries(models) as [name, model]}
+							{#each Object.entries(models).filter((entry) => entry[1].provider === currentProvider) as [name, model]}
 								{#if !model.hidden}
 									<option value={name}>
 										{$isPro ? model.middlewareDeploymentName || name : name}

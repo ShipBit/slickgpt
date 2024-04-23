@@ -1,5 +1,4 @@
-import type { ChatCompletionMessageParam } from 'openai/resources/chat';
-import type { Chat, ChatCost } from './shared';
+import type { Chat, ChatCost, ChatMessage } from './shared';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { ChatStorekeeper } from './chatStorekeeper';
 
@@ -8,6 +7,12 @@ import { ChatStorekeeper } from './chatStorekeeper';
 // and throws "TypeError: GPT3Tokenizer is not a constructor" if we try to call the ctor here.
 // Therefore, we initialize the tokenizer in the first call to countTokens().
 let tokenizer: GPT3Tokenizer;
+
+export enum AiProvider {
+	OpenAi = 'OpenAI',
+	Mistral = 'Mistral',
+	Meta = 'Meta'
+}
 
 export enum AiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
@@ -38,6 +43,7 @@ export const defaultOpenAiSettings: AiSettings = {
 };
 
 export interface AiModelStats {
+	provider: AiProvider;
 	maxTokens: number; // The max tokens you allow GPT to respond with
 	contextWindow: number; // The max tokens an AI model can handle.
 	costInput: number; // $ per 1M tokens, see https://openai.com/pricing:
@@ -48,6 +54,7 @@ export interface AiModelStats {
 
 export const models: { [key in AiModel]: AiModelStats } = {
 	[AiModel.Gpt35Turbo]: {
+		provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 16384,
 		costInput: 0.5,
@@ -55,18 +62,21 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		middlewareDeploymentName: 'gpt-35-turbo'
 	},
 	[AiModel.Gpt4]: {
+		provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 8192,
 		costInput: 30,
 		costOutput: 60
 	},
 	[AiModel.Gpt432k]: {
+		provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 32768,
 		costInput: 60,
 		costOutput: 120
 	},
 	[AiModel.Gpt4Turbo]: {
+		provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 128000,
 		costInput: 10,
@@ -74,12 +84,14 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		middlewareDeploymentName: 'gpt-4-turbo'
 	},
 	[OpenAiModel.Gpt4o]: {
+        provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 128000,
-		costPrompt: 0.005,
-		costCompletion: 0.015
+		costInput: 5,
+		costOutput: 15,
 	},
 	[AiModel.MistralLarge]: {
+		provider: AiProvider.Mistral,
 		maxTokens: 4096,
 		contextWindow: 32768,
 		costInput: 8,
@@ -87,6 +99,7 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		middlewareDeploymentName: 'mistral-large'
 	},
 	[AiModel.Llama38b]: {
+		provider: AiProvider.Meta,
 		maxTokens: 4096,
 		contextWindow: 128000,
 		costInput: 0.37,
@@ -94,6 +107,7 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		middlewareDeploymentName: 'llama3-8b'
 	},
 	[AiModel.Llama370b]: {
+		provider: AiProvider.Meta,
 		maxTokens: 4096,
 		contextWindow: 128000,
 		costInput: 1.54,
@@ -102,6 +116,7 @@ export const models: { [key in AiModel]: AiModelStats } = {
 	},
 	// deprecated, only here for backwards compatibility
 	[OpenAiModel.Gpt4TurboPreview]: {
+        provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 128000,
 		costPrompt: 0.01,
@@ -110,6 +125,7 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		hidden: true
 	},
 	[OpenAiModel.Gpt41106preview]: {
+        provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 128000,
 		costInput: 10,
@@ -117,11 +133,13 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		hidden: true
 	}
 };
+
+export const providers: AiProvider[] = [AiProvider.OpenAi, AiProvider.Mistral, AiProvider.Meta];
 /**
  * see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
  * see https://github.com/syonfox/GPT-3-Encoder/issues/2
  */
-export function countTokens(message: ChatCompletionMessageParam): number {
+export function countTokens(message: ChatMessage): number {
 	// see comment above
 	if (!tokenizer) {
 		tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
@@ -171,4 +189,14 @@ export function estimateChatCost(chat: Chat): ChatCost {
 		costTotal: costPrompt + costCompletion,
 		maxTokensForModel: contextWindow
 	};
+}
+
+export function getProviderForModel(model: AiModel) {
+	if (model.includes('llama')) {
+		return AiProvider.Meta;
+	} else if (model.includes('mistral')) {
+		return AiProvider.Mistral;
+	} else {
+		return AiProvider.OpenAi;
+	}
 }

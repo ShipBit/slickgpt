@@ -1,6 +1,4 @@
 <script lang="ts">
-	import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-	import type { Moderation } from 'openai/resources/moderations';
 	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
@@ -20,11 +18,13 @@
 		settingsStore,
 		isPro
 	} from '$misc/stores';
-	import { countTokens, models } from '$misc/openai';
+	import { AiProvider, countTokens, getProviderForModel, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
 	import { get } from 'svelte/store';
 	import {
+		PUBLIC_GROQ_API_URL,
 		PUBLIC_MIDDLEWARE_API_URL,
+		PUBLIC_MISTRAL_API_URL,
 		PUBLIC_MODERATION,
 		PUBLIC_MODERATION_API_URL,
 		PUBLIC_OPENAI_API_URL
@@ -51,7 +51,8 @@
 	$: message = {
 		role: 'user',
 		content: input.trim()
-	} as ChatCompletionMessageParam;
+	} as ChatMessage;
+	$: provider = getProviderForModel(chat.settings.model);
 
 	const unsubscribe = chatStore.subscribe((chats) => {
 		const chat = chats[slug];
@@ -71,7 +72,7 @@
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
-	async function checkModerationApi(messages: ChatCompletionMessageParam[], token: string) {
+	async function checkModerationApi(messages: ChatMessage[], token: string) {
 		if (PUBLIC_MODERATION === 'true') {
 			const textMessages = messages.map((msg) => msg.content);
 
@@ -141,7 +142,7 @@
 				({
 					role: m.role,
 					content: m.content
-				}) as ChatCompletionMessageParam
+				}) as ChatMessage
 		);
 
 		let payload: any;
@@ -166,10 +167,22 @@
 				stream: true
 			};
 		} else {
-			token = $settingsStore.openAiApiKey!;
-			url = PUBLIC_OPENAI_API_URL;
+			switch (provider) {
+				case AiProvider.Mistral:
+					token = $settingsStore.mistralApiKey!;
+					url = PUBLIC_MISTRAL_API_URL;
+					break;
+				case AiProvider.Meta:
+					token = $settingsStore.metaApiKey!;
+					url = PUBLIC_GROQ_API_URL;
+					break;
+				default:
+					token = $settingsStore.openAiApiKey!;
+					url = PUBLIC_OPENAI_API_URL;
+					break;
+			}
 
-			if (messages) {
+			if (provider === AiProvider.OpenAi && messages) {
 				const moderationOk = await checkModerationApi(messages, token);
 				if (!moderationOk) {
 					return;
@@ -183,7 +196,7 @@
 			};
 		}
 
-		await $eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
+		$eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
 		input = '';
 	}
 

@@ -200,3 +200,7 @@ export function getProviderForModel(model: AiModel) {
 		return AiProvider.OpenAi;
 	}
 }
+
+export function getDefaultModelForProvider(provider: AiProvider) {
+	return Object.keys(models).find((key) => models[key as AiModel].provider === provider) as AiModel;
+}

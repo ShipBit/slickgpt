@@ -7,7 +7,14 @@
 		getModalStore
 	} from '@skeletonlabs/skeleton';
 	import { chatStore, settingsStore, isPro } from '$misc/stores';
-	import { AiModel, AiProvider, getProviderForModel, models, providers } from '$misc/openai';
+	import {
+		AiModel,
+		AiProvider,
+		getDefaultModelForProvider,
+		getProviderForModel,
+		models,
+		providers
+	} from '$misc/openai';
 	import { track } from '$misc/shared';
 
 	const modalStore = getModalStore();
@@ -68,7 +75,12 @@
 			<!-- Provider -->
 			<RadioGroup>
 				{#each providers as provider}
-					<RadioItem bind:group={currentProvider} name={provider} value={provider}>
+					<RadioItem
+						bind:group={currentProvider}
+						name={provider}
+						value={provider}
+						on:change={(e) => (settings.model = getDefaultModelForProvider(e.target?.value))}
+					>
 						{provider}
 					</RadioItem>
 				{/each}

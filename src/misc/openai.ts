@@ -92,7 +92,7 @@ export const models: { [key in AiModel]: AiModelStats } = {
 	[AiModel.Llama38b]: {
 		provider: AiProvider.Meta,
 		maxTokens: 8192,
-		contextWindow: 128000,
+		contextWindow: 8192,
 		costInput: 0.05,
 		costOutput: 0.1,
 		middlewareDeploymentName: 'llama3-8b'
@@ -100,7 +100,7 @@ export const models: { [key in AiModel]: AiModelStats } = {
 	[AiModel.Llama370b]: {
 		provider: AiProvider.Meta,
 		maxTokens: 8192,
-		contextWindow: 128000,
+		contextWindow: 8192,
 		costInput: 0.59,
 		costOutput: 0.79,
 		middlewareDeploymentName: 'llama3-70b'

@@ -131,7 +131,7 @@
 							on:blur={() => (editApiKey = false)}
 						/>
 					</label>
-				{:else if !$settingsStore.openAiApiKey || editApiKey}
+				{:else if currentProvider === AiProvider.OpenAi && (!$settingsStore.openAiApiKey || editApiKey)}
 					<label class="label">
 						<div class="flex justify-between space-x-12">
 							<span>OpenAI API key</span>

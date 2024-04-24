@@ -1,5 +1,20 @@
 # Changelog
 
+## April 24, 2024
+
+- added Mistral and Meta/Llama3 models. You can either use your own API keys or use them via SlickGPT Pro!
+- deprecated `gpt-4-turbo-preview` in favor of the current `gpt-4-turbo` model
+- removed larger gpt-4 models because it doesn't make sense to use them without file upload or image capabilities.
+- Redesigned SlickGPT to make more room for the actual chat and use the available screen-space better:
+  - removed footer
+  - lowered fontsize
+  - title and action bar now scroll and aren't pinned anymore
+  - removed language hint
+  - shrank chat input and context input
+  - shrank dashboard tiles
+  - added model to dashboard tiles
+  - reworked mobile viewport as well
+
 ## March 18, 2024
 
 - SlickGPT now offers an optional "Pro" plan. If you choose this, you can use our Azure cloud infrastructure to access all the OpenAI models and settings without worrying about your own API key or usage limits. Yes, it's unlimited. We added a bunch of environment variables that you have to specify in your `.env` file to make this work. Check the `.env.example` file for details. You can leave all the values empty but you have to declare the variables if you want to self-host.

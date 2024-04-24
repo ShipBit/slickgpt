@@ -3,7 +3,14 @@ import type {
 	ChatCompletionSystemMessageParam
 } from 'openai/resources/chat/completions';
 import { get } from 'svelte/store';
-import { defaultOpenAiSettings, models, AiModel, type AiSettings, AiProvider } from './openai';
+import {
+	defaultOpenAiSettings,
+	models,
+	AiModel,
+	type AiSettings,
+	AiProvider,
+	getProviderForModel
+} from './openai';
 import type { ModalSettings, ToastSettings, ToastStore, ModalStore } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
 import vercelAnalytics from '@vercel/analytics';
@@ -12,7 +19,9 @@ import { goto } from '$app/navigation';
 import { isPro, chatStore, settingsStore } from './stores';
 import {
 	PUBLIC_DISABLE_TRACKING,
+	PUBLIC_GROQ_API_URL,
 	PUBLIC_MIDDLEWARE_API_URL,
+	PUBLIC_MISTRAL_API_URL,
 	PUBLIC_OPENAI_API_URL
 } from '$env/static/public';
 import { AuthService } from './authService';
@@ -147,15 +156,30 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 			stream: false
 		};
 	} else {
-		url = PUBLIC_OPENAI_API_URL;
+		const provider = getProviderForModel(chat.settings.model);
+		const settings = get(settingsStore);
+		switch (provider) {
+			case AiProvider.Mistral:
+				token = settings.mistralApiKey!;
+				url = PUBLIC_MISTRAL_API_URL;
+				break;
+			case AiProvider.Meta:
+				token = settings.metaApiKey!;
+				url = PUBLIC_GROQ_API_URL;
+				break;
+			default:
+				token = settings.openAiApiKey!;
+				url = PUBLIC_OPENAI_API_URL;
+				break;
+		}
 		headers = {
 			'Content-Type': 'application/json',
-			Authorization: `Bearer ${get(settingsStore).openAiApiKey}`
+			Authorization: `Bearer ${token}`
 		};
 		body = {
 			messages: filteredMessages,
 			...defaultOpenAiSettings,
-			model: AiModel.Gpt35Turbo,
+			model: chat.settings.model,
 			stream: false
 		};
 	}

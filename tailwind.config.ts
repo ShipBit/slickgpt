@@ -24,25 +24,17 @@ const config = {
 				barlow: ['Barlow', 'sans-serif'],
 				code: ['Fira Code', 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', 'monospace']
 			},
-			letterSpacing: {
-				tighter: '-0.02em',
-				tight: '-0.01em',
-				normal: '0',
-				wide: '0.01em',
-				wider: '0.02em',
-				widest: '0.4em'
-			},
 			fontSize: {
 				xs: '0.875rem',
-				sm: '1rem',
-				base: '1.125rem',
-				lg: '1.25rem',
-				xl: '1.375rem',
+				sm: '0.925rem',
+				base: '1rem',
+				lg: '1.125rem',
+				xl: '1.25rem',
 				'2xl': '1.5rem',
-				'3xl': '2rem',
-				'4xl': '2.5rem',
-				'5xl': '3.25rem',
-				'6xl': '4rem'
+				'3xl': '1.75rem',
+				'4xl': '2rem',
+				'5xl': '2.25rem',
+				'6xl': '2.5rem'
 			}
 		}
 	},

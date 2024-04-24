@@ -192,6 +192,8 @@ export function estimateChatCost(chat: Chat): ChatCost {
 }
 
 export function getProviderForModel(model: AiModel) {
+	if (!model) return '';
+
 	if (model.includes('llama')) {
 		return AiProvider.Meta;
 	} else if (model.includes('mistral')) {

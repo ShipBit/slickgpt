@@ -25,7 +25,6 @@
 	import 'highlight.js/styles/night-owl.css';
 
 	import Header from '$lib/Header.svelte';
-	import Footer from '$lib/Footer.svelte';
 	import SettingsModal from '$lib/Modals/SettingsModal.svelte';
 	import ContextModal from '$lib/Modals/ContextModal.svelte';
 	import ShareModal from '$lib/Modals/ShareModal.svelte';
@@ -141,20 +140,12 @@
 	<script async src="https://js.stripe.com/v3/buy-button.js"></script>
 </svelte:head>
 
-<AppShell
-	regionPage="relative lg:px-12"
-	slotHeader="py-2 md:py-6 px-4 lg:px-12"
-	slotFooter="py-2 md:py-6 px-4 lg:px-12"
->
+<AppShell regionPage="relative lg:px-12" slotHeader="py-2 md:py-6 px-4 lg:px-12">
 	<svelte:fragment slot="header">
 		<Header />
 	</svelte:fragment>
 
 	<slot />
-
-	<svelte:fragment slot="footer">
-		<Footer />
-	</svelte:fragment>
 </AppShell>
 
 <!-- Skeleton Singletons: -->

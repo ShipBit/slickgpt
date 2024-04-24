@@ -16,10 +16,11 @@ export enum AiProvider {
 
 export enum AiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
+	Gpt4Turbo = 'gpt-4-turbo',
 	Gpt4 = 'gpt-4',
 	Gpt432k = 'gpt-4-32k',
 	Gpt41106preview = 'gpt-4-1106-preview',
-	Gpt4Turbo = 'gpt-4-turbo-preview',
+	Gpt4TurboPreview = 'gpt-4-turbo-preview',
 	MistralLarge = 'mistral-large-latest',
 	Llama38b = 'llama3-8b-8192',
 	Llama370b = 'llama3-70b-8192'
@@ -58,20 +59,6 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		costInput: 0.5,
 		costOutput: 1.5,
 		middlewareDeploymentName: 'gpt-35-turbo'
-	},
-	[AiModel.Gpt4]: {
-		provider: AiProvider.OpenAi,
-		maxTokens: 4096,
-		contextWindow: 8192,
-		costInput: 30,
-		costOutput: 60
-	},
-	[AiModel.Gpt432k]: {
-		provider: AiProvider.OpenAi,
-		maxTokens: 4096,
-		contextWindow: 32768,
-		costInput: 60,
-		costOutput: 120
 	},
 	[AiModel.Gpt4Turbo]: {
 		provider: AiProvider.OpenAi,
@@ -112,6 +99,31 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		contextWindow: 128000,
 		costInput: 10,
 		costOutput: 30,
+		hidden: true
+	},
+	[AiModel.Gpt4TurboPreview]: {
+		provider: AiProvider.OpenAi,
+		maxTokens: 4096,
+		contextWindow: 128000,
+		costInput: 10,
+		costOutput: 30,
+		middlewareDeploymentName: 'gpt-4-turbo',
+		hidden: true
+	},
+	[AiModel.Gpt4]: {
+		provider: AiProvider.OpenAi,
+		maxTokens: 4096,
+		contextWindow: 8192,
+		costInput: 30,
+		costOutput: 60,
+		hidden: true
+	},
+	[AiModel.Gpt432k]: {
+		provider: AiProvider.OpenAi,
+		maxTokens: 4096,
+		contextWindow: 32768,
+		costInput: 60,
+		costOutput: 120,
 		hidden: true
 	}
 };

@@ -107,18 +107,23 @@
 		<h1 class="font-barlow text-2xl md:text-4xl font-bold tracking-wide hidden md:block">
 			SlickGPT
 		</h1>
-		<!-- Copyrights -->
-		<a
-			class="text-black dark:text-slate-200 space-x-1 items-center hidden md:flex mt-3 text-xs"
-			href="https://shipbit.de/"
-			target="_blank"
-			rel="noreferrer"
-		>
-			<span class="hidden md:inline">made with</span>
-			<img src="/shipbit-logo.svg" class="w-4 h-4" alt="ShipBit Logo" />
-			<span class="hidden md:inline">by</span>
-			<span class="font-bold md:text-shipbit font-barlow">ShipBit</span>
-		</a>
+		<div class="hidden md:flex gap-2 items-center justify-between text-xs mt-3">
+			<!-- Copyrights -->
+			<a
+				class="text-black dark:text-slate-200 space-x-1 items-center flex text-xs"
+				href="https://shipbit.de/"
+				target="_blank"
+				rel="noreferrer"
+			>
+				<span class="hidden lg:inline">made with</span>
+				<img src="/shipbit-logo.svg" class="w-4 h-4" alt="ShipBit Logo" />
+				<span class="hidden lg:inline">by</span>
+				<span class="font-bold md:text-shipbit font-barlow">ShipBit</span>
+			</a>
+			<span>|</span>
+			<!-- Legal -->
+			<a href="/legal">Legal</a>
+		</div>
 	</a>
 
 	<div class="gap-8 flex items-center">

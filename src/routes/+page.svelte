@@ -7,12 +7,14 @@
 		PlusCircle,
 		ChatBubbleLeftRight,
 		Share,
-		Trash
+		Trash,
+		CpuChip
 	} from '@inqling/svelte-icons/heroicon-24-solid';
 	import { ChatBubbleBottomCenter, Clock } from '@inqling/svelte-icons/heroicon-24-outline';
 	import { goto } from '$app/navigation';
 	import { createNewChat, showModalComponent, showToast } from '$misc/shared';
 	import { chatStore, isTimeagoInitializedStore, hasSeenProPrompt, isPro } from '$misc/stores';
+	import { getProviderForModel } from '$misc/openai';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -84,12 +86,12 @@
 </script>
 
 <div
-	class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6 px-4 md:px-8"
+	class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6 px-4 md:px-8 py-4"
 >
 	<!-- Add button -->
 	<button class="card p-4 grid variant-ghost-primary shadow-lg" on:click={() => createNewChat()}>
 		<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
-			<PlusCircle class="w-10 h-10" />
+			<PlusCircle class="w-8 h-8" />
 			<span class="text-lg">New Chat</span>
 		</div>
 	</button>
@@ -104,28 +106,34 @@
 				<div>
 					{#if chat.updateToken}
 						<!-- Shared -->
-						<Share class="w-10 h-10" />
+						<Share class="w-8 h-8" />
 					{:else}
 						<!-- Local -->
-						<ChatBubbleLeftRight class="w-10 h-10" />
+						<ChatBubbleLeftRight class="w-8 h-8" />
 					{/if}
 				</div>
-				<span class="line-clamp-2 text-lg">{chat.title}</span>
+				<span class="line-clamp-2 text-base">{chat.title}</span>
 			</div>
-			<footer class="flex justify-between space-x-2">
+			<div class="flex justify-between space-x-2">
 				<div class="badge variant-filled-surface flex items-center space-x-1">
-					<span><ChatBubbleBottomCenter class="w-4 h-4" /></span>
-					<span>{chatStore.countAllMessages(chat)}</span>
+					<span><CpuChip class="w-4 h-4" /></span>
+					<span>{getProviderForModel(chat.settings.model)}</span>
 				</div>
-				<div class="badge variant-filled-surface flex items-center space-x-1">
-					<span><Clock class="w-4 h-4" /></span>
-					{#if timeAgo}
-						<span class="self-center">
-							{timeAgo.format(new Date(chat.created), 'twitter-minute-now')}
-						</span>
-					{/if}
+				<div class="flex gap-2 items-center">
+					<div class="badge variant-filled-surface flex items-center space-x-1">
+						<span><ChatBubbleBottomCenter class="w-4 h-4" /></span>
+						<span>{chatStore.countAllMessages(chat)}</span>
+					</div>
+					<div class="badge variant-filled-surface flex items-center space-x-1">
+						<span><Clock class="w-4 h-4" /></span>
+						{#if timeAgo}
+							<span class="self-center">
+								{timeAgo.format(new Date(chat.created), 'twitter-minute-now')}
+							</span>
+						{/if}
+					</div>
 				</div>
-			</footer>
+			</div>
 		</a>
 	{/each}
 
@@ -142,7 +150,7 @@
 					xml:space="preserve"
 					style="enable-background:new 0 0 122.88 96.04"
 					viewBox="0 0 122.88 96.04"
-					class="w-10 h-10"
+					class="w-8 h-8"
 					fill="currentColor"
 				>
 					<path
@@ -165,7 +173,7 @@
 		target="_blank"
 	>
 		<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
-			<img src="/wingman-ai.png" class="w-16 h-16" alt="Wingman AI logo" />
+			<img src="/wingman-ai.png" class="w-8 h-8" alt="Wingman AI logo" />
 			<div class="flex flex-col items-center gap-2">
 				<span class="text-gray-700 dark:text-gray-300 text-sm">Discover our</span>
 				<span class="text-lg">Wingman AI</span>
@@ -177,15 +185,9 @@
 	{#if Object.entries($chatStore)?.length}
 		<button class="card p-4 grid variant-ghost-error shadow-lg" on:click={modalConfirmDelete}>
 			<div class="flex space-x-2 md:space-x-4 items-center self-center justify-self-center">
-				<Trash class="w-10 h-10" />
+				<Trash class="w-8 h-8" />
 				<span class="text-lg">Delete Chats</span>
 			</div>
 		</button>
 	{/if}
 </div>
-
-<style lang="postcss">
-	.card {
-		min-height: 9rem;
-	}
-</style>

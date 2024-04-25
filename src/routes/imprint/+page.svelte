@@ -3,14 +3,14 @@
 		<h1 class="h1">Impressum</h1>
 		<p>
 			<em>Angaben gemäß § 5 TMG</em><br />
-			ShipBit UG (haftungsbeschränkt) <br /> Graf-Haeseler-Str. 3 <br />
+			ShipBit GmbH <br /> Kaiserstr. 5a <br />
 			44135 Dortmund <br />
 		</p>
 		<p>
 			Handelsregister: HRB 31595 <br />
 			Registergericht: Amtsgericht Dortmund<br />
 			<br />
-			Vertreten durch: Timo Korinth
+			Vertreten durch: Timo Korinth & Simon Hopstätter
 		</p>
 	</div>
 

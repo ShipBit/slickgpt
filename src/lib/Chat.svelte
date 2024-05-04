@@ -51,13 +51,12 @@
 
 {#if chat}
 	<div
-		class="flex flex-col container h-full mx-auto px-4 md:px-8 gap-4"
-		style="justify-content: end"
+		class="flex flex-col container justify-end h-full mx-auto px-4 md:px-8 gap-6"
 	>
 		<slot name="additional-content-top" />
 
 		{#if chat.messages.length > 0 || $isLoadingAnswerStore}
-			<div class="flex flex-col max-w-4xl md:mx-auto space-y-6 pt-6">
+			<div class="flex flex-col max-w-4xl md:mx-auto space-y-6">
 				<!-- Message history -->
 				<ChatMessages {slug} siblings={chat.messages} on:editMessage />
 

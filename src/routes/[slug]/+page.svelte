@@ -2,32 +2,26 @@
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import hljs from 'highlight.js';
-	import { DocumentDuplicate, PencilSquare, XMark } from '@inqling/svelte-icons/heroicon-24-solid';
-	import { Trash, Cog6Tooth, Share } from '@inqling/svelte-icons/heroicon-24-outline';
+	import { DocumentDuplicate, PencilSquare } from '@inqling/svelte-icons/heroicon-24-solid';
+	import { Cog6Tooth, Share, Trash } from '@inqling/svelte-icons/heroicon-24-outline';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import {
-		isPro,
-		chatStore,
-		isLoadingAnswerStore,
-		liveAnswerStore,
-		settingsStore
-	} from '$misc/stores';
+	import { chatStore, isLoadingAnswerStore, isPro, liveAnswerStore, settingsStore } from '$misc/stores';
 	import ChatInput from '$lib/ChatInput.svelte';
 	import Chat from '$lib/Chat.svelte';
 	import HintMessage from '$lib/HintMessage.svelte';
 	import { countTokens, estimateChatCost, getProviderForModel } from '$misc/openai';
 	import {
 		canSuggestTitle,
+		type ChatMessage,
 		createNewChat,
 		showModalComponent,
 		showToast,
 		suggestChatTitle,
-		track,
-		type ChatMessage
+		track
 	} from '$misc/shared';
 	import snarkdown from 'snarkdown';
-	import {} from '@inqling/svelte-icons/heroicon-20-solid';
+	import Toolbar from '$lib/Toolbar.svelte';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -144,91 +138,69 @@
 	}
 </script>
 
-<div class="flex flex-col h-full gap-4">
-	{#if chat}
-		<div class="flex flex-col md:flex-row gap-4 justify-between items-center px-8">
-			<!-- Title -->
-			<div class="flex items-center">
-				<h2 class="h2 !text-xl md:!text-2xl font-bold">
-					{chat.title}
-				</h2>
-
-				<!-- Edit title -->
-				{#if slug}
-					<button type="button" class="btn btn-sm" on:click={handleEditTitle}>
-						<span><PencilSquare class="w-4 h-4 md:w-6 md:h-6" /></span>
-					</button>
-				{/if}
-			</div>
-
-			<!-- Action Buttons -->
-			<div class="flex gap-2 items-center">
+{#if chat}
+	<div class="flex flex-col h-full gap-4">
+		<Toolbar
+			{slug}
+			title={chat.title}
+			on:closeChat={handleCloseChat}
+			on:renameChat={handleEditTitle}
+		>
+			<svelte:fragment slot="actions">
 				<!-- Delete -->
-				<button
-					type="button"
-					class="btn btn-sm variant-ghost-error"
-					on:click={showConfirmDeleteModal}
-				>
+				<button class="btn btn-sm variant-ghost-error" on:click={showConfirmDeleteModal}>
 					<Trash class="w-6 h-6" />
 				</button>
 
 				<!-- Settings -->
 				<span class="relative inline-flex">
-					<button
-						type="button"
-						class="btn btn-sm variant-ghost-warning"
-						on:click={() => showModalComponent(modalStore, 'SettingsModal', { slug })}
-					>
-						<Cog6Tooth class="w-6 h-6" />
-					</button>
+				<button
+					class="btn btn-sm variant-ghost-warning"
+					on:click={() => showModalComponent(modalStore, 'SettingsModal', { slug })}
+				>
+					<Cog6Tooth class="w-6 h-6" />
+				</button>
 					{#if !$isPro && isMissingApiKey}
-						<span class="relative flex h-3 w-3">
-							<span
-								style="left: -10px;"
-								class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error-400 opacity-75"
-							/>
-							<span
-								style="left: -10px;"
-								class="relative inline-flex rounded-full h-3 w-3 bg-error-500"
-							/>
-						</span>
-					{/if}
-				</span>
+					<span class="relative flex h-3 w-3">
+						<span
+							style="left: -10px;"
+							class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error-400 opacity-75"
+						/>
+						<span
+							style="left: -10px;"
+							class="relative inline-flex rounded-full h-3 w-3 bg-error-500"
+						/>
+					</span>
+				{/if}
+			</span>
 
 				<!-- Share -->
 				<span
 					class="relative inline-flex"
 					style={!$isPro && isMissingApiKey ? 'margin-left: -4px;' : ''}
 				>
-					<button
-						type="button"
-						disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
-						class="btn btn-sm variant-ghost-tertiary"
-						on:click={() =>
-							showModalComponent(modalStore, 'ShareModal', { slug }, handleChatShared)}
-					>
-						<Share class="w-6 h-6" />
-					</button>
-					{#if chat.updateToken}
-						<span class="relative flex h-3 w-3">
-							<span
-								style="left: -10px;"
-								class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-400 opacity-75"
-							/>
-							<span
-								style="left: -10px;"
-								class="relative inline-flex rounded-full h-3 w-3 bg-tertiary-500"
-							/>
-						</span>
-					{/if}
-				</span>
-
-				<!-- Close -->
-				<button type="button" class="btn btn-sm" on:click={handleCloseChat}>
-					<span><XMark class="w-6 h-6" /></span>
+				<button
+					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
+					class="btn btn-sm inline-flex variant-ghost-tertiary"
+					on:click={() => showModalComponent(modalStore, 'ShareModal', { slug }, handleChatShared)}
+				>
+					<Share class="w-6 h-6" />
 				</button>
-			</div>
-		</div>
+					{#if chat.updateToken}
+					<span class="relative flex h-3 w-3">
+						<span
+							style="left: -10px;"
+							class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-400 opacity-75"
+						/>
+						<span
+							style="left: -10px;"
+							class="relative inline-flex rounded-full h-3 w-3 bg-tertiary-500"
+						/>
+					</span>
+				{/if}
+			</span>
+			</svelte:fragment>
+		</Toolbar>
 
 		<Chat {slug} on:editMessage={handleEditMessage}>
 			<svelte:fragment slot="additional-content-top">
@@ -273,5 +245,5 @@
 		</Chat>
 
 		<ChatInput {slug} chatCost={cost} bind:this={chatInput} />
-	{/if}
-</div>
+	</div>
+{/if}

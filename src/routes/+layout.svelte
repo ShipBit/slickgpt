@@ -1,26 +1,27 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, setContext } from 'svelte';
 	import type { Unsubscriber } from 'svelte/store';
+	import { writable } from 'svelte/store';
 	import 'highlightjs-copy/dist/highlightjs-copy.min.css';
 	import '../app.postcss';
 	import { inject } from '@vercel/analytics';
 
 	import { dev } from '$app/environment';
 	import {
-		type ModalComponent,
 		AppShell,
-		Modal,
-		storeHighlightJs,
-		Toast,
-		storePopup,
-		setInitialClassState,
+		getModalStore,
 		initializeStores,
+		Modal,
+		type ModalComponent,
 		type ModalSettings,
-		getModalStore
+		setInitialClassState,
+		storeHighlightJs,
+		storePopup,
+		Toast
 	} from '@skeletonlabs/skeleton';
 	import hljs from 'highlight.js';
 	import CopyButtonPlugin from 'highlightjs-copy';
-	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
+	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	// see https://highlightjs.org/static/demo/ for options:
 	import 'highlight.js/styles/night-owl.css';
 
@@ -43,6 +44,13 @@
 	setupSkeleton();
 
 	const modalStore = getModalStore();
+
+	const scrollStore = writable<UIEvent>();
+	setContext('scrollContext', scrollStore);
+
+	function handleScroll(event: UIEvent) {
+		scrollStore.set(event);
+	}
 
 	let unsubscribeHasAcceptedTerms: Unsubscriber;
 	let unsubscribeHasSubscriptionChanged: Unsubscriber;
@@ -140,7 +148,7 @@
 	<script async src="https://js.stripe.com/v3/buy-button.js"></script>
 </svelte:head>
 
-<AppShell regionPage="relative lg:px-12" slotHeader="py-2 md:py-6 px-4 lg:px-12">
+<AppShell regionPage="relative lg:px-12" slotHeader="py-2 md:py-0 px-4 lg:px-12" on:scroll={handleScroll}>
 	<svelte:fragment slot="header">
 		<Header />
 	</svelte:fragment>

@@ -11,10 +11,12 @@ let tokenizer: GPT3Tokenizer;
 
 export enum OpenAiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
+	Gpt4o = 'gpt-4o',
 	Gpt4 = 'gpt-4',
 	Gpt432k = 'gpt-4-32k',
 	Gpt41106preview = 'gpt-4-1106-preview',
-	Gpt4Turbo = 'gpt-4-turbo-preview'
+	Gpt4Turbo = 'gpt-4-turbo',
+	Gpt4TurboPreview = 'gpt-4-turbo-preview'
 }
 
 export interface OpenAiSettings {
@@ -69,7 +71,21 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 		costCompletion: 0.03,
 		middlewareDeploymentName: 'gpt-4-turbo'
 	},
+	[OpenAiModel.Gpt4o]: {
+		maxTokens: 4096,
+		contextWindow: 128000,
+		costPrompt: 0.03,
+		costCompletion: 0.06
+	},
 	// deprecated, only here for backwards compatibility
+	[OpenAiModel.Gpt4TurboPreview]: {
+		maxTokens: 4096,
+		contextWindow: 128000,
+		costPrompt: 0.01,
+		costCompletion: 0.03,
+		middlewareDeploymentName: 'gpt-4-turbo',
+		hidden: true
+	},
 	[OpenAiModel.Gpt41106preview]: {
 		maxTokens: 4096,
 		contextWindow: 128000,

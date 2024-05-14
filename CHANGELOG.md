@@ -1,5 +1,10 @@
 # Changelog
 
+## May 14, 2024
+
+- add new gpt-4o model
+- deprecate gpt-4-turbo-preview model in favor of gpt-4-turbo
+
 ## March 18, 2024
 
 - SlickGPT now offers an optional "Pro" plan. If you choose this, you can use our Azure cloud infrastructure to access all the OpenAI models and settings without worrying about your own API key or usage limits. Yes, it's unlimited. We added a bunch of environment variables that you have to specify in your `.env` file to make this work. Check the `.env.example` file for details. You can leave all the values empty but you have to declare the variables if you want to self-host.

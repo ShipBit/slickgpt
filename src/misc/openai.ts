@@ -69,12 +69,12 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		costOutput: 30,
 		middlewareDeploymentName: 'gpt-4-turbo'
 	},
-	[OpenAiModel.Gpt4o]: {
-        provider: AiProvider.OpenAi,
+	[AiModel.Gpt4o]: {
+		provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 128000,
 		costInput: 5,
-		costOutput: 15,
+		costOutput: 15
 	},
 	[AiModel.MistralLarge]: {
 		provider: AiProvider.Mistral,
@@ -101,23 +101,6 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		middlewareDeploymentName: 'llama3-70b'
 	},
 	// deprecated, only here for backwards compatibility
-	[OpenAiModel.Gpt4TurboPreview]: {
-        provider: AiProvider.OpenAi,
-		maxTokens: 4096,
-		contextWindow: 128000,
-		costPrompt: 0.01,
-		costCompletion: 0.03,
-		middlewareDeploymentName: 'gpt-4-turbo',
-		hidden: true
-	},
-	[OpenAiModel.Gpt41106preview]: {
-        provider: AiProvider.OpenAi,
-		maxTokens: 4096,
-		contextWindow: 128000,
-		costInput: 10,
-		costOutput: 30,
-		hidden: true
-	},
 	[AiModel.Gpt4TurboPreview]: {
 		provider: AiProvider.OpenAi,
 		maxTokens: 4096,
@@ -125,6 +108,14 @@ export const models: { [key in AiModel]: AiModelStats } = {
 		costInput: 10,
 		costOutput: 30,
 		middlewareDeploymentName: 'gpt-4-turbo',
+		hidden: true
+	},
+	[AiModel.Gpt41106preview]: {
+		provider: AiProvider.OpenAi,
+		maxTokens: 4096,
+		contextWindow: 128000,
+		costInput: 10,
+		costOutput: 30,
 		hidden: true
 	},
 	[AiModel.Gpt4]: {

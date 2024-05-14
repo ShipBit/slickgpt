@@ -74,8 +74,8 @@ export const models: { [key in OpenAiModel]: OpenAiModelStats } = {
 	[OpenAiModel.Gpt4o]: {
 		maxTokens: 4096,
 		contextWindow: 128000,
-		costPrompt: 0.03,
-		costCompletion: 0.06
+		costPrompt: 0.005,
+		costCompletion: 0.015
 	},
 	// deprecated, only here for backwards compatibility
 	[OpenAiModel.Gpt4TurboPreview]: {

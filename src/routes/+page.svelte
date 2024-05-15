@@ -13,8 +13,15 @@
 	import { ChatBubbleBottomCenter, Clock } from '@inqling/svelte-icons/heroicon-24-outline';
 	import { goto } from '$app/navigation';
 	import { createNewChat, showModalComponent, showToast } from '$misc/shared';
-	import { chatStore, isTimeagoInitializedStore, hasSeenProPrompt, isPro } from '$misc/stores';
-	import { getProviderForModel } from '$misc/openai';
+	import {
+		chatStore,
+		isTimeagoInitializedStore,
+		hasSeenProPrompt,
+		hasSeenGpt4oPrompt,
+		isPro,
+		settingsStore
+	} from '$misc/stores';
+	import { AiModel, getProviderForModel } from '$misc/openai';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -36,6 +43,16 @@
 		if (!$hasSeenProPrompt) {
 			$hasSeenProPrompt = true;
 			showModalComponent(modalStore, 'UserModal');
+		}
+
+		if (!$hasSeenGpt4oPrompt) {
+			$hasSeenGpt4oPrompt = true;
+			showToast(toastStore, '🎉 GPT-4 Omni is here! 🎉', 'primary', false, undefined, {
+				label: 'Use as default',
+				response: () => {
+					$settingsStore.defaultModel = AiModel.Gpt4o;
+				}
+			});
 		}
 	});
 

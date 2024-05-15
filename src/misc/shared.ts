@@ -229,13 +229,15 @@ export function showToast(
 	message: string,
 	type: 'primary' | 'secondary' | 'tertiary' | 'success' | 'warning' | 'error' = 'primary',
 	autohide = true,
-	timeout = 5000
+	timeout = 5000,
+	action?: { label: string; response: () => void }
 ) {
 	const toast: ToastSettings = {
 		background: `variant-filled-${type}`,
 		message,
 		autohide,
-		timeout
+		timeout,
+		action
 	};
 	toastStore.trigger(toast);
 }

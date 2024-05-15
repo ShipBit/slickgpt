@@ -36,7 +36,7 @@ export interface AiSettings {
 }
 
 export const defaultOpenAiSettings: AiSettings = {
-	model: AiModel.Gpt35Turbo,
+	model: AiModel.Gpt4o,
 	max_tokens: 4072, // Manually adjusted
 	temperature: 1,
 	top_p: 1

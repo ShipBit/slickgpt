@@ -2,7 +2,7 @@
 
 ## May 15, 2024
 
-- added Mistral and Meta/Llama3 models. You can either use your own API keys or use them via SlickGPT Pro!
+- added Mistral (Cloud) and Meta/Llama3 (via Groq) models to "bring your own API key" mode. We are waiting for an Azure fix to serve them using Wingman Pro. Stay tuned!
 - deprecated `gpt-4-turbo-preview` in favor of the current `gpt-4-turbo` model
 - removed larger gpt-4 models because it doesn't make sense to use them without file upload or image capabilities.
 - Redesigned SlickGPT to make more room for the actual chat and use the available screen-space better:
@@ -17,8 +17,8 @@
 
 ## May 14, 2024
 
-- add new gpt-4o model
-- deprecate gpt-4-turbo-preview model in favor of gpt-4-turbo
+- added new gpt-4o model
+- deprecated gpt-4-turbo-preview model in favor of gpt-4-turbo
 
 ## March 18, 2024
 

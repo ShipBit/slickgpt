@@ -94,7 +94,7 @@ export class AuthService {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${get(this.token)}`
+				Authorization: `Bearer ${get(this.token)}`
 			}
 		});
 

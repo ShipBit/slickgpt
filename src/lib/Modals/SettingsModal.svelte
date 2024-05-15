@@ -62,6 +62,11 @@
 	let editApiKey = false;
 	let currentProvider: AiProvider = getProviderForModel(settings.model);
 
+	// TODO: Remove this when we can serve llama/mistral via Wingman Pro
+	if ($isPro) {
+		currentProvider = AiProvider.OpenAi;
+	}
+
 	$: {
 		maxTokensForModel = models[$chatStore[slug].settings.model].maxTokens; //Now: max reply length
 		settings.max_tokens = clamp(settings.max_tokens, 0, maxTokensForModel);
@@ -72,19 +77,21 @@
 	<form>
 		<h3 class="h3 mb-4">Settings</h3>
 		<div class="flex-row space-y-6">
-			<!-- Provider -->
-			<RadioGroup>
-				{#each providers as provider}
-					<RadioItem
-						bind:group={currentProvider}
-						name={provider}
-						value={provider}
-						on:change={(e) => (settings.model = getDefaultModelForProvider(e.target?.value))}
-					>
-						{provider}
-					</RadioItem>
-				{/each}
-			</RadioGroup>
+			<!-- TODO: Remove this when we can serve llama/mistral via Wingman Pro -->
+			{#if !$isPro}
+				<RadioGroup>
+					{#each providers as provider}
+						<RadioItem
+							bind:group={currentProvider}
+							name={provider}
+							value={provider}
+							on:change={(e) => (settings.model = getDefaultModelForProvider(e.target?.value))}
+						>
+							{provider}
+						</RadioItem>
+					{/each}
+				</RadioGroup>
+			{/if}
 			{#if !$isPro}
 				<!-- API keys -->
 				{#if currentProvider === AiProvider.Mistral && (!$settingsStore.mistralApiKey || editApiKey)}

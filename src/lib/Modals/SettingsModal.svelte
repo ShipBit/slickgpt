@@ -119,14 +119,14 @@
 				{:else if currentProvider === AiProvider.Meta && (!$settingsStore.metaApiKey || editApiKey)}
 					<label class="label">
 						<div class="flex justify-between space-x-12">
-							<span>Meta API key</span>
+							<span>Groq API key</span>
 							<a
 								target="_blank"
 								rel="noreferrer"
 								href="https://console.groq.com/keys"
 								class="anchor"
 							>
-								Get yours (Groq)
+								Get yours
 							</a>
 						</div>
 						<input

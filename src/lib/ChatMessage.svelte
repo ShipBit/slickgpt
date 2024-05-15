@@ -38,7 +38,7 @@
 </script>
 
 <div
-	class="flex flex-col max-w-[90%] px-5 py-2 rounded-2xl {message.role === 'assistant'
+	class="flex flex-col px-5 py-2 rounded-2xl {message.role === 'assistant'
 		? 'md:place-self-start'
 		: 'md:place-self-end'}"
 	class:variant-ghost-surface={message.role === 'user'}
@@ -60,13 +60,17 @@
 				<div class="flex space-x-0">
 					<!-- Edit Message / Branch chat -->
 					{#if message.role === 'user'}
-						<button class="btn btn-sm" on:click={() => dispatch('editMessage', message)}>
-							<PencilSquare class="w-6 h-6" />
+						<button
+							type="button"
+							class="btn btn-sm"
+							on:click={() => dispatch('editMessage', message)}
+						>
+							<span><PencilSquare class="w-6 h-6" /></span>
 						</button>
 					{/if}
 					<!-- Delete message -->
-					<button class="btn btn-sm" on:click={() => modalConfirmDelete(message.id)}>
-						<XMark class="w-6 h-6" />
+					<button type="button" class="btn btn-sm" on:click={() => modalConfirmDelete(message.id)}>
+						<span><XMark class="w-6 h-6" /></span>
 					</button>
 				</div>
 			{/if}
@@ -74,13 +78,12 @@
 	</div>
 
 	<!-- Message Content -->
-	<div>
+	<div class="text-sm">
 		{@html snarkdown(message.content)}
 		<!-- {@html message.content} -->
 	</div>
 </div>
 
 {#if renderChildren && message.messages}
-	<!-- This TypeScript error is nonsense... -->
 	<ChatMessages {slug} siblings={message.messages} on:editMessage />
 {/if}

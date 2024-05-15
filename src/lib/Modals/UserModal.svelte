@@ -16,14 +16,14 @@
 			pricePerMonth: 0,
 			pricePerYear: 0,
 			yearlyDiscount: 0,
-			description: 'Bring your own API key, pay OpenAI directly based on your usage.'
+			description: 'Bring your own API keys, pay the providers directly based on your usage.'
 		},
 		pro: {
 			name: 'Pro',
 			pricePerMonth: 5.99,
 			pricePerYear: 59.99,
 			yearlyDiscount: 17,
-			description: "No API key, no hassle. You pay us, we'll do the rest."
+			description: "No API key, no hassle. You pay us, we'll do the rest your you."
 		}
 	};
 
@@ -35,12 +35,39 @@
 				pro: true
 			}
 		],
-		Misc: [
+		Models: [
 			{
-				name: 'OpenAI API Key included?',
-				free: 'bring your own',
+				name: 'gpt-3.5',
+				free: 'your OpenAI API key',
 				pro: true
 			},
+			{
+				name: 'gpt-4-turbo',
+				free: 'your OpenAI API key',
+				pro: true
+			},
+			{
+				name: 'gpt-4o',
+				free: 'your OpenAI API key',
+				pro: true
+			},
+			{
+				name: 'llama3-8b',
+				free: 'free with your Groq API key',
+				pro: 'soon'
+			},
+			{
+				name: 'llama3-70b',
+				free: 'free with your Groq API key',
+				pro: 'soon'
+			},
+			{
+				name: 'mistral-large-latest',
+				free: 'your Mistral API key',
+				pro: 'soon'
+			}
+		],
+		Misc: [
 			{
 				name: 'User registration',
 				free: 'optional',
@@ -64,8 +91,8 @@
 <div class="card flex flex-col gap-4 variant-filled-surface-700 p-4 md:p-6 lg:p-8 max-w-[100]">
 	<h3 class="h3">How do you want to use SlickGPT?</h3>
 	<p>
-		You can use SlickGPT with your own Open AI API key without user registration. You'll "pay per
-		use" directly to OpenAI. <br />
+		You can use SlickGPT with your own API keys without user registration. You'll "pay per use" to
+		the providers directly. <br />
 		If this is too complicated or you prefer to know upfront what you'll be paying, we can handle this
 		for you.
 	</p>

@@ -15,8 +15,8 @@
 		Array.isArray(chat.settings.stop) && chat.settings.stop.length > 0
 			? chat.settings.stop[0]
 			: typeof chat.settings.stop === 'string'
-			? chat.settings.stop
-			: '';
+				? chat.settings.stop
+				: '';
 	let stopSequence2 =
 		Array.isArray(chat.settings.stop) && chat.settings.stop.length > 1 ? chat.settings.stop[1] : '';
 	let stopSequence3 =

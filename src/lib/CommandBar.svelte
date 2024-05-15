@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { MagnifyingGlass } from '@inqling/svelte-icons/heroicon-24-outline';
 	import CommandPalette, { defineActions, createStoreMethods } from 'svelte-command-palette';
-	import type { action } from 'svelte-command-palette/types';
 	import { goto } from '$app/navigation';
 	import { chatStore } from '$misc/stores';
 
 	const paletteMethods = createStoreMethods();
 
 	let sortedChats: [string, any][] = [];
-	let chatActions: action[] = [];
-	let actions: action[] = [];
+	let chatActions: any[] = []; // svelte-command-palette is missing export type { actions } ...
+	let actions: any[] = [];
 	let key = 0;
 
 	$: {
@@ -43,7 +42,7 @@
 	on:click={paletteMethods.openPalette}
 >
 	<span><MagnifyingGlass class="w-4 h-4" /></span>
-	<span>⌘+K</span>
+	<span class="hidden md:inline">⌘+K</span>
 </button>
 
 {#key key}

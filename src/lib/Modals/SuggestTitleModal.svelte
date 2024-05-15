@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { getModalStore, ProgressRadial } from '@skeletonlabs/skeleton';
 	import { confettiAction } from 'svelte-legos';
-	import { chatStore, settingsStore, isPro } from '$misc/stores';
+	import { chatStore, settingsStore } from '$misc/stores';
 	import { canSuggestTitle, suggestChatTitle, track } from '$misc/shared';
+	import { getProviderForModel } from '$misc/openai';
 
 	const modalStore = getModalStore();
 
@@ -11,13 +12,10 @@
 
 	let title = $chatStore[slug].title;
 
-	$: showAiSuggestOptions =
-		($isPro || $settingsStore.openAiApiKey) && canSuggestTitle($chatStore[slug]);
+	$: showAiSuggestOptions = canSuggestTitle($chatStore[slug]);
+	$: provider = getProviderForModel($chatStore[slug].settings.model);
 
 	async function handleSuggestTitle() {
-		if (!$isPro && !$settingsStore.openAiApiKey) {
-			return;
-		}
 		isLoading = true;
 		title = await suggestChatTitle($chatStore[slug]);
 		isLoading = false;
@@ -54,7 +52,7 @@
 				on:click={handleSuggestTitle}
 			>
 				{#if !isLoading}
-					Let ChatGPT suggest a new title
+					Let {provider} suggest a new title
 				{:else}
 					<ProgressRadial
 						class="w-6"

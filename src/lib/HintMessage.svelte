@@ -1,16 +1,26 @@
 <script lang="ts">
-	export let title: string;
+	import TokenCost from './TokenCost.svelte';
+
+	export let title: string = '';
 	export let variantClass = '';
-	export let actionClass = '';
-	export let omitAlertActionsClass = false;
+	export let tokens: number = 0;
 </script>
 
-<aside class="alert {variantClass} max-w-4xl mx-auto mt-6 self-center">
-	<div class="alert-message flex flex-col">
-		<h3 class="h3">{title}</h3>
+<div class="flex flex-col max-w-4xl px-5 py-2 self-center {variantClass} rounded-lg">
+	<div class="flex justify-between items-center">
+		<span class="font-bold mr-12">{title}:</span>
+
+		<div class="flex items-center">
+			{#if tokens}
+				<TokenCost {tokens} />
+			{/if}
+
+			<slot name="actions" />
+		</div>
+	</div>
+
+	<!-- Message Content -->
+	<div class="flex flex-col text-sm">
 		<slot />
 	</div>
-	<div class={actionClass} class:alert-actions={!omitAlertActionsClass}>
-		<slot name="actions" />
-	</div>
-</aside>
+</div>

@@ -50,36 +50,39 @@
 </script>
 
 {#if chat}
-	<div class="flex flex-col container h-full mx-auto px-4 md:px-8" style="justify-content: end">
+	<div
+		class="flex flex-col container justify-end h-full mx-auto px-4 md:px-8 gap-6"
+	>
 		<slot name="additional-content-top" />
 
-		<div class="flex flex-col max-w-4xl md:mx-auto space-y-6 pt-6">
-			<!-- Message history -->
-			<ChatMessages {slug} siblings={chat.messages} on:editMessage />
+		{#if chat.messages.length > 0 || $isLoadingAnswerStore}
+			<div class="flex flex-col max-w-4xl md:mx-auto space-y-6">
+				<!-- Message history -->
+				<ChatMessages {slug} siblings={chat.messages} on:editMessage />
 
-			<!-- Live Message -->
-			{#if $isLoadingAnswerStore}
-				<div class="place-self-start">
-					<div class="p-5 rounded-2xl variant-ghost-tertiary rounded-tl-none">
-						{@html snarkdown($liveAnswerStore.content)}
+				<!-- Live Message -->
+				{#if $isLoadingAnswerStore}
+					<div class="place-self-start">
+						<div class="p-5 rounded-2xl variant-ghost-tertiary rounded-tl-none">
+							{@html snarkdown($liveAnswerStore.content)}
+						</div>
 					</div>
-				</div>
-			{/if}
-		</div>
+				{/if}
+			</div>
+		{/if}
 
 		<slot name="additional-content-bottom" />
 
 		<!-- Progress indicator -->
-		<div
-			class="animate-pulse md:w-12 self-center py-2 md:py-6"
-			class:invisible={!$isLoadingAnswerStore}
-		>
-			<ProgressRadial
-				class="w-8"
-				stroke={120}
-				meter="stroke-tertiary-500"
-				track="stroke-tertiary-500/30"
-			/>
-		</div>
+		{#if $isLoadingAnswerStore}
+			<div class="animate-pulse md:w-12 self-center py-2 md:py-6">
+				<ProgressRadial
+					class="w-8"
+					stroke={120}
+					meter="stroke-tertiary-500"
+					track="stroke-tertiary-500/30"
+				/>
+			</div>
+		{/if}
 	</div>
 {/if}

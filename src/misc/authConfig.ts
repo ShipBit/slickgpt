@@ -9,7 +9,7 @@ export const b2cPolicies = {
 	},
 	authorities: {
 		signUpSignIn: {
-			authority: "https://shipbit.b2clogin.com/shipbit.onmicrosoft.com/B2C_1A_SIGNUP_SIGNIN_SHIPBIT",
+			authority: 'https://shipbit.b2clogin.com/shipbit.onmicrosoft.com/B2C_1A_SIGNUP_SIGNIN_SHIPBIT'
 		},
 		forgotPassword: {
 			authority: 'https://shipbit.b2clogin.com/shipbit.onmicrosoft.com/B2C_1_passwordreset'

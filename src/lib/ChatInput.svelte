@@ -1,6 +1,4 @@
 <script lang="ts">
-	import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-	import type { Moderation } from 'openai/resources/moderations';
 	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
@@ -20,11 +18,13 @@
 		settingsStore,
 		isPro
 	} from '$misc/stores';
-	import { countTokens, models } from '$misc/openai';
+	import { AiProvider, countTokens, getProviderForModel, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
 	import { get } from 'svelte/store';
 	import {
+		PUBLIC_GROQ_API_URL,
 		PUBLIC_MIDDLEWARE_API_URL,
+		PUBLIC_MISTRAL_API_URL,
 		PUBLIC_MODERATION,
 		PUBLIC_MODERATION_API_URL,
 		PUBLIC_OPENAI_API_URL
@@ -51,7 +51,8 @@
 	$: message = {
 		role: 'user',
 		content: input.trim()
-	} as ChatCompletionMessageParam;
+	} as ChatMessage;
+	$: provider = getProviderForModel(chat.settings.model);
 
 	const unsubscribe = chatStore.subscribe((chats) => {
 		const chat = chats[slug];
@@ -71,7 +72,7 @@
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
-	async function checkModerationApi(messages: ChatCompletionMessageParam[], token: string) {
+	async function checkModerationApi(messages: ChatMessage[], token: string) {
 		if (PUBLIC_MODERATION === 'true') {
 			const textMessages = messages.map((msg) => msg.content);
 
@@ -141,7 +142,7 @@
 				({
 					role: m.role,
 					content: m.content
-				}) as ChatCompletionMessageParam
+				}) as ChatMessage
 		);
 
 		let payload: any;
@@ -166,10 +167,22 @@
 				stream: true
 			};
 		} else {
-			token = $settingsStore.openAiApiKey!;
-			url = PUBLIC_OPENAI_API_URL;
+			switch (provider) {
+				case AiProvider.Mistral:
+					token = $settingsStore.mistralApiKey!;
+					url = PUBLIC_MISTRAL_API_URL;
+					break;
+				case AiProvider.Meta:
+					token = $settingsStore.metaApiKey!;
+					url = PUBLIC_GROQ_API_URL;
+					break;
+				default:
+					token = $settingsStore.openAiApiKey!;
+					url = PUBLIC_OPENAI_API_URL;
+					break;
+			}
 
-			if (messages) {
+			if (provider === AiProvider.OpenAi && messages) {
 				const moderationOk = await checkModerationApi(messages, token);
 				if (!moderationOk) {
 					return;
@@ -183,7 +196,7 @@
 			};
 		}
 
-		await $eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
+		$eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
 		input = '';
 	}
 
@@ -335,9 +348,7 @@
 	}
 </script>
 
-<footer
-	class="sticky card space-y-4 bottom-0 z-10 variant-filled-surface-700 py-2 md:py-4 md:px-8 md:rounded-xl"
->
+<footer class="sticky space-y-4 bottom-0 z-10 card variant-surface p-2 rounded-none md:rounded-lg">
 	{#if $isLoadingAnswerStore}
 		<div class="flex items-center justify-center">
 			<button class="btn variant-ghost w-48 self-center" on:click={() => $eventSourceStore.stop()}>
@@ -345,7 +356,7 @@
 			</button>
 		</div>
 	{:else}
-		<div class="flex flex-col space-y-2 md:mx-auto md:w-3/4 px-2 md:px-8">
+		<div class="flex flex-col space-y-2 md:mx-auto md:w-3/4">
 			{#if isEditMode}
 				<div class="flex items-center justify-between">
 					<p>Editing creates a <span class="italic">chat branch</span>.</p>
@@ -367,34 +378,36 @@
 							bind:value={input}
 							bind:this={textarea}
 						/>
-						<div class="flex flex-col md:flex-row items-center justify-end md:items-end">
+						<div class="flex items-center">
+							<!-- Tokens -->
+							{#if input.length > 0}
+								<button
+									type="button"
+									class="btn btn-sm hidden md:inline"
+									class:animate-pulse={!!debounceTimer}
+									on:click={openTokenCostDialog}
+								>
+									<span class="flex items-center text-xs text-slate-500 dark:text-slate-200 gap-1"
+										><CircleStack class="w-5 h-5" /> {tokensLeft} left</span
+									>
+								</button>
+							{/if}
+							<!-- Send button -->
+							<button type="submit" class="btn btn-sm">
+								<PaperAirplane class="w-6 h-6" />
+							</button>
 							<!-- Insert Code button -->
 							<button
-								type="submit"
-								class="btn btn-sm ml-2"
+								type="button"
+								class="btn btn-sm hidden md:inline"
 								on:click|preventDefault={handleInsertCode}
 							>
 								<CodeBracket class="w-6 h-6" />
-							</button>
-							<!-- Send button -->
-							<button type="submit" class="btn btn-sm ml-2">
-								<PaperAirplane class="w-6 h-6" />
 							</button>
 						</div>
 					</div>
 				</form>
 			</div>
-			<!-- Tokens -->
-			{#if input.length > 0}
-				<button
-					class="flex items-center text-xs text-slate-500 dark:text-slate-200 ml-4 space-x-1"
-					class:animate-pulse={!!debounceTimer}
-					on:click={openTokenCostDialog}
-				>
-					<span>{tokensLeft} tokens left</span>
-					<CircleStack class="w-6 h-6" />
-				</button>
-			{/if}
 		</div>
 	{/if}
 </footer>

@@ -1,6 +1,16 @@
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import type {
+	ChatCompletionMessageParam,
+	ChatCompletionSystemMessageParam
+} from 'openai/resources/chat/completions';
 import { get } from 'svelte/store';
-import { defaultOpenAiSettings, models, OpenAiModel, type OpenAiSettings } from './openai';
+import {
+	defaultOpenAiSettings,
+	models,
+	AiModel,
+	type AiSettings,
+	AiProvider,
+	getProviderForModel
+} from './openai';
 import type { ModalSettings, ToastSettings, ToastStore, ModalStore } from '@skeletonlabs/skeleton';
 import { generateSlug } from 'random-word-slugs';
 import vercelAnalytics from '@vercel/analytics';
@@ -9,12 +19,17 @@ import { goto } from '$app/navigation';
 import { isPro, chatStore, settingsStore } from './stores';
 import {
 	PUBLIC_DISABLE_TRACKING,
+	PUBLIC_GROQ_API_URL,
 	PUBLIC_MIDDLEWARE_API_URL,
+	PUBLIC_MISTRAL_API_URL,
 	PUBLIC_OPENAI_API_URL
 } from '$env/static/public';
 import { AuthService } from './authService';
 
-export interface ChatMessage extends ChatCompletionMessageParam {
+export interface ChatMessage {
+	content: string;
+	role: 'system' | 'user' | 'assistant';
+	name?: string;
 	id?: string;
 	messages?: ChatMessage[];
 	isSelected?: boolean;
@@ -23,8 +38,8 @@ export interface ChatMessage extends ChatCompletionMessageParam {
 
 export interface Chat {
 	title: string;
-	settings: OpenAiSettings;
-	contextMessage: ChatCompletionMessageParam;
+	settings: AiSettings;
+	contextMessage: ChatCompletionSystemMessageParam;
 	messages: ChatMessage[];
 	created: Date;
 
@@ -34,9 +49,12 @@ export interface Chat {
 
 export interface ClientSettings {
 	openAiApiKey?: string;
+	mistralApiKey?: string;
+	metaApiKey?: string;
 	hideLanguageHint?: boolean;
 	useTitleSuggestions?: boolean;
-	defaultModel?: OpenAiModel;
+	defaultModel?: AiModel;
+	defaultProvider?: AiProvider;
 }
 
 export interface ChatCost {
@@ -52,8 +70,8 @@ export interface ChatCost {
 export function createNewChat(template?: {
 	context?: string | null;
 	title?: string;
-	settings?: OpenAiSettings;
-	messages?: ChatCompletionMessageParam[];
+	settings?: AiSettings;
+	messages?: ChatMessage[];
 }) {
 	const settings = { ...(template?.settings || defaultOpenAiSettings) };
 	const { defaultModel } = get(settingsStore);
@@ -134,19 +152,34 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 				topP: 1,
 				stopSequences: []
 			},
-			model: models[OpenAiModel.Gpt35Turbo].middlewareDeploymentName || OpenAiModel.Gpt35Turbo,
+			model: models[AiModel.Gpt35Turbo].middlewareDeploymentName || AiModel.Gpt35Turbo,
 			stream: false
 		};
 	} else {
-		url = PUBLIC_OPENAI_API_URL;
+		const provider = getProviderForModel(chat.settings.model);
+		const settings = get(settingsStore);
+		switch (provider) {
+			case AiProvider.Mistral:
+				token = settings.mistralApiKey!;
+				url = PUBLIC_MISTRAL_API_URL;
+				break;
+			case AiProvider.Meta:
+				token = settings.metaApiKey!;
+				url = PUBLIC_GROQ_API_URL;
+				break;
+			default:
+				token = settings.openAiApiKey!;
+				url = PUBLIC_OPENAI_API_URL;
+				break;
+		}
 		headers = {
 			'Content-Type': 'application/json',
-			Authorization: `Bearer ${get(settingsStore).openAiApiKey}`
+			Authorization: `Bearer ${token}`
 		};
 		body = {
 			messages: filteredMessages,
 			...defaultOpenAiSettings,
-			model: OpenAiModel.Gpt35Turbo,
+			model: chat.settings.model,
 			stream: false
 		};
 	}
@@ -196,13 +229,15 @@ export function showToast(
 	message: string,
 	type: 'primary' | 'secondary' | 'tertiary' | 'success' | 'warning' | 'error' = 'primary',
 	autohide = true,
-	timeout = 5000
+	timeout = 5000,
+	action?: { label: string; response: () => void }
 ) {
 	const toast: ToastSettings = {
 		background: `variant-filled-${type}`,
 		message,
 		autohide,
-		timeout
+		timeout,
+		action
 	};
 	toastStore.trigger(toast);
 }

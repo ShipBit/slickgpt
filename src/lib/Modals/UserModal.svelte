@@ -53,12 +53,12 @@
 			},
 			{
 				name: 'llama3-8b',
-				free: 'your Groq API key',
+				free: 'free with your Groq API key',
 				pro: 'soon'
 			},
 			{
 				name: 'llama3-70b',
-				free: 'your Groq API key',
+				free: 'free with your Groq API key',
 				pro: 'soon'
 			},
 			{

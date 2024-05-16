@@ -194,13 +194,15 @@ export function estimateChatCost(chat: Chat): ChatCost {
 }
 
 export function getProviderForModel(model: AiModel) {
-	if (model.includes('llama')) {
-		return AiProvider.Meta;
-	} else if (model.includes('mistral')) {
-		return AiProvider.Mistral;
-	} else {
-		return AiProvider.OpenAi;
+	const result = AiProvider.OpenAi;
+	if (model) {
+		if (model.includes('llama')) {
+			return AiProvider.Meta;
+		} else if (model.includes('mistral')) {
+			return AiProvider.Mistral;
+		}
 	}
+	return result;
 }
 
 export function getDefaultModelForProvider(provider: AiProvider) {

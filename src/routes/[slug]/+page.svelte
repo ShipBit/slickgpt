@@ -10,7 +10,8 @@
 	import ChatInput from '$lib/ChatInput.svelte';
 	import Chat from '$lib/Chat.svelte';
 	import HintMessage from '$lib/HintMessage.svelte';
-	import { countTokens, estimateChatCost, getProviderForModel } from '$misc/openai';
+	import TokenCost from '$lib/TokenCost.svelte';
+	import { countTokens, estimateChatCost, getProviderForModel, modelExists, defaultOpenAiSettings } from '$misc/openai';
 	import {
 		canSuggestTitle,
 		type ChatMessage,
@@ -30,6 +31,19 @@
 
 	$: ({ slug } = data);
 	$: chat = $chatStore[slug];
+	$: {
+		if (chat && !modelExists(chat.settings.model)) {
+			// When the model of a session no longer exists in /is deleted from slickgpt,
+			showToast(
+				toastStore,
+				`The model '${chat.settings.model}' used in this chat is ` + 
+				`no longer available. Switched to the default model ` + 
+				`'${defaultOpenAiSettings.model}'.`,
+				'warning', true, 30000
+			);
+			chat.settings.model = defaultOpenAiSettings.model; // fall back to the default model so the page won't hang.
+		}
+	}
 	$: cost = chat ? estimateChatCost(chat) : null;
 	$: hasContext = chat?.contextMessage?.content?.length || false;
 	$: provider = getProviderForModel(chat?.settings?.model);

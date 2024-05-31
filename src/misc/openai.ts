@@ -162,6 +162,10 @@ export function countTokens(message: ChatMessage): number {
 	return num_tokens;
 }
 
+export function modelExists(modelName: OpenAiModel): boolean {
+	return modelName in models;
+}
+
 export function estimateChatCost(chat: Chat): ChatCost {
 	let tokensPrompt = 0;
 	let tokensCompletion = 0;

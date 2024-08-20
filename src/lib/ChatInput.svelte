@@ -240,13 +240,29 @@
 					addCompletionToChat();
 				}
 			} else {
-				const completionResponse: any = JSON.parse(event.data);
-				const isFinished = completionResponse.choices[0].finish_reason === 'stop';
-				if (event.data !== '[DONE]' && !isFinished) {
-					const delta: string = completionResponse.choices[0].delta.content || '';
-					showLiveResponse(delta);
-				} else {
-					addCompletionToChat();
+				try {
+					const completionResponse: any = JSON.parse(event.data);
+					const isFinished = completionResponse.choices[0].finish_reason === 'stop';
+					if (!isFinished) {
+						const delta: string = completionResponse.choices[0].delta.content || '';
+						showLiveResponse(delta);
+					} else {
+						addCompletionToChat();
+					}
+				} catch (err) {
+					if (event.data == '[DONE]') {
+						//addCompletionToChat();
+						handleAbort(event);
+						showToast(
+							toastStore,
+							`The current model '${chat.settings.model}' returns finish message [DONE]` ,
+							'warning',
+							true,
+							5000
+						);
+					} else {
+						throw err;
+					}
 				}
 			}
 			if ($settingsStore.useTitleSuggestions && !hasUpdatedChatTitle && firstUserPrompt) {

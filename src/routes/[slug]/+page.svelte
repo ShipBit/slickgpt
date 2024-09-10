@@ -21,7 +21,7 @@
 		suggestChatTitle,
 		track
 	} from '$misc/shared';
-	import snarkdown from 'snarkdown';
+	import { renderMarkdown } from '$misc/markdownKatex';
 	import Toolbar from '$lib/Toolbar.svelte';
 
 	const modalStore = getModalStore();
@@ -226,7 +226,7 @@
 				>
 					<p>
 						{#if hasContext && chat.contextMessage.content}
-							{@html snarkdown(chat.contextMessage.content)}
+							{@html renderMarkdown(chat.contextMessage.content)}
 						{:else}
 							Tell the AI how to behave and provide it with knowledge to answer your prompt.
 						{/if}

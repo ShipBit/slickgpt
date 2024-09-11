@@ -21,7 +21,15 @@
 
 	async function highlightCode() {
 		await tick();
-		hljs.highlightAll();
+
+		// Highlight unprocessed code blocks only once
+		document.querySelectorAll('pre code').forEach((element) => {
+			const block = element as HTMLElement;
+			if (!block.dataset.highlighted) {
+				hljs.highlightElement(block);
+				block.dataset.highlighted = 'true';
+			}
+		});
 	}
 
 	function handleImportChat() {

@@ -8,6 +8,7 @@
 		type ChatMessage,
 		showModalComponent,
 		showToast,
+		suggestChatTitle,
 		track
 	} from '$misc/shared';
 	import {
@@ -117,6 +118,10 @@
 		return true;
 	}
 
+	// Variable to keep track of the user's first prompt
+	let firstUserPrompt = '';
+	let hasUpdatedChatTitle = false; // Flag to avoid multiple updates
+
 	async function handleSubmit() {
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
@@ -127,6 +132,10 @@
 		}
 
 		if (!isEditMode) {
+			// Check if it's the first user message
+			if (firstUserPrompt === '') {
+				firstUserPrompt = input.trim();
+			}
 			chatStore.addMessageToChat(slug, message, parent || undefined);
 			track('ask');
 		} else if (originalMessage && originalMessage.id) {
@@ -217,7 +226,7 @@
 		});
 	}
 
-	function handleAnswer(event: MessageEvent<any>) {
+	async function handleAnswer(event: MessageEvent<any>) {
 		try {
 			if ($isPro) {
 				if (event.data) {
@@ -237,6 +246,16 @@
 					addCompletionToChat();
 				}
 			}
+			if ($settingsStore.useTitleSuggestions 
+			   && !hasUpdatedChatTitle 
+			   && firstUserPrompt) {
+                hasUpdatedChatTitle = true; // Ensure the title is only updated once
+                const title = await suggestChatTitle({
+                    ...chat,
+                    messages: [...chat.messages, { role: 'user', content: firstUserPrompt }]
+                });
+                chatStore.updateChat(slug, { title });
+            }
 		} catch (err) {
 			handleError(err);
 		}

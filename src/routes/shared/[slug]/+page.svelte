@@ -4,7 +4,7 @@
 	import hljs from 'highlight.js';
 	import { track, type Chat as ChatModel } from '$misc/shared';
 	import { generateSlug } from 'random-word-slugs';
-	import snarkdown from 'snarkdown';
+	import { renderMarkdown } from '$misc/markdownKatex';
 	import { ArrowDownOnSquare } from '@inqling/svelte-icons/heroicon-24-outline';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import { chatStore } from '$misc/stores';
@@ -21,7 +21,15 @@
 
 	async function highlightCode() {
 		await tick();
-		hljs.highlightAll();
+
+		// Highlight unprocessed code blocks only once
+		document.querySelectorAll('pre code').forEach((element) => {
+			const block = element as HTMLElement;
+			if (!block.dataset.highlighted) {
+				hljs.highlightElement(block);
+				block.dataset.highlighted = 'true';
+			}
+		});
 	}
 
 	function handleImportChat() {
@@ -54,7 +62,7 @@
 	<svelte:fragment slot="additional-content-top">
 		{#if chat.contextMessage.content.length > 0}
 			<HintMessage title="Context" variantClass="variant-ghost-tertiary">
-				<p class="!mb-4">{@html snarkdown(chat.contextMessage.content)}</p>
+				<p class="!mb-4">{@html renderMarkdown(chat.contextMessage.content)}</p>
 			</HintMessage>
 		{/if}
 	</svelte:fragment>

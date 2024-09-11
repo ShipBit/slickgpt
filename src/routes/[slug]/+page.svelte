@@ -21,7 +21,7 @@
 		suggestChatTitle,
 		track
 	} from '$misc/shared';
-	import snarkdown from 'snarkdown';
+	import { renderMarkdown } from '$misc/markdownKatex';
 	import Toolbar from '$lib/Toolbar.svelte';
 
 	const modalStore = getModalStore();
@@ -77,7 +77,15 @@
 
 	async function highlightCode() {
 		await tick();
-		hljs.highlightAll();
+		
+		// Highlight unprocessed code blocks only once
+		document.querySelectorAll('pre code').forEach((element) => {
+			const block = element as HTMLElement;
+			if (!block.dataset.highlighted) {
+				hljs.highlightElement(block);
+				block.dataset.highlighted = 'true';
+			}
+		});
 	}
 
 	function showConfirmDeleteModal() {
@@ -226,7 +234,7 @@
 				>
 					<p>
 						{#if hasContext && chat.contextMessage.content}
-							{@html snarkdown(chat.contextMessage.content)}
+							{@html renderMarkdown(chat.contextMessage.content)}
 						{:else}
 							Tell the AI how to behave and provide it with knowledge to answer your prompt.
 						{/if}

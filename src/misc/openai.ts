@@ -3,7 +3,7 @@ import { encodingForModel } from 'js-tiktoken';
 import { ChatStorekeeper } from './chatStorekeeper';
 
 // Initialization is slow, so only do it once.
-let tokenizer = encodingForModel('gpt-4-turbo');
+const tokenizer = encodingForModel('gpt-4-turbo');
 
 export enum AiProvider {
 	OpenAi = 'OpenAI',
@@ -49,7 +49,7 @@ export interface AiModelStats {
 	hidden?: boolean;
 }
 
-export const models: { [key in AiModel]: AiModelStats } = {
+export const models: Record<AiModel, AiModelStats> = {
 	[AiModel.Gpt35Turbo]: {
 		provider: AiProvider.OpenAi,
 		maxTokens: 4096,
@@ -134,22 +134,18 @@ export const models: { [key in AiModel]: AiModelStats } = {
 };
 
 export const providers: AiProvider[] = [AiProvider.OpenAi, AiProvider.Mistral, AiProvider.Meta];
+
 /**
  * see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
  */
 export function countTokens(message: ChatMessage): number {
 	let num_tokens = 4; // every message follows <im_start>{role/name}\n{content}<im_end>\n
 	for (const [key, value] of Object.entries(message)) {
-		if (key !== 'name' && key !== 'role' && key !== 'content') {
-			continue;
-		}
-		const tokens: number[] = tokenizer.encode(value);
-		num_tokens += tokens.length;
-		if (key === 'name') {
-			num_tokens--; // if there's a name, the role is omitted
+		if (key === 'name' || key === 'role' || key === 'content') {
+			const tokensCount = tokenizer.encode(value).length;
+			num_tokens += (key === 'name') ? tokensCount - 1 : tokensCount;
 		}
 	}
-
 	return num_tokens;
 }
 
@@ -175,13 +171,13 @@ export function estimateChatCost(chat: Chat): ChatCost {
 	// see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
 	const tokensTotal = tokensPrompt + tokensCompletion + 2; // every reply is primed with <im_start>assistant
 	const { contextWindow, costInput, costOutput } = models[chat.settings.model];
-	const costPrompt = (costInput / 1000000.0) * tokensPrompt;
-	const costCompletion = (costOutput / 1000000.0) * tokensCompletion;
+	const costPrompt = (costInput / 1_000_000) * tokensPrompt;
+	const costCompletion = (costOutput / 1_000_000) * tokensCompletion;
 
 	return {
 		tokensPrompt,
 		tokensCompletion,
-		tokensTotal: tokensTotal,
+		tokensTotal,
 		costPrompt,
 		costCompletion,
 		costTotal: costPrompt + costCompletion,
@@ -189,7 +185,7 @@ export function estimateChatCost(chat: Chat): ChatCost {
 	};
 }
 
-export function getProviderForModel(model: AiModel) {
+export function getProviderForModel(model: AiModel): AiProvider {
 	if (model.includes('llama')) {
 		return AiProvider.Meta;
 	} else if (model.includes('mistral')) {
@@ -198,6 +194,6 @@ export function getProviderForModel(model: AiModel) {
 	return AiProvider.OpenAi;
 }
 
-export function getDefaultModelForProvider(provider: AiProvider) {
-	return Object.keys(models).find((key) => models[key as AiModel].provider === provider) as AiModel;
+export function getDefaultModelForProvider(provider: AiProvider): AiModel {
+	return (Object.keys(models) as AiModel[]).find(key => models[key].provider === provider)!;
 }

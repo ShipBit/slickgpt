@@ -3,8 +3,7 @@ import { encodingForModel } from 'js-tiktoken';
 import { ChatStorekeeper } from './chatStorekeeper';
 
 // Initialization is slow, so only do it once.
-let tokenizer = encodingForModel('gpt-4o');
-
+let tokenizer = encodingForModel('gpt-4-turbo');
 
 export enum AiProvider {
 	OpenAi = 'OpenAI',
@@ -137,7 +136,6 @@ export const models: { [key in AiModel]: AiModelStats } = {
 export const providers: AiProvider[] = [AiProvider.OpenAi, AiProvider.Mistral, AiProvider.Meta];
 /**
  * see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
- * see https://github.com/syonfox/GPT-3-Encoder/issues/2
  */
 export function countTokens(message: ChatMessage): number {
 	let num_tokens = 4; // every message follows <im_start>{role/name}\n{content}<im_end>\n
@@ -166,10 +164,11 @@ export function estimateChatCost(chat: Chat): ChatCost {
 	const messages = ChatStorekeeper.getCurrentMessageBranch(chat);
 
 	for (const message of messages) {
+		const tokens = countTokens(message);
 		if (message.role === 'assistant') {
-			tokensCompletion += countTokens(message);
+			tokensCompletion += tokens;
 		} else {
-			tokensPrompt += countTokens(message);
+			tokensPrompt += tokens;
 		}
 	}
 

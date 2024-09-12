@@ -173,7 +173,8 @@ export function estimateChatCost(chat: Chat): ChatCost {
 		}
 	}
 
-	const tokensTotal = tokensPrompt + tokensCompletion + 2;
+	// see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
+	const tokensTotal = tokensPrompt + tokensCompletion + 2; // every reply is primed with <im_start>assistant
 	const { contextWindow, costInput, costOutput } = models[chat.settings.model];
 	const costPrompt = (costInput / 1000000.0) * tokensPrompt;
 	const costCompletion = (costOutput / 1000000.0) * tokensCompletion;

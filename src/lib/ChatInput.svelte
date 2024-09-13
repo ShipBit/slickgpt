@@ -249,13 +249,13 @@
 			if ($settingsStore.useTitleSuggestions 
 			   && !hasUpdatedChatTitle 
 			   && firstUserPrompt) {
-                hasUpdatedChatTitle = true; // Ensure the title is only updated once
-                const title = await suggestChatTitle({
-                    ...chat,
-                    messages: [...chat.messages, { role: 'user', content: firstUserPrompt }]
-                });
-                chatStore.updateChat(slug, { title });
-            }
+				hasUpdatedChatTitle = true; // Ensure the title is only updated once
+				const title = await suggestChatTitle({
+					...chat,
+					messages: [...chat.messages, { role: 'user', content: firstUserPrompt }]
+				});
+				chatStore.updateChat(slug, { title });
+			}
 		} catch (err) {
 			handleError(err);
 		}
@@ -312,6 +312,14 @@
 		rawAnswer = '';
 	}
 
+	async function addNewLineAndResize() {
+		input += '\n';
+
+		// tick is required for the action to resize the textarea
+		await tick();
+		textareaAutosizeAction(textarea);
+	}
+
 	function handleKeyDown(event: KeyboardEvent) {
 		clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(calculateMessageTokens, 750);
@@ -321,7 +329,12 @@
 		}
 
 		if (event.key === 'Enter' && !event.shiftKey) {
-			handleSubmit();
+			if (input.trim() === '') {
+				// Create new line if input is whitespaced.
+				addNewLineAndResize();
+			} else {
+				handleSubmit();
+			}
 		}
 	}
 

@@ -120,9 +120,12 @@
 
 	// Variable to keep track of the user's first prompt
 	let firstUserPrompt = '';
-	let hasUpdatedChatTitle = false; // Flag to avoid multiple updates
+	// Flag to avoid multiple updates
+	let hasUpdatedChatTitle = false;
 
 	async function handleSubmit() {
+		if (input.trim() === '') return;
+
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
 
@@ -246,9 +249,7 @@
 					addCompletionToChat();
 				}
 			}
-			if ($settingsStore.useTitleSuggestions 
-			   && !hasUpdatedChatTitle 
-			   && firstUserPrompt) {
+			if ($settingsStore.useTitleSuggestions && !hasUpdatedChatTitle && firstUserPrompt) {
 				hasUpdatedChatTitle = true; // Ensure the title is only updated once
 				const title = await suggestChatTitle({
 					...chat,
@@ -279,7 +280,7 @@
 
 		const data = JSON.parse(event.data);
 
-		showToast(toastStore, data.message || 'An error occured.', 'error');
+		showToast(toastStore, data.message || 'An error occurred.', 'error');
 
 		if (data.message.includes('API key')) {
 			showModalComponent(modalStore, 'SettingsModal', { slug });
@@ -328,13 +329,21 @@
 			return;
 		}
 
-		if (event.key === 'Enter' && !event.shiftKey) {
-			if (input.trim() === '') {
-				// Create new line if input is whitespaced.
-				addNewLineAndResize();
-			} else {
-				handleSubmit();
-			}
+		switch (event.key) {
+			case 'ArrowUp':
+			case 'ArrowDown':
+				event.stopImmediatePropagation();
+				break;
+			case 'Enter':
+				if (!event.shiftKey) {
+					if (input.trim() === '') {
+						// Create a new line if input is whitespace.
+						addNewLineAndResize();
+					} else {
+						handleSubmit();
+					}
+				}
+				break;
 		}
 	}
 

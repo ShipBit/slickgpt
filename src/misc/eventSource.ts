@@ -2,14 +2,14 @@ import { SSE } from 'sse.js';
 
 export class EventSource {
 	private eventSource?: SSE;
-	private handleAnswer?: (event: MessageEvent<any>) => void;
+	private handleAnswer?: (event: MessageEvent<any>) => Promise<void>;
 	private handleError?: (event: MessageEvent<any>) => void;
 	private handleAbort?: (event: MessageEvent<any>) => void;
 
 	start(
 		url: string,
 		payload: any,
-		handleAnswer: (event: MessageEvent<any>) => void,
+		handleAnswer: (event: MessageEvent<any>) => Promise<void>,
 		handleError: (event: MessageEvent<any>) => void,
 		handleAbort: (event: MessageEvent<any>) => void,
 		token?: string

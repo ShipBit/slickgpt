@@ -150,7 +150,6 @@ export function countTokens(message: ChatMessage): number {
 	if (Array.isArray(message.content)) {
 		for (const contentItem of message.content) {
 			if (contentItem.type === 'text' && contentItem.text) {
-				console.log(contentItem.text);
 				num_tokens += tokenizer.encode(contentItem.text).length;
 			}
 		}

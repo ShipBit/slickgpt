@@ -147,11 +147,16 @@ export const providers: AiProvider[] = [AiProvider.OpenAi, AiProvider.Mistral, A
  */
 export function countTokens(message: ChatMessage): number {
 	let num_tokens = 4; // every message follows <im_start>{role/name}\n{content}<im_end>\n
-	for (const [key, value] of Object.entries(message)) {
-		if (key === 'name' || key === 'role' || key === 'content') {
-			const tokensCount = tokenizer.encode(value).length;
-			num_tokens += (key === 'name') ? tokensCount - 1 : tokensCount;
+	if (Array.isArray(message.content)) {
+		for (const contentItem of message.content) {
+			if (contentItem.type === 'text' && contentItem.text) {
+				console.log(contentItem.text);
+				num_tokens += tokenizer.encode(contentItem.text).length;
+			}
 		}
+	} else {
+		// Fallback for backward compatibility, in case content is still a string
+		num_tokens += tokenizer.encode(message.content).length;
 	}
 	return num_tokens;
 }

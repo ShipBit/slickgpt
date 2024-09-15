@@ -49,7 +49,7 @@
 	<svelte:fragment slot="additional-content-top">
 		{#if chat.contextMessage.content.length > 0}
 			<HintMessage title="Context" variantClass="variant-ghost-tertiary">
-				<p class="!mb-4">{@html renderMarkdown(chat.contextMessage.content)}</p>
+				<p class="!mb-4">{@html renderMarkdown(chat.contextMessage)}</p>
 			</HintMessage>
 		{/if}
 	</svelte:fragment>

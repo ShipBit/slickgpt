@@ -26,8 +26,17 @@ import {
 } from '$env/static/public';
 import { AuthService } from './authService';
 
+export interface ChatContent {
+	type: 'text' | 'image_url';
+	text?: string;
+	image_url?: {
+		url: string;
+		detail: 'low' | 'high';
+	};
+}
+
 export interface ChatMessage {
-	content: string;
+	content: string | ChatContent[];
 	role: 'system' | 'user' | 'assistant';
 	name?: string;
 	id?: string;

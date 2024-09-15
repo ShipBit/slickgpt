@@ -64,7 +64,7 @@
 				{#if $isLoadingAnswerStore}
 					<div class="place-self-start">
 						<div class="p-5 rounded-2xl variant-ghost-tertiary rounded-tl-none">
-							{@html renderMarkdown($liveAnswerStore.content)}
+							{@html renderMarkdown($liveAnswerStore)}
 						</div>
 					</div>
 				{/if}

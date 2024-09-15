@@ -235,7 +235,7 @@
 				>
 					<p>
 						{#if hasContext && chat.contextMessage.content}
-							{@html renderMarkdown(chat.contextMessage.content)}
+							{@html renderMarkdown(chat.contextMessage)}
 						{:else}
 							Tell the AI how to behave and provide it with knowledge to answer your prompt.
 						{/if}

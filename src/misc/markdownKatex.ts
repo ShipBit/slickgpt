@@ -1,6 +1,7 @@
 import markdownIt from 'markdown-it';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import type { ChatMessage } from '$misc/shared';
 
 interface Delimiter {
     left: string;
@@ -23,6 +24,7 @@ const defaultOptions: MarkdownKatexOptions = {
 
 // Modified from: https://github.com/SchneeHertz/markdown-it-katex-gpt/blob/master/index.js
 function escapedBracketRule(options: MarkdownKatexOptions) {
+    // @ts-expect-error
     return (state, silent: boolean) => {
         const max = state.posMax;
         const start = state.pos;
@@ -75,6 +77,20 @@ export function customLatexRenderer(md: markdownIt, options: MarkdownKatexOption
 
 const md = markdownIt({ html: true, breaks: true }).use(customLatexRenderer, defaultOptions);
 
-export function renderMarkdown(content: string): string {
-    return md.render(content);
+export function renderMarkdown(message: ChatMessage): string {
+	let content = '';
+
+	if (Array.isArray(message.content)) {
+		message.content.forEach(contentItem => {
+			if (contentItem.type === 'text' && contentItem.text) {
+				content += md.render(contentItem.text);
+			} else if (contentItem.type === 'image_url' && contentItem.image_url) {
+				content += `<img src="${contentItem.image_url.url}" alt="image" />`;
+			}
+		});
+	} else {
+		// Fallback for backward compatibility, in case content is still a string
+		content += md.render(message.content);
+	}
+	return content;
 }

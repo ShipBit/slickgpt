@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { onDestroy, tick } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
 	import { focusTrap, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
 		type ChatCost,
 		type ChatMessage,
+		type ChatContent,
 		showModalComponent,
 		showToast,
 		suggestChatTitle,
@@ -41,6 +42,7 @@
 	let messageTokens = 0;
 	let lastUserMessage: ChatMessage | null = null;
 	let currentMessages: ChatMessage[] | null = null;
+	let attachments: Array<ChatContent> = [];
 
 	let isEditMode = false;
 	let originalMessage: ChatMessage | null = null;
@@ -72,6 +74,70 @@
 	}
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
+
+	let dragOver = false;
+	let fileInput: HTMLInputElement;
+
+	onMount(() => {
+		const dropZone = document.getElementById('drop-zone');
+		if (dropZone) {
+			dropZone.addEventListener('dragover', handleDragOver);
+			dropZone.addEventListener('dragleave', handleDragLeave);
+			dropZone.addEventListener('drop', handleDrop);
+		}
+	});
+
+	function handleDragOver(e: DragEvent) {
+		e.preventDefault();
+		dragOver = true;
+	}
+
+	function handleDragLeave(e: DragEvent) {
+		e.preventDefault();
+		dragOver = false;
+	}
+
+	function handleDrop(e: DragEvent) {
+		e.preventDefault();
+		dragOver = false;
+		if (e.dataTransfer?.files) {
+			handleFiles(e.dataTransfer.files);
+		}
+	}
+
+	function handleFileSelect(e: Event) {
+		const target = e.target as HTMLInputElement;
+		if (target.files) {
+			handleFiles(target.files);
+		}
+	}
+
+	function handleFiles(files: FileList) {
+		const file = files[0];
+		if (file && file.type.startsWith('image/')) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const base64 = e.target?.result as string;
+
+				attachments.push({
+					type: 'image_url',
+					image_url: {
+						url: base64,
+						// TODO: Let user decide detail
+						// default to high for now
+						detail: 'high'
+					}
+				});
+
+				// TODO: Show user attachment in UI
+				showToast(toastStore, 'Image uploaded successfully.', 'success');
+			};
+			reader.readAsDataURL(file);
+		} else {
+			// Show an error message or handle non-image files
+			showToast(toastStore, 'Please upload only image files.', 'error');
+		}
+	}
 
 	async function checkModerationApi(messages: ChatMessage[], token: string) {
 		if (PUBLIC_MODERATION === 'true') {
@@ -124,10 +190,29 @@
 	let hasUpdatedChatTitle = false;
 
 	async function handleSubmit() {
-		if (input.trim() === '') return;
+		if (input.trim() === '' && attachments.length === 0) return;
 
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
+
+		let message: ChatMessage = {
+			role: 'user',
+			content: [] as ChatContent[]
+		};
+
+		// Add the text input to the content
+		if (input.trim() !== '') {
+			// if (typeof message.content === 'string') {
+			// 	message.content = [{ type: 'text', text: message.content }];
+			// }
+			(message.content as ChatContent[]).push({
+				type: 'text',
+				text: input.trim()
+			});
+		}
+
+		// Add attachments
+		(message.content as ChatContent[]).push(...attachments);
 
 		let parent: ChatMessage | null = null;
 		if (currentMessages && currentMessages.length > 0) {
@@ -135,7 +220,6 @@
 		}
 
 		if (!isEditMode) {
-			// Check if it's the first user message
 			if (firstUserPrompt === '') {
 				firstUserPrompt = input.trim();
 			}
@@ -157,6 +241,10 @@
 				}) as ChatMessage
 		);
 
+		// if (messages) {
+		// 	messages.push(message); // Add current message to payload here
+		// }
+
 		let payload: any;
 		let token: string;
 		let url: string;
@@ -175,7 +263,7 @@
 							: [...(Array.isArray(chat.settings.stop) ? chat.settings.stop : [chat.settings.stop])]
 				},
 				model: models[chat.settings.model].middlewareDeploymentName || chat.settings.model,
-				messages,
+				messages: messages,
 				stream: true
 			};
 		} else {
@@ -210,6 +298,7 @@
 
 		$eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
 		input = '';
+		attachments = [];
 	}
 
 	let rawAnswer: string = '';
@@ -389,7 +478,9 @@
 
 	export async function editMessage(message: ChatMessage) {
 		originalMessage = message;
-		input = message.content;
+		input = Array.isArray(message.content)
+			? message.content.map((c) => (c.type === 'text' ? c.text : '')).join('\n')
+			: message.content;
 		isEditMode = true;
 
 		// tick is required for the action to resize the textarea
@@ -428,42 +519,69 @@
 			<div class="grid">
 				<form use:focusTrap={!$isLoadingAnswerStore} on:submit|preventDefault={handleSubmit}>
 					<div class="grid grid-cols-[1fr_auto]">
-						<!-- Input -->
-						<textarea
-							class="textarea overflow-hidden min-h-[42px]"
-							rows="1"
-							placeholder="Enter to send, Shift+Enter for newline"
-							use:textareaAutosizeAction
-							on:keydown={handleKeyDown}
-							bind:value={input}
-							bind:this={textarea}
-						/>
-						<div class="flex items-center">
-							<!-- Tokens -->
-							{#if input.length > 0}
+						<div id="drop-zone" class="relative" class:drag-over={dragOver}>
+							<!-- Input -->
+							<textarea
+								class="textarea overflow-hidden min-h-[42px]"
+								rows="1"
+								placeholder="Enter to send, Shift+Enter for newline"
+								use:textareaAutosizeAction
+								on:keydown={handleKeyDown}
+								bind:value={input}
+								bind:this={textarea}
+							/>
+							<div class="flex items-center">
+								<!-- Tokens -->
+								{#if input.length > 0}
+									<button
+										type="button"
+										class="btn btn-sm hidden md:inline"
+										class:animate-pulse={!!debounceTimer}
+										on:click={openTokenCostDialog}
+									>
+										<span class="flex items-center text-xs text-slate-500 dark:text-slate-200 gap-1"
+											><CircleStack class="w-5 h-5" /> {tokensLeft} left</span
+										>
+									</button>
+								{/if}
+								<!-- Send button -->
+								<button type="submit" class="btn btn-sm">
+									<PaperAirplane class="w-6 h-6" />
+								</button>
+								<!-- Insert Code button -->
 								<button
 									type="button"
 									class="btn btn-sm hidden md:inline"
-									class:animate-pulse={!!debounceTimer}
-									on:click={openTokenCostDialog}
+									on:click|preventDefault={handleInsertCode}
 								>
-									<span class="flex items-center text-xs text-slate-500 dark:text-slate-200 gap-1"
-										><CircleStack class="w-5 h-5" /> {tokensLeft} left</span
-									>
+									<CodeBracket class="w-6 h-6" />
 								</button>
-							{/if}
-							<!-- Send button -->
-							<button type="submit" class="btn btn-sm">
-								<PaperAirplane class="w-6 h-6" />
-							</button>
-							<!-- Insert Code button -->
-							<button
-								type="button"
-								class="btn btn-sm hidden md:inline"
-								on:click|preventDefault={handleInsertCode}
-							>
-								<CodeBracket class="w-6 h-6" />
-							</button>
+								<!-- Image Upload button -->
+								<button type="button" class="btn btn-sm" on:click={() => fileInput.click()}>
+									<!-- You can replace this with an appropriate icon -->
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="w-6 h-6"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+										/>
+									</svg>
+								</button>
+								<input
+									type="file"
+									accept="image/*"
+									style="display: none;"
+									on:change={handleFileSelect}
+									bind:this={fileInput}
+								/>
+							</div>
 						</div>
 					</div>
 				</form>

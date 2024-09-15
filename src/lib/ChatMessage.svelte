@@ -79,7 +79,7 @@
 
 	<!-- Message Content -->
 	<div class="text-sm">
-		{@html renderMarkdown(message.content)}
+		{@html renderMarkdown(message)}
 		<!-- {@html message.content} -->
 	</div>
 </div>

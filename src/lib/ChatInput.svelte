@@ -251,11 +251,14 @@
 			}
 			if ($settingsStore.useTitleSuggestions && !hasUpdatedChatTitle && firstUserPrompt) {
 				hasUpdatedChatTitle = true; // Ensure the title is only updated once
-				const title = await suggestChatTitle({
+				
+				const suggestedTitle = await suggestChatTitle({
 					...chat,
 					messages: [...chat.messages, { role: 'user', content: firstUserPrompt }]
 				});
-				chatStore.updateChat(slug, { title: title.replaceAll('"', '') });
+				const cleanedTitle = suggestedTitle.replace(/^"(.*)"$/, '$1').trim();
+				
+				chatStore.updateChat(slug, { title: cleanedTitle || chat.title });
 			}
 		} catch (err) {
 			handleError(err);

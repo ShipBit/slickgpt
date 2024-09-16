@@ -126,7 +126,9 @@
 						// TODO: Let user decide detail
 						// default to high for now
 						detail: 'high'
-					}
+					},
+
+					fileName: file.name
 				});
 
 				// TODO: Show user attachment in UI
@@ -233,17 +235,23 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		const messages = currentMessages?.map(
-			(m) =>
-				({
-					role: m.role,
-					content: m.content
-				}) as ChatMessage
-		);
-
-		// if (messages) {
-		// 	messages.push(message); // Add current message to payload here
-		// }
+		// Create payload messages excluding filenames
+		const messages =
+			currentMessages?.map(
+				(currentMessage) =>
+					({
+						role: currentMessage.role,
+						content: Array.isArray(currentMessage.content)
+							? currentMessage.content.map((contentItem) => {
+									if ('fileName' in contentItem) {
+										let { fileName, ...sanitizedContent } = contentItem;
+										return sanitizedContent;
+									}
+									return contentItem;
+								})
+							: currentMessage.content
+					}) as ChatMessage
+			) ?? [];
 
 		let payload: any;
 		let token: string;

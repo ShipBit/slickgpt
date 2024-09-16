@@ -33,6 +33,7 @@ export interface ChatContent {
 		url: string;
 		detail: 'low' | 'high';
 	};
+	fileName?: string;
 }
 
 export interface ChatMessage {

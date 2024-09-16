@@ -85,7 +85,7 @@ export function renderMarkdown(message: ChatMessage): string {
 			if (contentItem.type === 'text' && contentItem.text) {
 				content += md.render(contentItem.text);
 			} else if (contentItem.type === 'image_url' && contentItem.image_url) {
-				content += `<img src="${contentItem.image_url.url}" alt="image" />`;
+				content += `<img src="${contentItem.image_url.url}" alt="${contentItem.fileName}" />`;
 			}
 		});
 	} else {

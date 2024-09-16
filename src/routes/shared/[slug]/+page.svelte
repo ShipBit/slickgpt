@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { onMount, tick } from 'svelte';
-	import hljs from 'highlight.js';
+	import { onMount } from 'svelte';
 	import { track, type Chat as ChatModel } from '$misc/shared';
 	import { generateSlug } from 'random-word-slugs';
 	import { renderMarkdown } from '$misc/markdownKatex';
 	import { ArrowDownOnSquare } from '@inqling/svelte-icons/heroicon-24-outline';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import { chatStore } from '$misc/stores';
+	import { highlightCode } from '$misc/highlightCode';
 	import { goto } from '$app/navigation';
 	import Chat from '$lib/Chat.svelte';
 	import HintMessage from '$lib/HintMessage.svelte';
@@ -18,19 +18,6 @@
 	onMount(async () => {
 		await highlightCode();
 	});
-
-	async function highlightCode() {
-		await tick();
-
-		// Highlight unprocessed code blocks only once
-		document.querySelectorAll('pre code').forEach((element) => {
-			const block = element as HTMLElement;
-			if (!block.dataset.highlighted) {
-				hljs.highlightElement(block);
-				block.dataset.highlighted = 'true';
-			}
-		});
-	}
 
 	function handleImportChat() {
 		if (!chat) return;

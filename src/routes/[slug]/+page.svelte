@@ -1,17 +1,27 @@
 <script lang="ts">
-	import { onDestroy, onMount, tick } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import hljs from 'highlight.js';
 	import { DocumentDuplicate, PencilSquare } from '@inqling/svelte-icons/heroicon-24-solid';
 	import { Cog6Tooth, Share, Trash } from '@inqling/svelte-icons/heroicon-24-outline';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { chatStore, isLoadingAnswerStore, isPro, liveAnswerStore, settingsStore } from '$misc/stores';
+	import {
+		chatStore,
+		isLoadingAnswerStore,
+		isPro,
+		liveAnswerStore,
+		settingsStore
+	} from '$misc/stores';
 	import ChatInput from '$lib/ChatInput.svelte';
 	import Chat from '$lib/Chat.svelte';
 	import HintMessage from '$lib/HintMessage.svelte';
-	import TokenCost from '$lib/TokenCost.svelte';
-	import { countTokens, estimateChatCost, getProviderForModel, modelExists, defaultOpenAiSettings } from '$misc/openai';
+	import {
+		countTokens,
+		estimateChatCost,
+		getProviderForModel,
+		modelExists,
+		defaultOpenAiSettings
+	} from '$misc/openai';
 	import {
 		canSuggestTitle,
 		type ChatMessage,
@@ -22,6 +32,7 @@
 		track
 	} from '$misc/shared';
 	import { renderMarkdown } from '$misc/markdownKatex';
+	import { highlightCode } from '$misc/highlightCode';
 	import Toolbar from '$lib/Toolbar.svelte';
 
 	const modalStore = getModalStore();
@@ -36,10 +47,12 @@
 			// When the model of a session no longer exists in /is deleted from slickgpt,
 			showToast(
 				toastStore,
-				`The model '${chat.settings.model}' used in this chat is ` + 
-				`no longer available. Switched to the default model ` + 
-				`'${defaultOpenAiSettings.model}'.`,
-				'warning', true, 30000
+				`The model '${chat.settings.model}' used in this chat is ` +
+					`no longer available. Switched to the default model ` +
+					`'${defaultOpenAiSettings.model}'.`,
+				'warning',
+				true,
+				30000
 			);
 			chat.settings.model = defaultOpenAiSettings.model; // fall back to the default model so the page won't hang.
 		}
@@ -74,19 +87,6 @@
 		unsubscribeisLoadingAnswerStore();
 		unsubscribeLiveAnswerStore();
 	});
-
-	async function highlightCode() {
-		await tick();
-		
-		// Highlight unprocessed code blocks only once
-		document.querySelectorAll('pre code').forEach((element) => {
-			const block = element as HTMLElement;
-			if (!block.dataset.highlighted) {
-				hljs.highlightElement(block);
-				block.dataset.highlighted = 'true';
-			}
-		});
-	}
 
 	function showConfirmDeleteModal() {
 		const modal: ModalSettings = {
@@ -176,51 +176,52 @@
 
 				<!-- Settings -->
 				<span class="relative inline-flex">
-				<button
-					class="btn btn-sm variant-ghost-warning"
-					on:click={() => showModalComponent(modalStore, 'SettingsModal', { slug })}
-				>
-					<Cog6Tooth class="w-6 h-6" />
-				</button>
+					<button
+						class="btn btn-sm variant-ghost-warning"
+						on:click={() => showModalComponent(modalStore, 'SettingsModal', { slug })}
+					>
+						<Cog6Tooth class="w-6 h-6" />
+					</button>
 					{#if !$isPro && isMissingApiKey}
-					<span class="relative flex h-3 w-3">
-						<span
-							style="left: -10px;"
-							class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error-400 opacity-75"
-						/>
-						<span
-							style="left: -10px;"
-							class="relative inline-flex rounded-full h-3 w-3 bg-error-500"
-						/>
-					</span>
-				{/if}
-			</span>
+						<span class="relative flex h-3 w-3">
+							<span
+								style="left: -10px;"
+								class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error-400 opacity-75"
+							/>
+							<span
+								style="left: -10px;"
+								class="relative inline-flex rounded-full h-3 w-3 bg-error-500"
+							/>
+						</span>
+					{/if}
+				</span>
 
 				<!-- Share -->
 				<span
 					class="relative inline-flex"
 					style={!$isPro && isMissingApiKey ? 'margin-left: -4px;' : ''}
 				>
-				<button
-					disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
-					class="btn btn-sm inline-flex variant-ghost-tertiary"
-					on:click={() => showModalComponent(modalStore, 'ShareModal', { slug }, handleChatShared)}
-				>
-					<Share class="w-6 h-6" />
-				</button>
+					<button
+						disabled={!chat.contextMessage.content?.length && !chat.messages?.length}
+						class="btn btn-sm inline-flex variant-ghost-tertiary"
+						on:click={() =>
+							showModalComponent(modalStore, 'ShareModal', { slug }, handleChatShared)}
+					>
+						<Share class="w-6 h-6" />
+					</button>
 					{#if chat.updateToken}
-					<span class="relative flex h-3 w-3">
-						<span
-							style="left: -10px;"
-							class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-400 opacity-75"
-						/>
-						<span
-							style="left: -10px;"
-							class="relative inline-flex rounded-full h-3 w-3 bg-tertiary-500"
-						/>
-					</span>
-				{/if}
-			</span>
+						<span class="relative flex h-3 w-3">
+							<span
+								style="left: -10px;"
+								class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-400 opacity-75"
+							/>
+							<span
+								style="left: -10px;"
+								class="relative inline-flex rounded-full h-3 w-3 bg-tertiary-500"
+							/>
+						</span>
+					{/if}
+				</span>
 			</svelte:fragment>
 		</Toolbar>
 

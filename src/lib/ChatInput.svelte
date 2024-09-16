@@ -50,10 +50,20 @@
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 
+	// Add this reactive statement
+	$: {
+		// This will run whenever message changes (due to input or attachments changing)
+		clearTimeout(debounceTimer);
+		debounceTimer = window.setTimeout(calculateMessageTokens, 750);
+	}
+
 	$: chat = $chatStore[slug];
 	$: message = {
 		role: 'user',
-		content: input.trim()
+		content: [
+			...(input.trim() !== '' ? [{ type: 'text', text: input.trim() }] : [{ type: 'text', text: '' }]),
+			...attachments
+		]
 	} as ChatMessage;
 	$: provider = getProviderForModel(chat.settings.model);
 
@@ -119,17 +129,17 @@
 			reader.onload = (e) => {
 				const base64 = e.target?.result as string;
 
-				attachments.push({
-					type: 'image_url',
-					image_url: {
-						url: base64,
-						// TODO: Let user decide detail
-						// default to high for now
-						detail: 'high'
-					},
-
-					fileName: file.name
-				});
+				attachments = [
+					...attachments,
+					{
+						type: 'image_url',
+						image_url: {
+							url: base64,
+							detail: 'high'
+						},
+						fileName: file.name
+					}
+				];
 
 				// TODO: Show user attachment in UI
 				showToast(toastStore, 'Image uploaded successfully.', 'success');
@@ -196,25 +206,6 @@
 
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
-
-		let message: ChatMessage = {
-			role: 'user',
-			content: [] as ChatContent[]
-		};
-
-		// Add the text input to the content
-		if (input.trim() !== '') {
-			// if (typeof message.content === 'string') {
-			// 	message.content = [{ type: 'text', text: message.content }];
-			// }
-			(message.content as ChatContent[]).push({
-				type: 'text',
-				text: input.trim()
-			});
-		}
-
-		// Add attachments
-		(message.content as ChatContent[]).push(...attachments);
 
 		let parent: ChatMessage | null = null;
 		if (currentMessages && currentMessages.length > 0) {
@@ -438,9 +429,6 @@
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
-		clearTimeout(debounceTimer);
-		debounceTimer = window.setTimeout(calculateMessageTokens, 750);
-
 		if ($isLoadingAnswerStore) {
 			return;
 		}
@@ -452,7 +440,7 @@
 				break;
 			case 'Enter':
 				if (!event.shiftKey) {
-					if (input.trim() === '') {
+					if (input.trim() === '' && attachments.length === 0) {
 						// Create a new line if input is whitespace.
 						addNewLineAndResize();
 					} else {
@@ -465,7 +453,6 @@
 
 	function calculateMessageTokens() {
 		messageTokens = countTokens(message);
-		clearTimeout(debounceTimer);
 		debounceTimer = undefined;
 	}
 
@@ -540,7 +527,7 @@
 							/>
 							<div class="flex items-center">
 								<!-- Tokens -->
-								{#if input.length > 0}
+								{#if input.length > 0 || attachments.length > 0}
 									<button
 										type="button"
 										class="btn btn-sm hidden md:inline"

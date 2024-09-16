@@ -254,7 +254,7 @@
 				const title = await suggestChatTitle({
 					...chat,
 					messages: [...chat.messages, { role: 'user', content: firstUserPrompt }]
-				})
+				});
 				chatStore.updateChat(slug, { title: title.replaceAll('"', '') });
 			}
 		} catch (err) {

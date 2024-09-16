@@ -182,13 +182,8 @@ export function countTokens(message: ChatMessage): number {
 		num_tokens += tokenizer.encode(message.content).length;
 	}
 
-	// Process role and name text
-	if (message.name) {
-		num_tokens += tokenizer.encode(message.name).length--;
-	}
-	if (message.role) {
-		num_tokens += tokenizer.encode(message.role).length;
-	}
+	// If a name is present, it replaces the role. Otherwise, the role is processed.
+	num_tokens += message.name ? tokenizer.encode(message.name).length : tokenizer.encode(message.role || '').length;
 
 	return num_tokens;
 }

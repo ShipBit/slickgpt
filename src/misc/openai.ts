@@ -186,8 +186,13 @@ export function estimateChatCost(chat: Chat): ChatCost {
 }
 
 export function getProviderForModel(model: AiModel): AiProvider {
-	return model ? models[model].provider : AiProvider.OpenAi;
-}
+	if (model in models && models[model] && models[model].provider) {
+	  return models[model].provider;
+	}
+	
+	// default
+	return AiProvider.OpenAi;
+  }
 
 export function getDefaultModelForProvider(provider: AiProvider): AiModel {
 	return (Object.keys(models) as AiModel[]).find(key => models[key].provider === provider)!;

@@ -61,7 +61,9 @@
 	$: message = {
 		role: 'user',
 		content: [
-			...(input.trim() !== '' ? [{ type: 'text', text: input.trim() }] : [{ type: 'text', text: '' }]),
+			...(input.trim() !== ''
+				? [{ type: 'text', text: input.trim() }]
+				: [{ type: 'text', text: '' }]),
 			...attachments
 		]
 	} as ChatMessage;
@@ -123,31 +125,57 @@
 	}
 
 	function handleFiles(files: FileList) {
-		const file = files[0];
-		if (file && file.type.startsWith('image/')) {
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				const base64 = e.target?.result as string;
+		const initialCount = attachments.length;
+		const remainingSlots = 10 - initialCount;
+		const filesToUpload = Math.min(files.length, remainingSlots);
 
-				attachments = [
-					...attachments,
-					{
-						type: 'image_url',
-						image_url: {
-							url: base64,
-							detail: 'high'
-						},
-						fileName: file.name
+		for (let i = 0; i < filesToUpload; i++) {
+			const file = files[i];
+			if (file && file.type.startsWith('image/')) {
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					const base64 = e.target?.result as string;
+
+					attachments = [
+						...attachments,
+						{
+							type: 'image_url',
+							image_url: {
+								url: base64,
+								detail: 'high'
+							},
+							fileName: file.name
+						}
+					];
+
+					if (attachments.length === initialCount + filesToUpload) {
+						showUploadResult(attachments.length - initialCount, files.length);
 					}
-				];
+				};
+				reader.readAsDataURL(file);
+			} else {
+				showToast(toastStore, `File "${file.name}" is not an image and was skipped.`, 'warning');
+			}
+		}
 
-				// TODO: Show user attachment in UI
-				showToast(toastStore, 'Image uploaded successfully.', 'success');
-			};
-			reader.readAsDataURL(file);
+		if (filesToUpload === 0) {
+			showToast(toastStore, 'Maximum number of images (10) already uploaded.', 'error');
+		}
+	}
+
+	function showUploadResult(uploadedCount: number, totalCount: number) {
+		if (uploadedCount === totalCount) {
+			showToast(
+				toastStore,
+				`Successfully uploaded ${uploadedCount} image${uploadedCount !== 1 ? 's' : ''}.`,
+				'success'
+			);
 		} else {
-			// Show an error message or handle non-image files
-			showToast(toastStore, 'Please upload only image files.', 'error');
+			showToast(
+				toastStore,
+				`Uploaded ${uploadedCount} out of ${totalCount} images. Maximum limit (10) reached.`,
+				'warning'
+			);
 		}
 	}
 
@@ -552,7 +580,12 @@
 									<CodeBracket class="w-6 h-6" />
 								</button>
 								<!-- Image Upload button -->
-								<button type="button" class="btn btn-sm" on:click={() => fileInput.click()}>
+								<button
+									type="button"
+									class="btn btn-sm"
+									on:click={() => fileInput.click()}
+									disabled={attachments.length >= 10}
+								>
 									<!-- You can replace this with an appropriate icon -->
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
@@ -575,6 +608,7 @@
 									style="display: none;"
 									on:change={handleFileSelect}
 									bind:this={fileInput}
+									multiple
 								/>
 							</div>
 						</div>

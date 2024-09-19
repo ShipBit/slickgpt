@@ -1,7 +1,13 @@
 <script lang="ts">
-	import { onMount, onDestroy, tick } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 	import { textareaAutosizeAction } from 'svelte-legos';
-	import { focusTrap, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+	import {
+		focusTrap,
+		getModalStore,
+		getToastStore,
+		FileButton,
+		FileDropzone
+	} from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
 		type ChatCost,
@@ -23,6 +29,7 @@
 	import { AiProvider, countTokens, getProviderForModel, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
 	import { get } from 'svelte/store';
+	import { fade } from 'svelte/transition';
 	import {
 		PUBLIC_GROQ_API_URL,
 		PUBLIC_MIDDLEWARE_API_URL,
@@ -44,13 +51,14 @@
 	let currentMessages: ChatMessage[] | null = null;
 	let attachments: Array<ChatContent> = [];
 
+	let hasUpdatedChatTitle = false;
 	let isEditMode = false;
 	let originalMessage: ChatMessage | null = null;
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
+	const MAX_ATTACHMENTS = 10;
 
-	// Add this reactive statement
 	$: {
 		// This will run whenever message changes (due to input or attachments changing)
 		clearTimeout(debounceTimer);
@@ -78,111 +86,73 @@
 
 	onDestroy(unsubscribe);
 
-	let tokensLeft = -1;
-	$: {
-		tokensLeft = chatCost
-			? chatCost.maxTokensForModel - (chatCost.tokensTotal + messageTokens)
-			: -1;
-	}
+	$: tokensLeft = chatCost
+		? chatCost.maxTokensForModel - (chatCost.tokensTotal + messageTokens)
+		: -1;
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
-	let dragOver = false;
-	let fileInput: HTMLInputElement;
-
-	onMount(() => {
-		const dropZone = document.getElementById('drop-zone');
-		if (dropZone) {
-			dropZone.addEventListener('dragover', handleDragOver);
-			dropZone.addEventListener('dragleave', handleDragLeave);
-			dropZone.addEventListener('drop', handleDrop);
-		}
-	});
-
-	function handleDragOver(e: DragEvent) {
-		e.preventDefault();
-		dragOver = true;
-	}
-
-	function handleDragLeave(e: DragEvent) {
-		e.preventDefault();
-		dragOver = false;
-	}
-
-	function handleDrop(e: DragEvent) {
-		e.preventDefault();
-		dragOver = false;
-		if (e.dataTransfer?.files) {
-			handleFiles(e.dataTransfer.files);
-		}
-	}
-
-	function handleFileSelect(e: Event) {
-		const target = e.target as HTMLInputElement;
-		if (target.files) {
-			handleFiles(target.files);
-		}
-	}
-
 	function handleFiles(files: FileList) {
 		const initialCount = attachments.length;
-		const remainingSlots = 10 - initialCount;
+		const remainingSlots = MAX_ATTACHMENTS - initialCount;
 		const filesToUpload = Math.min(files.length, remainingSlots);
 
-		for (let i = 0; i < filesToUpload; i++) {
-			const file = files[i];
-			if (file && file.type.startsWith('image/')) {
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					const base64 = e.target?.result as string;
-
-					attachments = [
-						...attachments,
-						{
-							type: 'image_url',
-							image_url: {
-								url: base64,
-								detail: 'high'
-							},
-							fileName: file.name
-						}
-					];
-
-					if (attachments.length === initialCount + filesToUpload) {
-						showUploadResult(attachments.length - initialCount, files.length);
-					}
-				};
-				reader.readAsDataURL(file);
-			} else {
-				showToast(toastStore, `File "${file.name}" is not an image and was skipped.`, 'warning');
-			}
-		}
-
 		if (filesToUpload === 0) {
-			showToast(toastStore, 'Maximum number of images (10) already uploaded.', 'error');
+			showToast(
+				toastStore,
+				`Maximum number of images (${MAX_ATTACHMENTS}) already uploaded.`,
+				'error'
+			);
+			return;
 		}
+
+		const newAttachments = Array.from(files)
+			.slice(0, filesToUpload)
+			.filter((file) => file.type.startsWith('image/'))
+			.map((file) => processFile(file));
+
+		Promise.all(newAttachments).then((validAttachments) => {
+			attachments = [...attachments, ...validAttachments];
+			showUploadResult(validAttachments.length, files.length);
+		});
+	}
+
+	function processFile(file: File): Promise<ChatContent> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				resolve({
+					type: 'image_url',
+					image_url: {
+						url: e.target?.result as string,
+						detail: 'high' // TODO: make this user configurable
+					},
+					fileName: file.name
+				});
+			};
+			reader.onerror = reject;
+			reader.readAsDataURL(file);
+		});
 	}
 
 	function showUploadResult(uploadedCount: number, totalCount: number) {
-		if (uploadedCount === totalCount) {
-			showToast(
-				toastStore,
-				`Successfully uploaded ${uploadedCount} image${uploadedCount !== 1 ? 's' : ''}.`,
-				'success'
-			);
-		} else {
-			showToast(
-				toastStore,
-				`Uploaded ${uploadedCount} out of ${totalCount} images. Maximum limit (10) reached.`,
-				'warning'
-			);
+		if (uploadedCount !== totalCount) {
+			const skippedCount = totalCount - uploadedCount;
+			const message =
+				skippedCount > 0
+					? `Uploaded ${uploadedCount} out of ${totalCount} images. ${skippedCount} file(s) skipped (not images).`
+					: `Uploaded ${uploadedCount} out of ${totalCount} images. Maximum limit (${MAX_ATTACHMENTS}) reached.`;
+			showToast(toastStore, message, 'warning');
 		}
 	}
 
+	// Check moderation API if enabled
 	async function checkModerationApi(messages: ChatMessage[], token: string) {
-		if (PUBLIC_MODERATION === 'true') {
-			const textMessages = messages.map((msg) => msg.content);
+		if (PUBLIC_MODERATION !== 'true') return true;
 
+		const textMessages = messages.map((msg) => msg.content);
+
+		try {
 			const moderationResponse = await fetch(PUBLIC_MODERATION_API_URL, {
 				method: 'POST',
 				headers: {
@@ -220,14 +190,13 @@
 					}
 				}
 			}
+		} catch (error) {
+			console.error('Error checking moderation:', error);
+			return false;
 		}
+
 		return true;
 	}
-
-	// Variable to keep track of the user's first prompt
-	let firstUserPrompt = '';
-	// Flag to avoid multiple updates
-	let hasUpdatedChatTitle = false;
 
 	async function handleSubmit() {
 		if (input.trim() === '' && attachments.length === 0) return;
@@ -241,9 +210,6 @@
 		}
 
 		if (!isEditMode) {
-			if (firstUserPrompt === '') {
-				firstUserPrompt = input.trim();
-			}
 			chatStore.addMessageToChat(slug, message, parent || undefined);
 			track('ask');
 		} else if (originalMessage && originalMessage.id) {
@@ -254,27 +220,23 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		// Create payload messages excluding filenames
-		const messages =
-			currentMessages?.map(
-				(currentMessage) =>
-					({
-						role: currentMessage.role,
-						content: Array.isArray(currentMessage.content)
-							? currentMessage.content.map((contentItem) => {
-									if ('fileName' in contentItem) {
-										let { fileName, ...sanitizedContent } = contentItem;
-										return sanitizedContent;
-									}
-									return contentItem;
-								})
-							: currentMessage.content
-					}) as ChatMessage
-			) ?? [];
+		const messages = currentMessages?.map((currentMessage) => ({
+			role: currentMessage.role,
+			content: Array.isArray(currentMessage.content)
+				? currentMessage.content.map((contentItem) => {
+						if ('fileName' in contentItem) {
+							const { fileName, ...sanitizedContent } = contentItem;
+							return sanitizedContent;
+						}
+						return contentItem;
+					})
+				: currentMessage.content
+		})) as ChatMessage[];
 
 		let payload: any;
 		let token: string;
 		let url: string;
+
 		if ($isPro) {
 			const authService = await AuthService.getInstance();
 			token = get(authService.token);
@@ -284,13 +246,14 @@
 					maxTokens: chat.settings.max_tokens,
 					temperature: chat.settings.temperature,
 					topP: chat.settings.top_p,
-					stopSequences:
-						chat.settings.stop === undefined
-							? []
-							: [...(Array.isArray(chat.settings.stop) ? chat.settings.stop : [chat.settings.stop])]
+					stopSequences: chat.settings.stop
+						? Array.isArray(chat.settings.stop)
+							? chat.settings.stop
+							: [chat.settings.stop]
+						: []
 				},
 				model: models[chat.settings.model].middlewareDeploymentName || chat.settings.model,
-				messages: messages,
+				messages,
 				stream: true
 			};
 		} else {
@@ -336,11 +299,7 @@
 			rawAnswer += delta;
 			const codeBlocks = rawAnswer.match(/```/g) || [];
 			const openCodeBlockWithoutClose = codeBlocks.length % 2 !== 0;
-			if (openCodeBlockWithoutClose) {
-				answer.content = rawAnswer + '\n```';
-			} else {
-				answer.content = rawAnswer;
-			}
+			answer.content = openCodeBlockWithoutClose ? rawAnswer + '\n```' : rawAnswer;
 			return answer;
 		});
 	}
@@ -381,16 +340,13 @@
 					}
 				}
 			}
-			if ($settingsStore.useTitleSuggestions && !hasUpdatedChatTitle && firstUserPrompt) {
-				hasUpdatedChatTitle = true; // Ensure the title is only updated once
-				
-				const suggestedTitle = await suggestChatTitle({
+			if ($settingsStore.useTitleSuggestions && !hasUpdatedChatTitle && chat.hasUpdatedChatTitle !== true) {
+				hasUpdatedChatTitle = true;
+				const title = await suggestChatTitle({
 					...chat,
-					messages: [...chat.messages, { role: 'user', content: firstUserPrompt }]
+					messages: [...chat.messages, { role: 'user', content: input.trim() }]
 				});
-				const cleanedTitle = suggestedTitle.replace(/^"(.*)"$/, '$1').trim();
-				
-				chatStore.updateChat(slug, { title: cleanedTitle || chat.title });
+				chatStore.updateChat(slug, { title, hasUpdatedChatTitle: true }); // Store the variable in the chat store
 			}
 		} catch (err) {
 			handleError(err);
@@ -440,11 +396,7 @@
 	}
 
 	function resetLiveAnswer() {
-		liveAnswerStore.update((store) => {
-			const answer = { ...store };
-			answer.content = '';
-			return answer;
-		});
+		liveAnswerStore.update((store) => ({ ...store, content: '' }));
 		rawAnswer = '';
 	}
 
@@ -457,9 +409,7 @@
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
-		if ($isLoadingAnswerStore) {
-			return;
-		}
+		if ($isLoadingAnswerStore) return;
 
 		switch (event.key) {
 			case 'ArrowUp':
@@ -520,17 +470,58 @@
 		await tick();
 		textareaAutosizeAction(textarea);
 	}
+
+	let isDraggingFile = false;
+
+	function handleDragEnter(event: DragEvent) {
+		event.preventDefault();
+		if (event.dataTransfer?.types.includes('Files')) {
+			isDraggingFile = true;
+		}
+	}
+
+	function handleDragLeave(event: DragEvent) {
+		event.preventDefault();
+		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+		if (
+			rect &&
+			(event.clientX <= rect.left ||
+				event.clientX >= rect.right ||
+				event.clientY <= rect.top ||
+				event.clientY >= rect.bottom)
+		) {
+			isDraggingFile = false;
+		}
+	}
+
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		isDraggingFile = false;
+		if (event.dataTransfer?.files) {
+			handleFiles(event.dataTransfer.files);
+		}
+	}
+
+	// Function to remove an attachment by index
+	function removeAttachment(index: number) {
+		attachments = attachments.filter((_, i) => i !== index);
+	}
 </script>
 
+<!-- Footer component for chat input -->
 <footer class="sticky space-y-4 bottom-0 z-10 card variant-surface p-2 rounded-none md:rounded-lg">
+	<!-- Check if answer is loading -->
 	{#if $isLoadingAnswerStore}
+		<!-- Display cancel button when answer is loading -->
 		<div class="flex items-center justify-center">
 			<button class="btn variant-ghost w-48 self-center" on:click={() => $eventSourceStore.stop()}>
 				Cancel generating
 			</button>
 		</div>
 	{:else}
+		<!-- Main chat input area -->
 		<div class="flex flex-col space-y-2 md:mx-auto md:w-3/4">
+			<!-- Display edit mode message if active -->
 			{#if isEditMode}
 				<div class="flex items-center justify-between">
 					<p>Editing creates a <span class="italic">chat branch</span>.</p>
@@ -540,77 +531,131 @@
 				</div>
 			{/if}
 			<div class="grid">
+				<!-- Chat input form -->
 				<form use:focusTrap={!$isLoadingAnswerStore} on:submit|preventDefault={handleSubmit}>
 					<div class="grid grid-cols-[1fr_auto]">
-						<div id="drop-zone" class="relative" class:drag-over={dragOver}>
-							<!-- Input -->
-							<textarea
-								class="textarea overflow-hidden min-h-[42px]"
-								rows="1"
-								placeholder="Enter to send, Shift+Enter for newline"
-								use:textareaAutosizeAction
-								on:keydown={handleKeyDown}
-								bind:value={input}
-								bind:this={textarea}
-							/>
-							<div class="flex items-center">
-								<!-- Tokens -->
-								{#if input.length > 0 || attachments.length > 0}
-									<button
-										type="button"
-										class="btn btn-sm hidden md:inline"
-										class:animate-pulse={!!debounceTimer}
-										on:click={openTokenCostDialog}
-									>
-										<span class="flex items-center text-xs text-slate-500 dark:text-slate-200 gap-1"
-											><CircleStack class="w-5 h-5" /> {tokensLeft} left</span
-										>
-									</button>
+						<div class="relative flex flex-col">
+							<div class="relative">
+								<!-- Display attachments if any -->
+								{#if attachments.length > 0}
+									<div class="mb-2 flex flex-wrap gap-2">
+										{#each attachments as attachment, index}
+											<div
+												class="attachment flex items-center bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded"
+											>
+												<!-- Display image if attachment is an image -->
+												{#if attachment.type === 'image_url'}
+													<img
+														src={attachment.image_url?.url}
+														alt={attachment.fileName}
+														class="w-16 h-16 object-cover rounded mr-2"
+													/>
+												{/if}
+												<span class="truncate max-w-xs">{attachment.fileName}</span>
+												<!-- Button to remove attachment -->
+												<button
+													type="button"
+													class="ml-2 text-red-500 hover:text-red-700"
+													on:click={() => removeAttachment(index)}
+													aria-label={`Remove attachment ${attachment.fileName}`}
+												>
+													&times;
+												</button>
+											</div>
+										{/each}
+									</div>
 								{/if}
-								<!-- Send button -->
-								<button type="submit" class="btn btn-sm">
-									<PaperAirplane class="w-6 h-6" />
-								</button>
-								<!-- Insert Code button -->
+								<!-- Textarea for user input -->
+								<textarea
+									class="textarea overflow-hidden min-h-[42px] w-full"
+									rows="1"
+									placeholder="Enter to send, Shift+Enter for newline"
+									use:textareaAutosizeAction
+									on:keydown={handleKeyDown}
+									bind:value={input}
+									bind:this={textarea}
+									on:dragenter={handleDragEnter}
+									on:dragleave={handleDragLeave}
+									on:drop={handleDrop}
+								/>
+								<!-- File drop zone overlay -->
+								{#if isDraggingFile}
+									<div
+										class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
+										transition:fade={{ duration: 150 }}
+										on:dragleave={handleDragLeave}
+										on:drop={handleDrop}
+										role="region"
+										aria-label="File drop area"
+									>
+										<FileDropzone
+											name="files"
+											accept="image/*"
+											multiple
+											on:files={(e) => handleFiles(e.detail)}
+										>
+											<span>Drop images here</span>
+										</FileDropzone>
+									</div>
+								{/if}
+							</div>
+						</div>
+						<!-- Action buttons -->
+						<div class="flex items-center">
+							<!-- Token count button -->
+							{#if input.length > 0 || attachments.length > 0}
 								<button
 									type="button"
 									class="btn btn-sm hidden md:inline"
-									on:click|preventDefault={handleInsertCode}
+									class:animate-pulse={!!debounceTimer}
+									on:click={openTokenCostDialog}
 								>
-									<CodeBracket class="w-6 h-6" />
-								</button>
-								<!-- Image Upload button -->
-								<button
-									type="button"
-									class="btn btn-sm"
-									on:click={() => fileInput.click()}
-									disabled={attachments.length >= 10}
-								>
-									<!-- You can replace this with an appropriate icon -->
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="w-6 h-6"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
+									<span class="flex items-center text-xs text-slate-500 dark:text-slate-200 gap-1"
+										><CircleStack class="w-5 h-5" /> {tokensLeft} left</span
 									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-										/>
-									</svg>
 								</button>
-								<input
-									type="file"
-									accept="image/*"
-									style="display: none;"
-									on:change={handleFileSelect}
-									bind:this={fileInput}
-									multiple
-								/>
-							</div>
+							{/if}
+							<!-- Send button -->
+							<button type="submit" class="btn btn-sm">
+								<PaperAirplane class="w-6 h-6" />
+							</button>
+							<!-- Insert Code button -->
+							<button
+								type="button"
+								class="btn btn-sm hidden md:inline"
+								on:click|preventDefault={handleInsertCode}
+							>
+								<CodeBracket class="w-6 h-6" />
+							</button>
+							<!-- Image Upload button -->
+							<FileButton
+								name="files"
+								button="btn-icon btn-sm"
+								accept="image/*"
+								multiple
+								on:change={(e) => {
+									// @ts-ignore
+									const files = e?.target?.files;
+									if (files && files.length > 0) {
+										handleFiles(files);
+									}
+								}}
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="w-6 h-6"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+									/>
+								</svg>
+							</FileButton>
 						</div>
 					</div>
 				</form>
@@ -618,3 +663,38 @@
 		</div>
 	{/if}
 </footer>
+
+<style>
+	.attachment {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		border-radius: 0.375rem;
+	}
+
+	.attachment img {
+		border-radius: 0.25rem;
+	}
+
+	.attachment button {
+		margin-left: 0.5rem;
+		background: rgba(0, 0, 0, 0.5);
+		border: none;
+		color: white;
+		border-radius: 50%;
+		width: 20px;
+		height: 20px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.attachment button:hover {
+		background: rgba(0, 0, 0, 0.7);
+	}
+
+	.relative {
+		height: 100%;
+	}
+</style>

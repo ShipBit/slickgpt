@@ -55,6 +55,7 @@ export interface Chat {
 
 	isImported?: boolean;
 	updateToken?: string;
+	hasUpdatedChatTitle?: boolean;
 }
 
 export interface ClientSettings {

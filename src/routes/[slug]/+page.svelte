@@ -31,7 +31,7 @@
 		suggestChatTitle,
 		track
 	} from '$misc/shared';
-	import { renderMarkdown } from '$misc/markdownKatex';
+	import { renderMarkdown } from '$misc/markdownHelper';
 	import { highlightCode } from '$misc/highlightCode';
 	import Toolbar from '$lib/Toolbar.svelte';
 

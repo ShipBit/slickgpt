@@ -22,7 +22,7 @@ const defaultOptions: MarkdownKatexOptions = {
     ]
 }
 
-const md = markdownIt({ html: true, breaks: true }).use(customLatexRenderer, defaultOptions);
+const md = markdownIt({ breaks: true }).use(customLatexRenderer, defaultOptions);
 
 // Modified from: https://github.com/SchneeHertz/markdown-it-katex-gpt/blob/master/index.js
 function escapedBracketRule(options: MarkdownKatexOptions) {
@@ -107,7 +107,7 @@ export function renderMarkdown(message: ChatMessage): string {
 			if (contentItem.type === 'text' && contentItem.text) {
 				content += md.render(contentItem.text);
 			} else if (contentItem.type === 'image_url' && contentItem.image_url) {
-				content += `<img src="${contentItem.image_url.url}" alt="${contentItem.fileName}" />`;
+				content += `<img src="${contentItem.image_url.url}" alt="${contentItem.fileName}" width="60%" height="auto" />`;
 			}
 		});
 	} else {

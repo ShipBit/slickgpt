@@ -158,9 +158,8 @@ export function countTokens(message: ChatMessage): number {
 				// Encoding the text content and adding the token count
 				num_tokens += tokenizer.encode(contentItem.text).length;
 			} else if (contentItem.type === 'image_url' && contentItem.image_url) {
-				// Process image content based on detail level
 				const { width, height } = getImageDimensions(contentItem.image_url.url);
-
+				// Process image content based on detail level
 				if (contentItem.image_url.detail === 'low') {
 					// Low detail images have a fixed token cost of 85 tokens
 					num_tokens += 85;
@@ -189,9 +188,9 @@ export function countTokens(message: ChatMessage): number {
 }
 
 function getImageDimensions(image_url: string): { width: number; height: number } {
-	// This function should return the dimensions of the image
-	// TODO: Replace with actual dimensions fetching logic
-	return { width: 1024, height: 2048 };
+	const img = new Image();
+	img.src = image_url;
+	return { width: img.width, height: img.height };
 }
 
 function scaleImageToFit2048(width: number, height: number): { width: number; height: number } {
@@ -246,12 +245,12 @@ export function estimateChatCost(chat: Chat): ChatCost {
 
 export function getProviderForModel(model: AiModel): AiProvider {
 	if (model in models && models[model] && models[model].provider) {
-	  return models[model].provider;
+		return models[model].provider;
 	}
-	
+
 	// default
 	return AiProvider.OpenAi;
-  }
+}
 
 export function getDefaultModelForProvider(provider: AiProvider): AiModel {
 	return (Object.keys(models) as AiModel[]).find(key => models[key].provider === provider)!;

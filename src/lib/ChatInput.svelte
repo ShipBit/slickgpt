@@ -50,7 +50,7 @@
 	let lastUserMessage: ChatMessage | null = null;
 	let currentMessages: ChatMessage[] | null = null;
 	let attachments: Array<ChatContent> = [];
-
+	let shouldDebounce = false;	
 	let hasUpdatedChatTitle = false;
 	let isEditMode = false;
 	let originalMessage: ChatMessage | null = null;
@@ -59,10 +59,16 @@
 	const toastStore = getToastStore();
 	const MAX_ATTACHMENTS = 10;
 
-	$: {
-		// This will run whenever message changes (due to input or attachments changing)
+	function triggerDebounce() {
+		shouldDebounce = true;
+	}
+
+	$: if (message && shouldDebounce) {
 		clearTimeout(debounceTimer);
-		debounceTimer = window.setTimeout(calculateMessageTokens, 750);
+		debounceTimer = window.setTimeout(() => {
+			calculateMessageTokens();
+			shouldDebounce = false;
+		}, 750);
 	}
 
 	$: chat = $chatStore[slug];
@@ -114,6 +120,7 @@
 		Promise.all(newAttachments).then((validAttachments) => {
 			attachments = [...attachments, ...validAttachments];
 			showUploadResult(validAttachments.length, files.length);
+			triggerDebounce();
 		});
 	}
 
@@ -330,7 +337,7 @@
 						handleAbort(event);
 						showToast(
 							toastStore,
-							`The current model '${chat.settings.model}' returns finish message [DONE]` ,
+							`The current model '${chat.settings.model}' returns finish message [DONE]`,
 							'warning',
 							true,
 							5000
@@ -340,7 +347,12 @@
 					}
 				}
 			}
-			if ($settingsStore.useTitleSuggestions && !hasUpdatedChatTitle && chat.hasUpdatedChatTitle !== true) {
+
+			if (
+				$settingsStore.useTitleSuggestions &&
+				!hasUpdatedChatTitle &&
+				chat.hasUpdatedChatTitle !== true
+			) {
 				hasUpdatedChatTitle = true;
 				const title = await suggestChatTitle({
 					...chat,
@@ -426,6 +438,8 @@
 					}
 				}
 				break;
+			default:
+				triggerDebounce();
 		}
 	}
 
@@ -502,9 +516,9 @@
 		}
 	}
 
-	// Function to remove an attachment by index
 	function removeAttachment(index: number) {
 		attachments = attachments.filter((_, i) => i !== index);
+		triggerDebounce();
 	}
 </script>
 

@@ -74,25 +74,25 @@ function escapedBracketRule(options: MarkdownKatexOptions) {
 }
 
 export function containsMarkdownCodeBlock(input: string): boolean {
-	const oneTickCodeBlockRegex = /`[^`]*`/;
-	const threeTicksCodeBlockRegex = /```[\s\S]*?```/;
+    const oneTickCodeBlockRegex = /`[^`]*`/;
+    const threeTicksCodeBlockRegex = /```[\s\S]*?```/;
 
-	return oneTickCodeBlockRegex.test(input) || threeTicksCodeBlockRegex.test(input);
+    return oneTickCodeBlockRegex.test(input) || threeTicksCodeBlockRegex.test(input);
 }
 
 export function closeOpenedCodeTicks(input: string) {
-	const oneTickMatches = input.match(/(?<!`)`(?!`)/g) || [];
-	const threeTickMatches = input.match(/(?<!``)```(?!``)/g) || [];
+    const oneTickMatches = input.match(/(?<!`)`(?!`)/g) || [];
+    const threeTickMatches = input.match(/(?<!``)```(?!``)/g) || [];
 
-	if (oneTickMatches.length % 2 !== 0) {
-		input += '`';
-	}
+    if (oneTickMatches.length % 2 !== 0) {
+        input += '`';
+    }
 
-	if (threeTickMatches.length % 2 !== 0) {
-		input += '\n```';
-	}
+    if (threeTickMatches.length % 2 !== 0) {
+        input += '\n```';
+    }
 
-	return input;
+    return input;
 }
 
 export function customLatexRenderer(md: markdownIt, options: MarkdownKatexOptions = defaultOptions) {
@@ -100,19 +100,36 @@ export function customLatexRenderer(md: markdownIt, options: MarkdownKatexOption
 }
 
 export function renderMarkdown(message: ChatMessage): string {
-	let content = '';
+    const content = Array.isArray(message.content)
+        ? renderContentArray(message.content)
+        : md.render(message.content);
 
-	if (Array.isArray(message.content)) {
-		message.content.forEach(contentItem => {
-			if (contentItem.type === 'text' && contentItem.text) {
-				content += md.render(contentItem.text);
-			} else if (contentItem.type === 'image_url' && contentItem.image_url) {
-				content += `<img src="${contentItem.image_url.url}" alt="${contentItem.fileName}" width="60%" height="auto" />`;
-			}
-		});
-	} else {
-		// Fallback for backward compatibility, in case content is still a string
-		content += md.render(message.content);
-	}
-	return content;
+    return formatContent(content);
+}
+
+function renderContentArray(contentArray: Array<{ type: string; text?: string; image_url?: { url: string }; fileName?: string }>): string {
+    return contentArray.map(item => {
+        if (item.type === 'text' && item.text) {
+            return md.render(item.text);
+        } else if (item.type === 'image_url' && item.image_url) {
+            return `<img src="${item.image_url.url}" alt="${item.fileName || ''}" width="60%" height="auto" />`;
+        }
+        return '';
+    }).join('');
+}
+
+function formatContent(content: string): string {
+    content = content
+        .replace(/\\n\\n|\n\n/g, '</p><p>')
+        .replace(/\n(?!$)/g, '<br />')
+        .replace(/<br \/>$/, '');
+
+    if (!content.startsWith('<p>')) {
+        content = `<p>${content}`;
+    }
+    if (!content.endsWith('</p>')) {
+        content += '</p>';
+    }
+
+    return content;
 }

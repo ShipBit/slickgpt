@@ -50,7 +50,7 @@
 	let lastUserMessage: ChatMessage | null = null;
 	let currentMessages: ChatMessage[] | null = null;
 	let attachments: Array<ChatContent> = [];
-	let shouldDebounce = false;	
+	let shouldDebounce = false;
 	let hasUpdatedChatTitle = false;
 	let isEditMode = false;
 	let originalMessage: ChatMessage | null = null;
@@ -516,6 +516,23 @@
 		}
 	}
 
+	function handlePaste(event: ClipboardEvent) {
+		const items = event.clipboardData?.items;
+		if (!items) return;
+
+		const imageFiles = Array.from(items)
+			.filter((item) => item.type.startsWith('image/'))
+			.map((item) => item.getAsFile())
+			.filter((file): file is File => file !== null);
+
+		if (imageFiles.length > 0) {
+			const dataTransfer = new DataTransfer();
+			imageFiles.forEach((file) => dataTransfer.items.add(file));
+			handleFiles(dataTransfer.files);
+			event.preventDefault();
+		}
+	}
+
 	function removeAttachment(index: number) {
 		attachments = attachments.filter((_, i) => i !== index);
 		triggerDebounce();
@@ -586,6 +603,7 @@
 									placeholder="Enter to send, Shift+Enter for newline"
 									use:textareaAutosizeAction
 									on:keydown={handleKeyDown}
+									on:paste={handlePaste}
 									bind:value={input}
 									bind:this={textarea}
 									on:dragenter={handleDragEnter}

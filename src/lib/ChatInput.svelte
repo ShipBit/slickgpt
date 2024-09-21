@@ -571,27 +571,22 @@
 								{#if attachments.length > 0}
 									<div class="mb-2 flex flex-wrap gap-2">
 										{#each attachments as attachment, index}
-											<div
-												class="attachment flex items-center bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded"
-											>
-												<!-- Display image if attachment is an image -->
+											<div class="attachment relative">
 												{#if attachment.type === 'image_url'}
 													<img
 														src={attachment.image_url?.url}
 														alt={attachment.fileName}
-														class="w-16 h-16 object-cover rounded mr-2"
+														class="w-16 h-16 object-cover rounded"
 													/>
+													<button
+														type="button"
+														class="remove-btn"
+														on:click={() => removeAttachment(index)}
+														aria-label={`Remove attachment ${attachment.fileName}`}
+													>
+														&times;
+													</button>
 												{/if}
-												<span class="truncate max-w-xs">{attachment.fileName}</span>
-												<!-- Button to remove attachment -->
-												<button
-													type="button"
-													class="ml-2 text-red-500 hover:text-red-700"
-													on:click={() => removeAttachment(index)}
-													aria-label={`Remove attachment ${attachment.fileName}`}
-												>
-													&times;
-												</button>
 											</div>
 										{/each}
 									</div>
@@ -697,36 +692,34 @@
 </footer>
 
 <style>
-	.attachment {
-		position: relative;
-		display: inline-flex;
-		align-items: center;
-		border-radius: 0.375rem;
-	}
+    .attachment {
+        position: relative;
+        display: inline-block;
+    }
 
-	.attachment img {
-		border-radius: 0.25rem;
-	}
+    .attachment img {
+        border-radius: 0.25rem;
+    }
 
-	.attachment button {
-		margin-left: 0.5rem;
-		background: rgba(0, 0, 0, 0.5);
-		border: none;
-		color: white;
-		border-radius: 50%;
-		width: 20px;
-		height: 20px;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
+    .remove-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: rgba(0, 0, 0, 0.5);
+        border: none;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        line-height: 1;
+    }
 
-	.attachment button:hover {
-		background: rgba(0, 0, 0, 0.7);
-	}
-
-	.relative {
-		height: 100%;
-	}
+    .remove-btn:hover {
+        background: rgba(0, 0, 0, 0.7);
+    }
 </style>

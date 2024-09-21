@@ -112,9 +112,11 @@
 			return;
 		}
 
+		const allowedFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
+
 		const newAttachments = Array.from(files)
 			.slice(0, filesToUpload)
-			.filter((file) => file.type.startsWith('image/'))
+			.filter((file) => allowedFormats.includes(file.type))
 			.map((file) => processFile(file));
 
 		Promise.all(newAttachments).then((validAttachments) => {
@@ -617,7 +619,7 @@
 									>
 										<FileDropzone
 											name="files"
-											accept="image/*"
+											accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
 											multiple
 											on:files={(e) => handleFiles(e.detail)}
 										>
@@ -658,7 +660,7 @@
 							<FileButton
 								name="files"
 								button="btn-icon btn-sm"
-								accept="image/*"
+								accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
 								multiple
 								on:change={(e) => {
 									// @ts-ignore

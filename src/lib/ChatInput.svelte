@@ -571,7 +571,7 @@
 								{#if attachments.length > 0}
 									<div class="mb-2 flex flex-wrap gap-2">
 										{#each attachments as attachment, index}
-											<div class="attachment relative">
+											<div class="relative inline-block">
 												{#if attachment.type === 'image_url'}
 													<img
 														src={attachment.image_url?.url}
@@ -580,9 +580,9 @@
 													/>
 													<button
 														type="button"
-														class="remove-btn"
 														on:click={() => removeAttachment(index)}
 														aria-label={`Remove attachment ${attachment.fileName}`}
+														class="absolute -top-2 -right-2 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-sm leading-none hover:bg-opacity-70"
 													>
 														&times;
 													</button>
@@ -690,36 +690,3 @@
 		</div>
 	{/if}
 </footer>
-
-<style>
-    .attachment {
-        position: relative;
-        display: inline-block;
-    }
-
-    .attachment img {
-        border-radius: 0.25rem;
-    }
-
-    .remove-btn {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        background: rgba(0, 0, 0, 0.5);
-        border: none;
-        color: white;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        line-height: 1;
-    }
-
-    .remove-btn:hover {
-        background: rgba(0, 0, 0, 0.7);
-    }
-</style>

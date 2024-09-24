@@ -78,7 +78,7 @@
 	</div>
 
 	<!-- Message Content -->
-	<div class="text-sm">
+	<div class="text-sm markdown-content">
 		{@html renderMarkdown(message)}
 		<!-- {@html message.content} -->
 	</div>

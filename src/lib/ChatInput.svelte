@@ -38,6 +38,8 @@
 		PUBLIC_MODERATION_API_URL,
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
+	import { handlePaste, handleDrop, handleDragEnter, handleDragLeave } from '$misc/inputUtils';
+	import { handleFiles } from '$misc/fileUtils';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -54,20 +56,16 @@
 	let hasUpdatedChatTitle = false;
 	let isEditMode = false;
 	let originalMessage: ChatMessage | null = null;
+	let isDraggingFile = false;
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
-	const MAX_ATTACHMENTS = 10;
-
-	function triggerDebounce() {
-		shouldDebounce = true;
-	}
 
 	$: if (message && shouldDebounce) {
 		clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(() => {
-			calculateMessageTokens();
 			shouldDebounce = false;
+			calculateMessageTokens();
 		}, 750);
 	}
 
@@ -97,63 +95,6 @@
 		: -1;
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
-
-	function handleFiles(files: FileList) {
-		const initialCount = attachments.length;
-		const remainingSlots = MAX_ATTACHMENTS - initialCount;
-		const filesToUpload = Math.min(files.length, remainingSlots);
-
-		if (filesToUpload === 0) {
-			showToast(
-				toastStore,
-				`Maximum number of images (${MAX_ATTACHMENTS}) already uploaded.`,
-				'error'
-			);
-			return;
-		}
-
-		const allowedFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
-
-		const newAttachments = Array.from(files)
-			.slice(0, filesToUpload)
-			.filter((file) => allowedFormats.includes(file.type))
-			.map((file) => processFile(file));
-
-		Promise.all(newAttachments).then((validAttachments) => {
-			attachments = [...attachments, ...validAttachments];
-			showUploadResult(validAttachments.length, files.length);
-			triggerDebounce();
-		});
-	}
-
-	function processFile(file: File): Promise<ChatContent> {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				resolve({
-					type: 'image_url',
-					image_url: {
-						url: e.target?.result as string,
-						detail: 'high' // TODO: make this user configurable
-					},
-					fileName: file.name
-				});
-			};
-			reader.onerror = reject;
-			reader.readAsDataURL(file);
-		});
-	}
-
-	function showUploadResult(uploadedCount: number, totalCount: number) {
-		if (uploadedCount !== totalCount) {
-			const skippedCount = totalCount - uploadedCount;
-			const message =
-				skippedCount > 0
-					? `Uploaded ${uploadedCount} out of ${totalCount} images. ${skippedCount} file(s) skipped (not images).`
-					: `Uploaded ${uploadedCount} out of ${totalCount} images. Maximum limit (${MAX_ATTACHMENTS}) reached.`;
-			showToast(toastStore, message, 'warning');
-		}
-	}
 
 	// Check moderation API if enabled
 	async function checkModerationApi(messages: ChatMessage[], token: string) {
@@ -441,7 +382,8 @@
 				}
 				break;
 			default:
-				triggerDebounce();
+				shouldDebounce = true;
+				break;
 		}
 	}
 
@@ -487,57 +429,12 @@
 		textareaAutosizeAction(textarea);
 	}
 
-	let isDraggingFile = false;
-
-	function handleDragEnter(event: DragEvent) {
-		event.preventDefault();
-		if (event.dataTransfer?.types.includes('Files')) {
-			isDraggingFile = true;
-		}
-	}
-
-	function handleDragLeave(event: DragEvent) {
-		event.preventDefault();
-		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-		if (
-			rect &&
-			(event.clientX <= rect.left ||
-				event.clientX >= rect.right ||
-				event.clientY <= rect.top ||
-				event.clientY >= rect.bottom)
-		) {
-			isDraggingFile = false;
-		}
-	}
-
-	function handleDrop(event: DragEvent) {
-		event.preventDefault();
-		isDraggingFile = false;
-		if (event.dataTransfer?.files) {
-			handleFiles(event.dataTransfer.files);
-		}
-	}
-
-	function handlePaste(event: ClipboardEvent) {
-		const items = event.clipboardData?.items;
-		if (!items) return;
-
-		const imageFiles = Array.from(items)
-			.filter((item) => item.type.startsWith('image/'))
-			.map((item) => item.getAsFile())
-			.filter((file): file is File => file !== null);
-
-		if (imageFiles.length > 0) {
-			const dataTransfer = new DataTransfer();
-			imageFiles.forEach((file) => dataTransfer.items.add(file));
-			handleFiles(dataTransfer.files);
-			event.preventDefault();
-		}
-	}
-
-	function removeAttachment(index: number) {
+	async function removeAttachment(index: number) {
 		attachments = attachments.filter((_, i) => i !== index);
-		triggerDebounce();
+		shouldDebounce = true;
+
+		await tick();
+		textareaAutosizeAction(textarea);
 	}
 </script>
 
@@ -600,20 +497,32 @@
 									placeholder="Enter to send, Shift+Enter for newline"
 									use:textareaAutosizeAction
 									on:keydown={handleKeyDown}
-									on:paste={handlePaste}
+									on:paste={(event) => handlePaste(event, toastStore)}
 									bind:value={input}
 									bind:this={textarea}
-									on:dragenter={handleDragEnter}
-									on:dragleave={handleDragLeave}
-									on:drop={handleDrop}
+									on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
+									on:dragleave={(event) =>
+										(isDraggingFile = handleDragLeave(event, event.currentTarget))}
+									on:drop={(event) => {
+										isDraggingFile = false;
+										handleDrop(event, toastStore).then((newAttachments) => {
+											attachments = [...attachments, ...newAttachments];
+										});
+									}}
 								/>
 								<!-- File drop zone overlay -->
 								{#if isDraggingFile}
 									<div
 										class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
 										transition:fade={{ duration: 150 }}
-										on:dragleave={handleDragLeave}
-										on:drop={handleDrop}
+										on:dragleave={(event) =>
+											(isDraggingFile = handleDragLeave(event, event.currentTarget))}
+										on:drop={(event) => {
+											isDraggingFile = false;
+											handleDrop(event, toastStore).then((newAttachments) => {
+												attachments = [...attachments, ...newAttachments];
+											});
+										}}
 										role="region"
 										aria-label="File drop area"
 									>
@@ -621,7 +530,10 @@
 											name="files"
 											accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
 											multiple
-											on:files={(e) => handleFiles(e.detail)}
+											on:files={(e) =>
+												handleFiles(e.detail, toastStore).then((newAttachments) => {
+													attachments = [...attachments, ...newAttachments];
+												})}
 										>
 											<span>Drop images here</span>
 										</FileDropzone>
@@ -666,7 +578,9 @@
 									// @ts-ignore
 									const files = e?.target?.files;
 									if (files && files.length > 0) {
-										handleFiles(files);
+										handleFiles(files, toastStore).then((newAttachments) => {
+											attachments = [...attachments, ...newAttachments];
+										});
 									}
 								}}
 							>

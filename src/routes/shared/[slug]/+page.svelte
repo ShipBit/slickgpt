@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { track, type Chat as ChatModel } from '$misc/shared';
 	import { generateSlug } from 'random-word-slugs';
-	import { renderMarkdown } from '$misc/markdownHelper';
+	import { renderMarkdown } from '$misc/markdownUtils';
 	import { ArrowDownOnSquare } from '@inqling/svelte-icons/heroicon-24-outline';
 	import Toolbar from '$lib/Toolbar.svelte';
 	import { chatStore } from '$misc/stores';

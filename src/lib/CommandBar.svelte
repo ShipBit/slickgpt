@@ -3,7 +3,7 @@
 	import CommandPalette, { defineActions, createStoreMethods } from 'svelte-command-palette';
 	import { goto } from '$app/navigation';
 	import { chatStore } from '$misc/stores';
-	import type { ChatMessage } from '$misc/shared';
+	import { processChatContent } from '$misc/chatUtils';
 
 	const paletteMethods = createStoreMethods();
 
@@ -11,25 +11,6 @@
 	let chatActions: any[] = []; // svelte-command-palette is missing export type { actions } ...
 	let actions: any[] = [];
 	let key = 0;
-
-	// Helper function to process chat content
-	function processChatContent(messages: ChatMessage[]): string[] {
-		let extractedTexts: string[] = [];
-		messages.forEach((message) => {
-		if (Array.isArray(message.content)) {
-			// If content is an array (new format)
-			message.content.forEach((contentItem) => {
-			if (contentItem.type === 'text' && contentItem.text) {
-				extractedTexts.push(contentItem.text);
-			}
-			});
-		} else if (typeof message.content === 'string') {
-			// If content is a string (backward compatibility)
-			extractedTexts.push(message.content);
-		}});
-
-		return extractedTexts;
-	}
 
 	$: {
 		// Sorting the chats by creation date, most recent first

@@ -137,7 +137,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		{
 			role: 'user',
 			content:
-				"Suggest a short title for this chat, summarising its content. Take the 'system' message into account and the first prompt from me and your first answer. The title should not be longer than 100 chars. Answer with just the title. Don't use punctuation in the title."
+				"Suggest a short, relevant title for this chat, focusing solely on the main topic. Consider the 'system' message, my first prompt, and your first answer. The title should be in the same language as our conversation. Keep it under 100 characters and provide only the title without punctuation."
 		} as ChatCompletionMessageParam
 	];
 

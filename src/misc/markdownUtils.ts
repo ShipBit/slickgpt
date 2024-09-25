@@ -24,26 +24,6 @@ const defaultOptions: MarkdownKatexOptions = {
 
 const md = markdownIt({ breaks: true }).use(customLatexRenderer, defaultOptions);
 
-export function containsMarkdownCodeBlock(input: string): boolean {
-    const codeBlockRegex = /`[^`]+`|```[\s\S]+?```/;
-    return codeBlockRegex.test(input);
-}
-
-export function closeOpenedCodeTicks(input: string) {
-    const oneTickCount = (input.match(/`/g) || []).length;
-    const threeTickCount = (input.match(/```/g) || []).length;
-
-    if (oneTickCount % 2 !== 0) {
-        input += '`';
-    }
-
-    if (threeTickCount % 2 !== 0) {
-        input += '\n```';
-    }
-
-    return input;
-}
-
 // Modified from: https://github.com/SchneeHertz/markdown-it-katex-gpt/blob/master/index.js
 function escapedBracketRule(options: MarkdownKatexOptions) {
     return (state: any, silent: boolean) => {

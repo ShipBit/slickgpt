@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { afterUpdate, onMount } from 'svelte';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
-	import { renderMarkdown } from '$misc/markdownHelper';
+	import { renderMarkdown } from '$misc/markdownUtils';
 	import { afterNavigate } from '$app/navigation';
 	import type { Chat } from '$misc/shared';
 	import { chatStore, isLoadingAnswerStore, liveAnswerStore } from '$misc/stores';

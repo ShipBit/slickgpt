@@ -2,7 +2,7 @@
 	import type { ChatMessage } from '$misc/shared';
 	import { createEventDispatcher } from 'svelte';
 	import { type ModalSettings, getModalStore } from '@skeletonlabs/skeleton';
-	import { renderMarkdown } from '$misc/markdownHelper';
+	import { renderMarkdown } from '$misc/markdownUtils';
 	import { XMark, PencilSquare } from '@inqling/svelte-icons/heroicon-24-solid';
 	import { chatStore } from '$misc/stores';
 	import { countTokens } from '$misc/openai';

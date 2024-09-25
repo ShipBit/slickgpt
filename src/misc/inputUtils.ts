@@ -1,5 +1,6 @@
 import { handleFiles } from './fileUtils';
 import type { ToastStore } from '@skeletonlabs/skeleton';
+import type { ChatContent } from './shared';
 
 export function handleDragEnter(event: DragEvent) {
     event.preventDefault();
@@ -24,9 +25,9 @@ export function handleDragLeave(event: DragEvent, element: HTMLElement) {
     return true;
 }
 
-export function handlePaste(event: ClipboardEvent, toastStore: ToastStore, uploadedCount: number) {
+export function handlePaste(event: ClipboardEvent, toastStore: ToastStore, uploadedCount: number): Promise<ChatContent[]> {
     const items = event.clipboardData?.items;
-    if (!items) return;
+    if (!items) return Promise.resolve([]);
 
     const imageFiles = Array.from(items)
         .filter((item) => item.type.startsWith('image/'))
@@ -36,7 +37,8 @@ export function handlePaste(event: ClipboardEvent, toastStore: ToastStore, uploa
     if (imageFiles.length > 0) {
         const dataTransfer = new DataTransfer();
         imageFiles.forEach((file) => dataTransfer.items.add(file));
-        event.preventDefault();
-        handleFiles(dataTransfer.files, toastStore, uploadedCount);
+        event.preventDefault(); 
+        return handleFiles(dataTransfer.files, toastStore, uploadedCount);
     }
+    return Promise.resolve([]);
 }

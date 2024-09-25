@@ -494,7 +494,11 @@
 									placeholder="Enter to send, Shift+Enter for newline"
 									use:textareaAutosizeAction
 									on:keydown={handleKeyDown}
-									on:paste={(event) => handlePaste(event, toastStore, attachments.length)}
+									on:paste={(event) =>
+										handlePaste(event, toastStore, attachments.length).then((newAttachments) => {
+											attachments = [...attachments, ...newAttachments];
+											shouldDebounce = true;
+										})}
 									bind:value={input}
 									bind:this={textarea}
 									on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}

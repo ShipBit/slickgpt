@@ -38,7 +38,7 @@
 		PUBLIC_MODERATION_API_URL,
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
-	import { handlePaste, handleDrop, handleDragEnter, handleDragLeave } from '$misc/inputUtils';
+	import { handlePaste, handleDragEnter, handleDragLeave } from '$misc/inputUtils';
 	import { handleFiles } from '$misc/fileUtils';
 
 	export let slug: string;
@@ -508,9 +508,14 @@
 											(isDraggingFile = handleDragLeave(event, event.currentTarget))}
 										on:drop={(event) => {
 											isDraggingFile = false;
-											handleDrop(event, toastStore, attachments.length).then((newAttachments) => {
-												attachments = [...attachments, ...newAttachments];
-											});
+											if (event.dataTransfer?.files) {
+												handleFiles(event.dataTransfer.files, toastStore, attachments.length).then(
+													(newAttachments) => {
+														attachments = [...attachments, ...newAttachments];
+														shouldDebounce = true;
+													}
+												);
+											}
 										}}
 										role="region"
 										aria-label="File drop area"
@@ -519,10 +524,6 @@
 											name="files"
 											accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
 											multiple
-											on:files={(e) =>
-												handleFiles(e.detail, toastStore, attachments.length).then((newAttachments) => {
-													attachments = [...attachments, ...newAttachments];
-												})}
 										>
 											<span>Drop images here</span>
 										</FileDropzone>
@@ -564,11 +565,15 @@
 								accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
 								multiple
 								on:change={(e) => {
-									// @ts-ignore
-									const files = e?.target?.files;
+									// @ts-expect-error
+									const files = e.target.files;
 									if (files && files.length > 0) {
 										handleFiles(files, toastStore, attachments.length).then((newAttachments) => {
 											attachments = [...attachments, ...newAttachments];
+											// Clear the file input after processing
+											// @ts-expect-error
+											e.target.value = '';
+											shouldDebounce = true;
 										});
 									}
 								}}

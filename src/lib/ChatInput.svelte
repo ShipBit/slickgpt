@@ -51,7 +51,7 @@
 	let messageTokens = 0;
 	let lastUserMessage: ChatMessage | null = null;
 	let currentMessages: ChatMessage[] | null = null;
-	let attachments: Array<ChatContent> = [];
+	let attachments: ChatContent[] = [];
 	let shouldDebounce = false;
 	let hasUpdatedChatTitle = false;
 	let isEditMode = false;
@@ -429,12 +429,9 @@
 		textareaAutosizeAction(textarea);
 	}
 
-	async function removeAttachment(index: number) {
+	function removeAttachment(index: number) {
 		attachments = attachments.filter((_, i) => i !== index);
 		shouldDebounce = true;
-
-		await tick();
-		textareaAutosizeAction(textarea);
 	}
 </script>
 
@@ -497,18 +494,10 @@
 									placeholder="Enter to send, Shift+Enter for newline"
 									use:textareaAutosizeAction
 									on:keydown={handleKeyDown}
-									on:paste={(event) => handlePaste(event, toastStore)}
+									on:paste={(event) => handlePaste(event, toastStore, attachments.length)}
 									bind:value={input}
 									bind:this={textarea}
 									on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
-									on:dragleave={(event) =>
-										(isDraggingFile = handleDragLeave(event, event.currentTarget))}
-									on:drop={(event) => {
-										isDraggingFile = false;
-										handleDrop(event, toastStore).then((newAttachments) => {
-											attachments = [...attachments, ...newAttachments];
-										});
-									}}
 								/>
 								<!-- File drop zone overlay -->
 								{#if isDraggingFile}
@@ -519,7 +508,7 @@
 											(isDraggingFile = handleDragLeave(event, event.currentTarget))}
 										on:drop={(event) => {
 											isDraggingFile = false;
-											handleDrop(event, toastStore).then((newAttachments) => {
+											handleDrop(event, toastStore, attachments.length).then((newAttachments) => {
 												attachments = [...attachments, ...newAttachments];
 											});
 										}}
@@ -531,7 +520,7 @@
 											accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
 											multiple
 											on:files={(e) =>
-												handleFiles(e.detail, toastStore).then((newAttachments) => {
+												handleFiles(e.detail, toastStore, attachments.length).then((newAttachments) => {
 													attachments = [...attachments, ...newAttachments];
 												})}
 										>
@@ -578,7 +567,7 @@
 									// @ts-ignore
 									const files = e?.target?.files;
 									if (files && files.length > 0) {
-										handleFiles(files, toastStore).then((newAttachments) => {
+										handleFiles(files, toastStore, attachments.length).then((newAttachments) => {
 											attachments = [...attachments, ...newAttachments];
 										});
 									}

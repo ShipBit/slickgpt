@@ -4,14 +4,15 @@ import type { ToastStore } from '@skeletonlabs/skeleton';
 
 const MAX_ATTACHMENTS = 10;
 
-export function handleFiles(files: FileList, toastStore: ToastStore): Promise<ChatContent[]> {
-    const filesToUpload = Math.min(files.length, MAX_ATTACHMENTS);
-
-    if (filesToUpload === 0) {
+export function handleFiles(files: FileList, toastStore: ToastStore, uploadedCount: number): Promise<ChatContent[]> {
+    const remainingSlots = MAX_ATTACHMENTS - uploadedCount;
+    const filesToUpload = Math.min(files.length, remainingSlots);
+    
+    if (filesToUpload <= 0) {
         showToast(
             toastStore,
             `Maximum number of images (${MAX_ATTACHMENTS}) already uploaded.`,
-            'error'
+            'warning'
         );
         return Promise.resolve([]);
     }
@@ -24,7 +25,7 @@ export function handleFiles(files: FileList, toastStore: ToastStore): Promise<Ch
         .map((file) => processFile(file));
 
     return Promise.all(newAttachments).then((validAttachments) => {
-        showUploadResult(validAttachments.length, files.length, toastStore);
+        showUploadResult(validAttachments.length, filesToUpload, toastStore);
         return validAttachments;
     });
 }

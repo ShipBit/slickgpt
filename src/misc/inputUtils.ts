@@ -25,15 +25,15 @@ export function handleDragLeave(event: DragEvent, element: HTMLElement) {
     return true;
 }
 
-export function handleDrop(event: DragEvent, toastStore: ToastStore): Promise<ChatContent[]> {
+export function handleDrop(event: DragEvent, toastStore: ToastStore, uploadedCount: number): Promise<ChatContent[]> {
     event.preventDefault();
     if (event.dataTransfer?.files) {
-        return handleFiles(event.dataTransfer.files, toastStore);
+        return handleFiles(event.dataTransfer.files, toastStore, uploadedCount);
     }
     return Promise.resolve([]);
 }
 
-export function handlePaste(event: ClipboardEvent, toastStore: ToastStore) {
+export function handlePaste(event: ClipboardEvent, toastStore: ToastStore, uploadedCount: number) {
     const items = event.clipboardData?.items;
     if (!items) return;
 
@@ -46,6 +46,6 @@ export function handlePaste(event: ClipboardEvent, toastStore: ToastStore) {
         const dataTransfer = new DataTransfer();
         imageFiles.forEach((file) => dataTransfer.items.add(file));
         event.preventDefault();
-        handleFiles(dataTransfer.files, toastStore);
+        handleFiles(dataTransfer.files, toastStore, uploadedCount);
     }
 }

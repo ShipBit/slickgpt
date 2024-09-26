@@ -78,8 +78,8 @@ export const models: Record<AiModel, AiModelStats> = {
 		provider: AiProvider.OpenAi,
 		maxTokens: 4096,
 		contextWindow: 128000,
-		costInput: 5,
-		costOutput: 15
+		costInput: 0.15,
+		costOutput: 0.6
 	},
 	[AiModel.MistralLarge]: {
 		provider: AiProvider.Mistral,

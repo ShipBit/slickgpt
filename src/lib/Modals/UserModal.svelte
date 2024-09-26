@@ -52,6 +52,16 @@
 				pro: true
 			},
 			{
+				name: 'gpt-4o-mini',
+				free: 'your OpenAI API key',
+				pro: true
+			},
+			{
+				name: 'gpt-4',
+				free: 'your OpenAI API key',
+				pro: true
+			},
+			{
 				name: 'llama3-8b',
 				free: 'free with your Groq API key',
 				pro: 'soon'

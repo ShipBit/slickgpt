@@ -47,10 +47,10 @@
 
 		if (!$hasSeenGpt4oPrompt) {
 			$hasSeenGpt4oPrompt = true;
-			showToast(toastStore, '🎉 GPT-4 Omni is here! 🎉', 'primary', false, undefined, {
+			showToast(toastStore, '🎉 GPT-4o-mini is here! 🎉', 'primary', false, undefined, {
 				label: 'Use as default',
 				response: () => {
-					$settingsStore.defaultModel = AiModel.Gpt4o;
+					$settingsStore.defaultModel = AiModel.Gpt4oMini;
 				}
 			});
 		}

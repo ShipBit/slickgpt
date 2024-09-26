@@ -7,7 +7,7 @@
 	import { AuthService } from '$misc/authService';
 	import { User } from '@inqling/svelte-icons/heroicon-24-outline';
 	import { onMount } from 'svelte';
-	import { PUBLIC_STRIPE_PRO_PORTAL } from '$env/static/public';
+	import { PUBLIC_PAYPRO_PORTAL } from '$env/static/public';
 
 	const modalStore = getModalStore();
 
@@ -44,7 +44,7 @@
 		{#if $isPro}
 			<!-- Manage subscription -->
 			<a
-				href={PUBLIC_STRIPE_PRO_PORTAL}
+				href={PUBLIC_PAYPRO_PORTAL}
 				class="btn hover:text-gray-500 dark:hover:text-gray-400"
 				target="_blank"
 			>

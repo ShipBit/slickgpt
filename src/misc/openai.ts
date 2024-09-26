@@ -14,6 +14,7 @@ export enum AiProvider {
 export enum AiModel {
 	Gpt35Turbo = 'gpt-3.5-turbo',
 	Gpt4o = 'gpt-4o',
+	Gpt4oMini = 'gpt-4o-mini',
 	Gpt4 = 'gpt-4',
 	Gpt432k = 'gpt-4-32k',
 	Gpt41106preview = 'gpt-4-1106-preview',
@@ -33,7 +34,7 @@ export interface AiSettings {
 }
 
 export const defaultOpenAiSettings: AiSettings = {
-	model: AiModel.Gpt4o,
+	model: AiModel.Gpt4oMini,
 	max_tokens: 4072, // Manually adjusted
 	temperature: 1,
 	top_p: 1
@@ -72,6 +73,13 @@ export const models: Record<AiModel, AiModelStats> = {
 		contextWindow: 128000,
 		costInput: 5,
 		costOutput: 15
+	},
+	[AiModel.Gpt4oMini]: {
+		provider: AiProvider.OpenAi,
+		maxTokens: 4096,
+		contextWindow: 128000,
+		costInput: 0.15,
+		costOutput: 0.6
 	},
 	[AiModel.MistralLarge]: {
 		provider: AiProvider.Mistral,
@@ -120,8 +128,7 @@ export const models: Record<AiModel, AiModelStats> = {
 		maxTokens: 4096,
 		contextWindow: 8192,
 		costInput: 30,
-		costOutput: 60,
-		hidden: true
+		costOutput: 60
 	},
 	[AiModel.Gpt432k]: {
 		provider: AiProvider.OpenAi,

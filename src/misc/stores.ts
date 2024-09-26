@@ -34,11 +34,33 @@ export const eventSourceStore: Readable<EventSource> = readable(new EventSource(
 export const account = writable<AccountInfo | null>(null);
 
 export const isPro = derived(account, ($account) => {
-	return (
+	if (
 		$account?.idTokenClaims &&
-		($account.idTokenClaims['extension_SlickGPTSubscriptionPlan'] === 'Pro' ||
+		($account?.idTokenClaims['extension_SlickGPTSubscriptionPlan'] === 'Pro' ||
 			$account?.idTokenClaims['extension_WingmanSubscriptionPlan'] === 'Ultra')
-	);
+	) {
+		return true;
+	}
+
+	// Check for PayPro subscription date
+	if (
+		$account?.idTokenClaims &&
+		($account?.idTokenClaims['extension_LastPayProSubscriptionPlan'] === 'SlickGPTPro' ||
+			$account?.idTokenClaims['extension_LastPayProSubscriptionPlan'] === 'WingmanUltra')
+	) {
+		const subscriptionDate =
+			$account?.idTokenClaims &&
+			($account?.idTokenClaims['extension_PayProSubscriptionEndDate'] || null);
+	
+		if (subscriptionDate) {
+			const endDate = new Date(subscriptionDate as string);
+			const now = new Date();
+	
+			return endDate >= now;
+		}
+	}
+
+	return false;
 });
 
 export const hasAcceptedTerms = writable(true);

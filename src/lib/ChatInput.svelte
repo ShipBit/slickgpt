@@ -126,8 +126,12 @@
 						}
 						return contentItem;
 					})
-				: currentMessage.content
+				: currentMessage.role === 'assistant' || currentMessage.role === 'system'
+					? currentMessage.content
+					: [{ type: 'text', text: currentMessage.content }]
 		})) as ChatMessage[];
+
+		console.log(messages);
 
 		let payload: any;
 		let token: string;

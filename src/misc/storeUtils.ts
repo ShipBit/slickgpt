@@ -11,16 +11,16 @@ export function persistentStore<T>(key: string, initialValue: T): Writable<T> {
       console.log(`persistentStore initial load: ${key} ->`, storedValue);  // Debugging log
       store.set(storedValue);
     }
-    loadedFromStorage = true;  // Mark as loaded from storage
+    loadedFromStorage = true;
   }).catch(error => {
     console.error(`Error loading initial value for ${key}:`, error);  // Debugging log
-    loadedFromStorage = true;  // Ensure store updates proceed despite error
+    loadedFromStorage = true;
   });
 
   function subscribe(run: (value: T) => void, invalidate?: (value?: T) => void) {
     return store.subscribe((value) => {
       run(value);
-      if (!loadedFromStorage) return;  // Skip during initial load until fully loaded
+      if (!loadedFromStorage) return;
       storageService.setItem(key, value).then(() => {
         console.log(`persistentStore subscription update: ${key} ->`, value);  // Debugging log
       }).catch(error => {

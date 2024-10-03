@@ -96,28 +96,6 @@ class IndexedDbService implements StorageService {
     }
 }
 
-// No operation storage service for environments where no storage is available
-class NoopStorageService implements StorageService {
-    async getItem<T>(key: string): Promise<T | null> {
-        return null;
-    }
-
-    async setItem<T>(key: string, value: T): Promise<void> {
-        // Noop
-    }
-
-    async removeItem(key: string): Promise<void> {
-        // Noop
-    }
-
-    async clear(): Promise<void> {
-        // Noop
-    }
-}
-
-// Determine which service to use based on environment capability
-const useIndexedDb = typeof indexedDB !== 'undefined';
-
-const storageService: StorageService = useIndexedDb ? new IndexedDbService() : new NoopStorageService();
+const storageService: StorageService = new IndexedDbService();
 
 export default storageService;

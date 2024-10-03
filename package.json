@@ -61,7 +61,6 @@
 		"firebase": "^10.11.0",
 		"highlight.js": "^11.9.0",
 		"highlightjs-copy": "^1.0.5",
-		"idb": "^8.0.0",
 		"javascript-time-ago": "^2.5.10",
 		"js-tiktoken": "^1.0.14",
 		"openai": "^4.38.2",

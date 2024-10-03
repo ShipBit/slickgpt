@@ -1,29 +1,29 @@
 import { writable, type Readable, type Writable, readable, get, derived } from 'svelte/store';
-import { localStorageStore } from '@skeletonlabs/skeleton';
+import { persistentStore } from './storeUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
 import type { Chat, ChatContent, ChatMessage, ClientSettings } from './shared';
 import type { AccountInfo } from '@azure/msal-browser';
 
-export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
+export const settingsStore: Writable<ClientSettings> = persistentStore('settingsStore', {});
 
-export const hasSeenProPrompt: Writable<boolean> = localStorageStore(
-	'slickgpt.hasSeenProPrompt',
+export const hasSeenProPrompt: Writable<boolean> = persistentStore(
+	'slickgpt.hasSeenProPrompt', 
 	false
 );
 
-export const hasSeenGpt4oPrompt: Writable<boolean> = localStorageStore(
-	'slickgpt.hasSeenGpt4oPrompt',
+export const hasSeenGpt4oPrompt: Writable<boolean> = persistentStore(
+	'slickgpt.hasSeenGpt4oPrompt', 
 	false
 );
 
-export const hasSeenVisionPrompt: Writable<boolean> = localStorageStore(
-	'slickgpt.hasSeenVisionPrompt',
+export const hasSeenVisionPrompt: Writable<boolean> = persistentStore(
+	'slickgpt.hasSeenVisionPrompt', 
 	false
 );
 
-export const autoLogin: Writable<boolean> = localStorageStore('slickgpt.autoLogin', false);
+export const autoLogin: Writable<boolean> = persistentStore('slickgpt.autoLogin', false);
 
 export const liveAnswerStore: Writable<ChatMessage> = writable({
 	role: 'assistant',
@@ -94,7 +94,7 @@ export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	countMessagesInCurrentBranch(chat: Chat): number;
 }
 
-const _chatStore: Writable<{ [key: string]: Chat }> = localStorageStore('chatStore', {});
+const _chatStore: Writable<{ [key: string]: Chat }> = persistentStore('chatStore', {});
 
 /**
  * Be careful when updating nested objects - they are overwritten, not merged!

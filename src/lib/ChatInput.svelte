@@ -10,6 +10,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
+	type ChatContent,
 		type ChatCost,
 		type ChatMessage,
 		showModalComponent,
@@ -116,19 +117,27 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		const messages = currentMessages?.map((currentMessage) => ({
-			role: currentMessage.role,
-			content: Array.isArray(currentMessage.content)
-				? currentMessage.content.map((contentItem) => {
-						if ('fileName' in contentItem) {
-							const { fileName, ...sanitizedContent } = contentItem;
-							return sanitizedContent;
-						}
-						return contentItem;
-					})
-				: currentMessage.role === 'assistant' || currentMessage.role === 'system'
-					? currentMessage.content
-					: [{ type: 'text', text: currentMessage.content }]
+		const processContentItem = (contentItem: ChatContent) => {
+			if ('fileName' in contentItem) {
+				const { fileName, ...sanitizedContent } = contentItem;
+				return sanitizedContent;
+			}
+			return contentItem;
+		};
+
+		const processMessageContent = (message: ChatMessage) => {
+			if (Array.isArray(message.content)) {
+				return message.content.map(processContentItem);
+			} else if (message.role === 'assistant' || message.role === 'system') {
+				return message.content;
+			}
+
+			return [{ type: 'text', text: message.content }];
+		};
+
+		const messages = currentMessages?.map((message) => ({
+			role: message.role,
+			content: processMessageContent(message)
 		})) as ChatMessage[];
 
 		let payload: any;

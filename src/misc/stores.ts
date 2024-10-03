@@ -3,7 +3,7 @@ import { localStorageStore } from '@skeletonlabs/skeleton';
 import { v4 as uuidv4 } from 'uuid';
 import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
-import type { Chat, ChatMessage, ClientSettings } from './shared';
+import type { Chat, ChatContent, ChatMessage, ClientSettings } from './shared';
 import type { AccountInfo } from '@azure/msal-browser';
 
 export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
@@ -51,11 +51,11 @@ export const isPro = derived(account, ($account) => {
 		const subscriptionDate =
 			$account?.idTokenClaims &&
 			($account?.idTokenClaims['extension_PayProSubscriptionEndDate'] || null);
-	
+
 		if (subscriptionDate) {
 			const endDate = new Date(subscriptionDate as string);
 			const now = new Date();
-	
+
 			return endDate >= now;
 		}
 	}
@@ -66,6 +66,8 @@ export const isPro = derived(account, ($account) => {
 export const hasAcceptedTerms = writable(true);
 
 export const hasSubscriptionChanged = writable(false);
+
+export const attachments: Writable<ChatContent[]> = writable([]);
 
 /**
  * Custom chat store

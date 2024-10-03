@@ -2,10 +2,11 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { getModalStore, getToastStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { DocumentDuplicate, PencilSquare } from '@inqling/svelte-icons/heroicon-24-solid';
-	import { Cog6Tooth, Share, Trash } from '@inqling/svelte-icons/heroicon-24-outline';
+	import { Cog6Tooth, Share, Trash, XMark } from '@inqling/svelte-icons/heroicon-24-outline';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import {
+		attachments,
 		chatStore,
 		isLoadingAnswerStore,
 		isPro,
@@ -39,6 +40,8 @@
 	const toastStore = getToastStore();
 
 	export let data: PageData;
+
+	let shouldDebounce = false;
 
 	$: ({ slug } = data);
 	$: chat = $chatStore[slug];
@@ -158,10 +161,15 @@
 			showModalComponent(modalStore, 'SuggestTitleModal', { slug });
 		}
 	}
+
+	function removeAttachment(index: number) {
+		$attachments = $attachments.filter((_, i) => i !== index);
+		shouldDebounce = true;
+	}
 </script>
 
 {#if chat}
-	<div class="flex flex-col h-full gap-4">
+	<div class="relative flex flex-col h-full gap-4">
 		<Toolbar
 			{slug}
 			title={chat.title}
@@ -267,6 +275,33 @@
 			</svelte:fragment>
 		</Chat>
 
-		<ChatInput {slug} chatCost={cost} bind:this={chatInput} />
+		<!-- File attachments -->
+		{#if $attachments.length > 0}
+			<div class="sticky mx-auto bottom-0">
+				<div class="flex flex-wrap z-10">
+					{#each $attachments as attachment, index}
+						{#if attachment.type === 'image_url'}
+							<button
+								type="button"
+								class="btn btn-sm relative rounded-full"
+								aria-label="Remove attachment {attachment.fileName}"
+								on:click={() => removeAttachment(index)}
+							>
+								<span class="absolute -top-2 right-0 p-0 bg-slate-600 opacity-80 rounded-full">
+									<XMark class="text-white w-5 h-5" />
+								</span>
+								<img
+									src={attachment.image_url?.url}
+									alt={attachment.fileName}
+									class="w-16 h-16 object-cover rounded"
+								/>
+							</button>
+						{/if}
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<ChatInput {slug} chatCost={cost} {shouldDebounce} bind:this={chatInput} />
 	</div>
 {/if}

@@ -12,7 +12,6 @@
 	import {
 		type ChatCost,
 		type ChatMessage,
-		type ChatContent,
 		showModalComponent,
 		showToast,
 		suggestChatTitle,
@@ -24,7 +23,8 @@
 		isLoadingAnswerStore,
 		liveAnswerStore,
 		settingsStore,
-		isPro
+		isPro,
+		attachments
 	} from '$misc/stores';
 	import { AiProvider, countTokens, getProviderForModel, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
@@ -36,11 +36,12 @@
 		PUBLIC_MISTRAL_API_URL,
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
-	import { handlePaste, handleDragEnter, handleDragLeave } from '$misc/inputUtils';
-	import { handleFiles } from '$misc/fileUtils';
+	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
+	import { uploadFiles } from '$misc/fileUtils';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
+	export let shouldDebounce = false;
 
 	let debounceTimer: number | undefined;
 	let input = '';
@@ -49,8 +50,7 @@
 	let messageTokens = 0;
 	let lastUserMessage: ChatMessage | null = null;
 	let currentMessages: ChatMessage[] | null = null;
-	let attachments: ChatContent[] = [];
-	let shouldDebounce = false;
+
 	let hasUpdatedChatTitle = false;
 	let isEditMode = false;
 	let originalMessage: ChatMessage | null = null;
@@ -74,7 +74,7 @@
 			...(input.trim() !== ''
 				? [{ type: 'text', text: input.trim() }]
 				: [{ type: 'text', text: '' }]),
-			...attachments
+			...$attachments
 		]
 	} as ChatMessage;
 	$: provider = getProviderForModel(chat.settings.model);
@@ -95,7 +95,7 @@
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
 	async function handleSubmit() {
-		if (input.trim() === '' && attachments.length === 0) return;
+		if (input.trim() === '' && $attachments.length === 0) return;
 
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
@@ -130,8 +130,6 @@
 					? currentMessage.content
 					: [{ type: 'text', text: currentMessage.content }]
 		})) as ChatMessage[];
-
-		console.log(messages);
 
 		let payload: any;
 		let token: string;
@@ -181,7 +179,7 @@
 
 		$eventSourceStore.start(url, payload, handleAnswer, handleError, handleAbort, token);
 		input = '';
-		attachments = [];
+		$attachments = [];
 	}
 
 	let rawAnswer: string = '';
@@ -316,7 +314,7 @@
 				break;
 			case 'Enter':
 				if (!event.shiftKey) {
-					if (input.trim() === '' && attachments.length === 0) {
+					if (input.trim() === '' && $attachments.length === 0) {
 						// Create a new line if input is whitespace.
 						addNewLineAndResize();
 					} else {
@@ -372,9 +370,31 @@
 		textareaAutosizeAction(textarea);
 	}
 
-	function removeAttachment(index: number) {
-		attachments = attachments.filter((_, i) => i !== index);
+	async function handlePaste(event: ClipboardEvent) {
+		const newAttachments = await pasteImage(event, toastStore, $attachments.length);
+		$attachments = [...$attachments, ...newAttachments];
 		shouldDebounce = true;
+	}
+
+	async function uploadFilesAndDebounce(files: FileList) {
+		const newAttachments = await uploadFiles(files, toastStore, $attachments.length);
+		$attachments = [...$attachments, ...newAttachments];
+		shouldDebounce = true;
+	}
+
+	async function handleFileDrop(event: DragEvent) {
+		isDraggingFile = false;
+		if (event.dataTransfer?.files) {
+			await uploadFilesAndDebounce(event.dataTransfer.files);
+		}
+	}
+
+	async function handleFileChange(event: Event & { target: HTMLInputElement & EventTarget }) {
+		if (event?.target?.files) {
+			await uploadFilesAndDebounce(event.target.files);
+			// Clear the file input after processing
+			event.target.value = '';
+		}
 	}
 </script>
 
@@ -405,92 +425,52 @@
 				<form use:focusTrap={!$isLoadingAnswerStore} on:submit|preventDefault={handleSubmit}>
 					<div class="grid grid-cols-[1fr_auto]">
 						<div class="relative flex flex-col">
-							<div class="relative">
-								<!-- Display attachments if any -->
-								{#if attachments.length > 0}
-									<div class="mb-2 flex flex-wrap gap-2">
-										{#each attachments as attachment, index}
-											<div class="relative inline-block">
-												{#if attachment.type === 'image_url'}
-													<img
-														src={attachment.image_url?.url}
-														alt={attachment.fileName}
-														class="w-16 h-16 object-cover rounded"
-													/>
-													<button
-														type="button"
-														on:click={() => removeAttachment(index)}
-														aria-label={`Remove attachment ${attachment.fileName}`}
-														class="absolute -top-2 -right-2 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-sm leading-none hover:bg-opacity-70"
-													>
-														&times;
-													</button>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								{/if}
-								<!-- Textarea for user input -->
-								<textarea
-									class="textarea overflow-hidden min-h-[42px] w-full"
-									rows="1"
-									placeholder="Enter to send, Shift+Enter for newline"
-									use:textareaAutosizeAction
-									on:keydown={handleKeyDown}
-									on:paste={(event) =>
-										handlePaste(event, toastStore, attachments.length).then((newAttachments) => {
-											attachments = [...attachments, ...newAttachments];
-											shouldDebounce = true;
-										})}
-									bind:value={input}
-									bind:this={textarea}
-									on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
-								/>
-								<!-- File drop zone overlay -->
-								{#if isDraggingFile}
-									<div
-										class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
-										transition:fade={{ duration: 150 }}
-										on:dragleave={(event) =>
-											(isDraggingFile = handleDragLeave(event, event.currentTarget))}
-										on:drop={(event) => {
-											isDraggingFile = false;
-											if (event.dataTransfer?.files) {
-												handleFiles(event.dataTransfer.files, toastStore, attachments.length).then(
-													(newAttachments) => {
-														attachments = [...attachments, ...newAttachments];
-														shouldDebounce = true;
-													}
-												);
-											}
-										}}
-										role="region"
-										aria-label="File drop area"
+							<!-- Textarea for user input -->
+							<textarea
+								class="textarea overflow-hidden min-h-[42px] w-full"
+								rows="1"
+								placeholder="Enter to send, Shift+Enter for newline"
+								use:textareaAutosizeAction
+								on:keydown={handleKeyDown}
+								on:paste={handlePaste}
+								bind:value={input}
+								bind:this={textarea}
+								on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
+							/>
+							<!-- File drop zone overlay -->
+							{#if isDraggingFile}
+								<div
+									class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
+									transition:fade={{ duration: 150 }}
+									on:dragleave={(event) => (isDraggingFile = handleDragLeave(event))}
+									on:drop={handleFileDrop}
+									role="region"
+									aria-label="File drop area"
+								>
+									<FileDropzone
+										name="files"
+										accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
+										multiple
 									>
-										<FileDropzone
-											name="files"
-											accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
-											multiple
-										>
-											<span>Drop images here</span>
-										</FileDropzone>
-									</div>
-								{/if}
-							</div>
+										<span>Drop images here</span>
+									</FileDropzone>
+								</div>
+							{/if}
 						</div>
 						<!-- Action buttons -->
 						<div class="flex items-center">
 							<!-- Token count button -->
-							{#if input.length > 0 || attachments.length > 0}
+							{#if input.length > 0 || $attachments.length > 0}
 								<button
 									type="button"
 									class="btn btn-sm hidden md:inline"
 									class:animate-pulse={!!debounceTimer}
 									on:click={openTokenCostDialog}
 								>
-									<span class="flex items-center text-xs text-slate-500 dark:text-slate-200 gap-1"
-										><CircleStack class="w-5 h-5" /> {tokensLeft} left</span
-									>
+									<span class="flex items-center text-xs text-slate-500 dark:text-slate-200 gap-1">
+										<CircleStack class="w-5 h-5" />
+										{tokensLeft} left
+									</span>
 								</button>
 							{/if}
 							<!-- Send button -->
@@ -511,19 +491,7 @@
 								button="btn-icon btn-sm"
 								accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
 								multiple
-								on:change={(e) => {
-									// @ts-expect-error
-									const files = e.target.files;
-									if (files && files.length > 0) {
-										handleFiles(files, toastStore, attachments.length).then((newAttachments) => {
-											attachments = [...attachments, ...newAttachments];
-											// Clear the file input after processing
-											// @ts-expect-error
-											e.target.value = '';
-											shouldDebounce = true;
-										});
-									}
-								}}
+								on:change={handleFileChange}
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"

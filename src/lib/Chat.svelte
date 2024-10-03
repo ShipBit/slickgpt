@@ -4,7 +4,7 @@
 	import { renderMarkdown } from '$misc/markdownUtils';
 	import { afterNavigate } from '$app/navigation';
 	import type { Chat } from '$misc/shared';
-	import { chatStore, isLoadingAnswerStore, liveAnswerStore } from '$misc/stores';
+	import { chatStore, isLoadingAnswerStore, liveAnswerStore, attachments } from '$misc/stores';
 	import ChatMessages from './ChatMessages.svelte';
 
 	export let slug: string;
@@ -47,12 +47,14 @@
 	afterNavigate(() => {
 		scrollToBottom();
 	});
+
+	$: if ($attachments.length > 0) {
+		scrollToBottom();
+	}
 </script>
 
 {#if chat}
-	<div
-		class="flex flex-col container justify-end h-full mx-auto px-4 md:px-8 gap-6"
-	>
+	<div class="flex flex-col container justify-end h-full mx-auto px-4 md:px-8 gap-6">
 		<slot name="additional-content-top" />
 
 		{#if chat.messages.length > 0 || $isLoadingAnswerStore}

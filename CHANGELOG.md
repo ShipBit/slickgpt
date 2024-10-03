@@ -1,8 +1,14 @@
 # Changelog
 
+## October 3, 2024
+
+- added support for OpenAI's Vision capabilities (thanks to @Anajrim01)
+- fixed token calculation (thanks to @Anajrim01)
+- improved Markdown rendering for tables and paragraphs (thanks to @Anajrim01)
+
 ## September 11, 2024
 
-- replaced `snarkdown` with `markdown-it` (thanks to @Anajrim01). This should make code highlighting in completions more reliable, supports more syntaxes like LaTeX and fixes list numbering in completions.
+- replaced `snarkdown` with `markdown-it`. This should make code highlighting in completions more reliable, supports more syntaxes like LaTeX and fixes list numbering in completions. (thanks to @Anajrim01)
 - auto-generate titles after you have typed the first message (thanks to @Anajrim01)
 
 ## May 15, 2024

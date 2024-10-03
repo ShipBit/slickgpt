@@ -18,6 +18,11 @@ export const hasSeenGpt4oPrompt: Writable<boolean> = localStorageStore(
 	false
 );
 
+export const hasSeenVisionPrompt: Writable<boolean> = localStorageStore(
+	'slickgpt.hasSeenVisionPrompt',
+	false
+);
+
 export const autoLogin: Writable<boolean> = localStorageStore('slickgpt.autoLogin', false);
 
 export const liveAnswerStore: Writable<ChatMessage> = writable({

@@ -34,8 +34,6 @@
 		PUBLIC_GROQ_API_URL,
 		PUBLIC_MIDDLEWARE_API_URL,
 		PUBLIC_MISTRAL_API_URL,
-		PUBLIC_MODERATION,
-		PUBLIC_MODERATION_API_URL,
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
 	import { handlePaste, handleDragEnter, handleDragLeave } from '$misc/inputUtils';
@@ -95,58 +93,6 @@
 		: -1;
 	$: maxTokensCompletion = chat.settings.max_tokens;
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
-
-	// Check moderation API if enabled
-	async function checkModerationApi(messages: ChatMessage[], token: string) {
-		if (PUBLIC_MODERATION !== 'true') return true;
-
-		const textMessages = messages.map((msg) => msg.content);
-
-		try {
-			const moderationResponse = await fetch(PUBLIC_MODERATION_API_URL, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`
-				},
-				body: JSON.stringify({ input: textMessages })
-			});
-
-			if (!moderationResponse.ok) {
-				const err = await moderationResponse.json();
-				throw new Error(err.error);
-			}
-
-			const moderationJson = await moderationResponse.json();
-
-			for (let index = 0; index < moderationJson.results.length; index++) {
-				const result = moderationJson.results[index];
-
-				if (result.flagged) {
-					handleError({
-						data: JSON.stringify({
-							message: `Message ${index + 1} is globally flagged for moderation.`
-						})
-					});
-					return false;
-				}
-
-				for (const [category, flagged] of Object.entries(result.categories)) {
-					if (flagged) {
-						handleError({
-							data: JSON.stringify({ message: `Message ${index + 1} is flagged for ${category}.` })
-						});
-						return false;
-					}
-				}
-			}
-		} catch (error) {
-			console.error('Error checking moderation:', error);
-			return false;
-		}
-
-		return true;
-	}
 
 	async function handleSubmit() {
 		if (input.trim() === '' && attachments.length === 0) return;
@@ -220,13 +166,6 @@
 					token = $settingsStore.openAiApiKey!;
 					url = PUBLIC_OPENAI_API_URL;
 					break;
-			}
-
-			if (provider === AiProvider.OpenAi && messages) {
-				const moderationOk = await checkModerationApi(messages, token);
-				if (!moderationOk) {
-					return;
-				}
 			}
 
 			payload = {

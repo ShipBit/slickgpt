@@ -3,6 +3,7 @@
 ## October 3, 2024
 
 - added support for OpenAI's Vision capabilities (thanks to @Anajrim01)
+- migrated from localStorage to indexedDB because 5MB won't be enough to save images
 - fixed token calculation (thanks to @Anajrim01)
 - improved Markdown rendering for tables and paragraphs (thanks to @Anajrim01)
 

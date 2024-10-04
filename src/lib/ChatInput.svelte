@@ -250,7 +250,7 @@
 				const title = await suggestChatTitle({
 					...chat,
 					messages: [...chat.messages, { role: 'user', content: input.trim() }]
-				});
+				}) || chat.title;
 				chatStore.updateChat(slug, { title, hasUpdatedChatTitle: true }); // Store the variable in the chat store
 			}
 		} catch (err) {

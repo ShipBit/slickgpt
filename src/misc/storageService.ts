@@ -81,6 +81,22 @@ class IdbStorageService implements StorageService {
             console.error('Error in clear:', error);
         }
     }
+
+    migrateLocalStorageToIndexedDB() {
+        const keys = Object.keys(localStorage);
+        for (const key of keys) {
+            const value = localStorage.getItem(key);
+            if (value) {
+                try {
+                    const parsedValue = JSON.parse(value);
+                    this.setItem(key, parsedValue);
+                    localStorage.removeItem(key);
+                } catch (e) {
+                    console.error(`Failed to migrate key "${key}"`, e);
+                }
+            }
+        }
+    }
 }
 
 class InMemoryStorageService implements StorageService {
@@ -105,7 +121,12 @@ class InMemoryStorageService implements StorageService {
 
 const createStorageService = (): StorageService => {
     if (typeof window !== 'undefined' && 'indexedDB' in window) {
-        return new IdbStorageService();
+        const idbService = new IdbStorageService();
+        
+        // migrate old chat to indexedDb
+        idbService.migrateLocalStorageToIndexedDB();
+        
+        return idbService;
     }
     return new InMemoryStorageService();
 };

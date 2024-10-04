@@ -1,3 +1,5 @@
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+
 interface StorageService {
     getItem<T>(key: string): Promise<T | null>;
     setItem<T>(key: string, value: T): Promise<void>;
@@ -5,97 +7,109 @@ interface StorageService {
     clear(): Promise<void>;
 }
 
-class IndexedDbService implements StorageService {
-    private dbName = 'slickGPT';
-    private storeName = 'chatStore';
+interface MyDB extends DBSchema {
+    'chatStore': {
+        key: string;
+        value: any;
+    };
+}
 
-    private checkIndexedDb(): void {
-        if (typeof indexedDB === 'undefined') {
-            throw new Error('IndexedDB is not available in the current environment.');
+class IdbStorageService implements StorageService {
+    private dbName = 'slickGPT';
+    private storeName: 'chatStore' = 'chatStore';
+    private db: IDBPDatabase<MyDB> | null = null;
+
+    constructor() {
+        this.initDb();
+    }
+
+    private async initDb(): Promise<void> {
+        try {
+            this.db = await openDB<MyDB>(this.dbName, 1, {
+                upgrade(db) {
+                    db.createObjectStore('chatStore');
+                },
+            });
+        } catch (error) {
+            // Error handling in production should be done via proper logging service
         }
     }
 
-    private async getDb() {
-        this.checkIndexedDb();
-
-        return new Promise<IDBDatabase>((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, 1);
-            request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-                const db = (event.target as any).result as IDBDatabase;
-                db.createObjectStore(this.storeName);
-            };
-            request.onsuccess = (event: Event) => {
-                resolve((event.target as any).result as IDBDatabase);
-            };
-            request.onerror = (event: Event) => {
-                reject((event.target as any).error);
-            };
-        });
-    }
-
-    private async withStore<R>(
-        type: IDBTransactionMode,
-        callback: (store: IDBObjectStore, resolve: (value: R | PromiseLike<R>) => void, reject: (reason?: unknown) => void) => void
-    ): Promise<R> {
-        const db = await this.getDb();
-        const transaction = db.transaction(this.storeName, type);
-        const store = transaction.objectStore(this.storeName);
-        return new Promise<R>((resolve, reject) => {
-            callback(store, resolve, reject);
-            transaction.oncomplete = () => resolve(undefined as unknown as R);
-            transaction.onerror = (event: Event) => reject((event.target as any).error);
-        });
+    private async getDb(): Promise<IDBPDatabase<MyDB> | null> {
+        if (!this.db) {
+            await this.initDb();
+        }
+        return this.db;
     }
 
     async getItem<T>(key: string): Promise<T | null> {
-        return this.withStore<T | null>('readonly', (store, resolve, reject) => {
-            const request = store.get(key);
-            request.onsuccess = (event) => {
-                resolve((event.target as any).result || null);
-            };
-            request.onerror = (event: Event) => {
-                reject((event.target as any).error);
-            };
-        });
+        try {
+            const db = await this.getDb();
+            if (!db) return null;
+            return await db.get(this.storeName, key);
+        } catch (error) {
+            return null;
+        }
     }
 
     async setItem<T>(key: string, value: T): Promise<void> {
-        return this.withStore<void>('readwrite', (store, resolve, reject) => {
-            const request = store.put(value, key);
-            request.onsuccess = () => {
-                resolve();
-            };
-            request.onerror = (event: Event) => {
-                reject((event.target as any).error);
-            };
-        });
+        try {
+            const db = await this.getDb();
+            if (!db) return;
+            await db.put(this.storeName, value, key);
+        } catch (error) {
+            // Error handling in production should be done via proper logging service
+        }
     }
 
     async removeItem(key: string): Promise<void> {
-        return this.withStore<void>('readwrite', (store, resolve, reject) => {
-            const request = store.delete(key);
-            request.onsuccess = () => {
-                resolve();
-            };
-            request.onerror = (event: Event) => {
-                reject((event.target as any).error);
-            };
-        });
+        try {
+            const db = await this.getDb();
+            if (!db) return;
+            await db.delete(this.storeName, key);
+        } catch (error) {
+            // Error handling in production should be done via proper logging service
+        }
     }
 
     async clear(): Promise<void> {
-        return this.withStore<void>('readwrite', (store, resolve, reject) => {
-            const request = store.clear();
-            request.onsuccess = () => {
-                resolve();
-            };
-            request.onerror = (event: Event) => {
-                reject((event.target as any).error);
-            };
-        });
+        try {
+            const db = await this.getDb();
+            if (!db) return;
+            await db.clear(this.storeName);
+        } catch (error) {
+            // Error handling in production should be done via proper logging service
+        }
     }
 }
 
-const storageService: StorageService = new IndexedDbService();
+class InMemoryStorageService implements StorageService {
+    private storage: Map<string, any> = new Map();
+
+    async getItem<T>(key: string): Promise<T | null> {
+        return this.storage.get(key) || null;
+    }
+
+    async setItem<T>(key: string, value: T): Promise<void> {
+        this.storage.set(key, value);
+    }
+
+    async removeItem(key: string): Promise<void> {
+        this.storage.delete(key);
+    }
+
+    async clear(): Promise<void> {
+        this.storage.clear();
+    }
+}
+
+const createStorageService = (): StorageService => {
+    if (typeof window !== 'undefined' && 'indexedDB' in window) {
+        return new IdbStorageService();
+    }
+    return new InMemoryStorageService();
+};
+
+const storageService: StorageService = createStorageService();
 
 export default storageService;

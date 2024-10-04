@@ -6,24 +6,24 @@ import { ChatStorekeeper } from './chatStorekeeper';
 import type { Chat, ChatContent, ChatMessage, ClientSettings } from './shared';
 import type { AccountInfo } from '@azure/msal-browser';
 
-export const settingsStore: Writable<ClientSettings> = persistentStore('settingsStore', {});
+export const settingsStore: Writable<ClientSettings> = await persistentStore('settingsStore', {});
 
-export const hasSeenProPrompt: Writable<boolean> = persistentStore(
+export const hasSeenProPrompt: Writable<boolean> = await persistentStore(
 	'slickgpt.hasSeenProPrompt', 
 	false
 );
 
-export const hasSeenGpt4oPrompt: Writable<boolean> = persistentStore(
+export const hasSeenGpt4oPrompt: Writable<boolean> = await persistentStore(
 	'slickgpt.hasSeenGpt4oPrompt', 
 	false
 );
 
-export const hasSeenVisionPrompt: Writable<boolean> = persistentStore(
+export const hasSeenVisionPrompt: Writable<boolean> = await persistentStore(
 	'slickgpt.hasSeenVisionPrompt', 
 	false
 );
 
-export const autoLogin: Writable<boolean> = persistentStore('slickgpt.autoLogin', false);
+export const autoLogin: Writable<boolean> = await persistentStore('slickgpt.autoLogin', false);
 
 export const liveAnswerStore: Writable<ChatMessage> = writable({
 	role: 'assistant',
@@ -94,7 +94,7 @@ export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	countMessagesInCurrentBranch(chat: Chat): number;
 }
 
-const _chatStore: Writable<{ [key: string]: Chat }> = persistentStore('chatStore', {});
+const _chatStore: Writable<{ [key: string]: Chat }> = await persistentStore('chatStore', {});
 
 /**
  * Be careful when updating nested objects - they are overwritten, not merged!

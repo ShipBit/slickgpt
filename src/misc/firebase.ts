@@ -47,12 +47,19 @@ export async function loadChatFromDb(slug: string) {
 	const response = (await get(ref(db, `sharedchats/${slug}`))).toJSON() as Chat;
 
 	// firebase stores array as objects like { 0: whatever, 1: whateverelse }
+	const convertToArray = (obj: any): any[] => {
+		return Object.values(obj || {});
+	};
+
 	const convertMessagesToArray = (messagesObj: Chat | ChatMessage[]): ChatMessage[] => {
 		const messages: ChatMessage[] = [];
 		for (const message of Object.values(messagesObj)) {
 			const chatMessage = message as ChatMessage;
 			if (chatMessage.messages) {
 				chatMessage.messages = convertMessagesToArray(chatMessage.messages);
+			}
+			if (chatMessage.content && typeof chatMessage.content === 'object') {
+				chatMessage.content = convertToArray(chatMessage.content);
 			}
 			messages.push(chatMessage);
 		}

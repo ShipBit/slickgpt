@@ -29,9 +29,6 @@ export async function highlightCode() {
         if (language && hljs.getLanguage(language)) {
             highlight();
         } else {
-            // If language is not supported or not specified, use auto-detection
-            console.warn(`Language ${language ?? 'unspecified'} not supported, using auto-detection.`);
-
             // Remove the language class if present to allow auto-detection
             if (languageClass) block.classList.remove(languageClass);
 

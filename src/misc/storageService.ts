@@ -31,7 +31,7 @@ class IdbStorageService implements StorageService {
                 },
             });
         } catch (error) {
-            // Error handling in production should be done via proper logging service
+            console.error('Failed to initialize IndexedDB:', error);
         }
     }
 
@@ -58,7 +58,7 @@ class IdbStorageService implements StorageService {
             if (!db) return;
             await db.put(this.storeName, value, key);
         } catch (error) {
-            // Error handling in production should be done via proper logging service
+            console.error('Error in setItem:', error);
         }
     }
 
@@ -68,7 +68,7 @@ class IdbStorageService implements StorageService {
             if (!db) return;
             await db.delete(this.storeName, key);
         } catch (error) {
-            // Error handling in production should be done via proper logging service
+            console.error('Error in removeItem:', error);
         }
     }
 
@@ -78,7 +78,7 @@ class IdbStorageService implements StorageService {
             if (!db) return;
             await db.clear(this.storeName);
         } catch (error) {
-            // Error handling in production should be done via proper logging service
+            console.error('Error in clear:', error);
         }
     }
 }

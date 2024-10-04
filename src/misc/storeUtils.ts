@@ -3,7 +3,6 @@ import storageService from './storageService';
 
 export async function persistentStore<T>(key: string, initialValue: T): Promise<Writable<T>> {
   const store = writable<T>(initialValue);
-  let loadedFromStorage = false;
 
   try {
     const storedValue = await storageService.getItem<T>(key);
@@ -13,31 +12,26 @@ export async function persistentStore<T>(key: string, initialValue: T): Promise<
       await storageService.setItem(key, initialValue);
     }
   } catch (error) {
-    // handle err
+    console.error(`Error in persistentStore:`, error)
   }
 
-  loadedFromStorage = true;
 
   return {
     subscribe: store.subscribe,
     set: async (value: T) => {
       store.set(value);
-      if (loadedFromStorage) {
-        try {
-          await storageService.setItem(key, value);
-        } catch (error) {
-          // handle err
-        }
+      try {
+        await storageService.setItem(key, value);
+      } catch (error) {
+        console.error(`Error setting value for ${key}:`, error);
       }
+
     },
     update: async (updater: (value: T) => T) => {
       store.update(currentValue => {
         const newValue = updater(currentValue);
-        if (loadedFromStorage) {
-          storageService.setItem(key, newValue).catch(error => {
-            // handle err
-          });
-        }
+        // unawaitable as syncronous updater.
+        storageService.setItem(key, newValue)
         return newValue;
       });
     }

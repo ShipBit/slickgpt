@@ -176,6 +176,7 @@ While ChatGPT offers a great conversational AI experience, it lacks some feature
 | Use Your Own API Key         | ✅       | ✅                      |
 | Edit and branch messages     | ✅       | ✅                      |
 | Stop generation              | ✅       | ✅                      |
+| Vision                       | ✅       | ✅
 | Share and continue chats     | ✅       | (✅) (can't import)     |
 | Host yourself / Run locally  | ✅       | ❌                      |
 | Set context / system message | ✅       | ❌                      |

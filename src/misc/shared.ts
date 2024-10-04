@@ -202,7 +202,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 
 	let result;
 	if (isUsingPro) {
-		result = (await response.text()).replace(/^[\'\"]|[\'\"]$/g, '').trim()
+		result = (await response.text()).replace(/^[\'\"]|[\'\"]$/g, '').trim();
 	} else {
 		const res = await response.json();
 		const title = res.choices[0].message.content.replace(/^[\'\"]|[\'\"]$/g, '').trim();

@@ -71,13 +71,13 @@ If you're really into AI, you can also combine it with our other project, [Wingm
 
 ![SlickGPT][slickgpt-screenshot]
 
-SlickGPT is a light-weight "use-your-own-API-key" (or optional: subscription-based) web client for OpenAI-compatible APIs written in Svelte. It offers them a very fancy user interface with a rich feature set like managing a local chat history (in the localStorage), a userless "Share" function for chats, a prominent context editor, and token cost calculation and distribution. You can run the client locally, host it yourself or use our public instance.
+SlickGPT is a light-weight "use-your-own-API-key" (or optional: subscription-based) web client for OpenAI-compatible APIs written in Svelte. It offers them a very fancy user interface with a rich feature set like managing a local chat history (in your browser's IndexedDb), a userless "Share" function for chats, a prominent context editor, and token cost calculation and distribution. You can run the client locally, host it yourself or use our public instance.
 
 ## Feature Overview
 
 - **Fancy User Interface** <br> Interact with an elegant and cleanUI that makes chatting fun and explains a lot of the heavy stuff to users.
 - **Mobile first and fully responsive** <br> SlickGPT is always at your hand. Literally, on your phone.
-- **Local History** <br> Your chat history is stored in localStorage and never leaves your machine (until you actively decide to share chats).
+- **Local History** <br> Your chat history is stored in your browser's IndexedDb and never leaves your machine (until you actively decide to share chats).
 - **Delete and edit messages** <br> Just like you are used to from the OpenAI client.
 - **Auto-suggest chat titles** <br> SlickGPT can suggest a title for your chat based on the first message you send.
 - **Share Chats** <br> Generate shareable links for your chats with 3 clicks to collaborate and brainstorm ideas with your team or friends. Without any authentication.
@@ -116,7 +116,7 @@ See a **YouTube video** for a quick feature overview (from an older version):
 
 ### Local chat history
 
-Your chat history is stored in the localStorage of your browser and never leaves your machine (unless you actively decide to share a chat.
+Your chat history is stored in the IndexedDb of your browser and never leaves your machine (unless you actively decide to share a chat.
 
 <a href="static/docu/history.png">
   <img src="static/docu/history.png" alt="History of chats" height="300">
@@ -211,9 +211,9 @@ See the [open issues](https://github.com/ShipBit/slickgpt/issues) for a full lis
 
 SlickGPT uses [Svelte](https://svelte.dev/), [SvelteKit](https://kit.svelte.dev/) and [Skeleton UI](https://www.skeleton.dev/) as frontend foundation.
 
-The secret sauce of SlickGPT is that almost everything is stored in the `localStorage` of the browser. One case where it leaves this boundary is, of course, when a user communicates with the [OpenAI API](https://platform.openai.com/). While questions are simple POST requests, responses are sent back to the client using the native [EventSource API](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) and rendered as a "live stream" just like the ChatGPT client does.
+The secret sauce of SlickGPT is that almost everything is stored in the `IndexedDb` of the browser. One case where it leaves this boundary is, of course, when a user communicates with the [OpenAI API](https://platform.openai.com/). While questions are simple POST requests, responses are sent back to the client using the native [EventSource API](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) and rendered as a "live stream" just like the ChatGPT client does.
 
-The other case is when users share their chats with others using the "userless share" feature. Then SlickGPT dumps the appropriate `localStorage` object in a simple [Firebase Realtime Database](https://firebase.google.com/docs/database) and tags it with a random `updateToken`. A serverless (Edge) function sends this token back to the client where it is stored in the `localStorage` next to the original chat. The token can be used later to update or unshare chats.
+The other case is when users share their chats with others using the "userless share" feature. Then SlickGPT dumps the appropriate `IndexedDb` object in a simple [Firebase Realtime Database](https://firebase.google.com/docs/database) and tags it with a random `updateToken`. A serverless (Edge) function sends this token back to the client where it is stored in the `IndexedDb` next to the original chat. The token can be used later to update or unshare chats.
 
 SlickGPT uses Svelte endpoints as "proxy" between the client and the external APIs. This way, the client does not need to know any Firebase secrets at all and you have a great starting point to implement more complex "backend" logic if needed.
 

@@ -83,6 +83,8 @@ class IdbStorageService implements StorageService {
 	async migrateLocalStorageToIndexedDB() {
 		const keys = Object.keys(localStorage);
 		for (const key of keys) {
+			if (key.includes('mode')) continue; // skip theme settings
+
 			const value = localStorage.getItem(key);
 			if (value) {
 				try {

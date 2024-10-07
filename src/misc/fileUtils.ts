@@ -2,20 +2,20 @@ import type { ChatContent } from './shared';
 import { showToast } from './shared';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 
-const MAX_ATTACHMENTS = 10;
+export const MAX_ATTACHMENTS_SIZE = 10;
 
 export async function uploadFiles(
 	files: FileList,
 	toastStore: ToastStore,
 	uploadedCount: number
 ): Promise<ChatContent[]> {
-	const remainingSlots = MAX_ATTACHMENTS - uploadedCount;
+	const remainingSlots = MAX_ATTACHMENTS_SIZE - uploadedCount;
 	const filesToUpload = Math.min(files.length, remainingSlots);
 
 	if (filesToUpload <= 0) {
 		showToast(
 			toastStore,
-			`Maximum number of images (${MAX_ATTACHMENTS}) already uploaded.`,
+			`Maximum number of images (${MAX_ATTACHMENTS_SIZE}) already uploaded.`,
 			'warning'
 		);
 		return [];
@@ -69,7 +69,23 @@ function showUploadResult(uploadedCount: number, totalCount: number, toastStore:
 		const message =
 			skippedCount > 0
 				? `Uploaded ${uploadedCount} out of ${totalCount} images. ${skippedCount} file(s) skipped (not images).`
-				: `Uploaded ${uploadedCount} out of ${totalCount} images. Maximum limit (${MAX_ATTACHMENTS}) reached.`;
+				: `Uploaded ${uploadedCount} out of ${totalCount} images. Maximum limit (${MAX_ATTACHMENTS_SIZE}) reached.`;
 		showToast(toastStore, message, 'warning');
 	}
+}
+
+export function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = event => {
+			const result = event.target?.result;
+			if (result instanceof ArrayBuffer) {
+				resolve(result);
+			} else {
+				reject(new Error("File read did not return an ArrayBuffer."));
+			}
+		};
+		reader.onerror = error => reject(error);
+		reader.readAsArrayBuffer(file);
+	});
 }

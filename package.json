@@ -65,6 +65,7 @@
 		"javascript-time-ago": "^2.5.10",
 		"js-tiktoken": "^1.0.14",
 		"openai": "^4.38.2",
+		"pdfjs-dist": "^4.7.76",
 		"random-word-slugs": "^0.1.7",
 		"sse.js": "^2.4.1",
 		"svelte-command-palette": "^1.2.1",

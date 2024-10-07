@@ -1,0 +1,39 @@
+.markdown-content :where(p:not(:last-child)) {
+	@apply mb-6;
+}
+
+.markdown-content :where(h1, h2, h3, h4, h5, h6) {
+    @apply mt-8 mb-4;
+}
+
+.markdown-content :where(ul, ol) {
+    @apply my-4;
+}
+
+.markdown-content :where(li:not(:last-child)) {
+    @apply mb-2;
+}
+
+.markdown-content :where(hr) {
+	@apply my-8;
+}
+
+.markdown-content :where(table) {
+	@apply min-w-full border border-surface-300-600-token rounded-lg overflow-hidden shadow-sm mb-6;
+}
+
+.markdown-content :where(thead) {
+	@apply bg-surface-200-700-token;
+}
+
+.markdown-content :where(th) {
+	@apply px-6 py-3 text-left text-xs font-medium text-surface-700-200-token uppercase tracking-wider;
+}
+
+.markdown-content :where(tbody) {
+	@apply divide-y divide-surface-300-600-token;
+}
+
+.markdown-content :where(td) {
+	@apply px-6 py-4 text-sm text-surface-900-50-token;
+}

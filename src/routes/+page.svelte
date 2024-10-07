@@ -18,6 +18,7 @@
 		isTimeagoInitializedStore,
 		hasSeenProPrompt,
 		hasSeenGpt4oPrompt,
+		hasSeenVisionPrompt,
 		isPro,
 		settingsStore
 	} from '$misc/stores';
@@ -47,12 +48,17 @@
 
 		if (!$hasSeenGpt4oPrompt) {
 			$hasSeenGpt4oPrompt = true;
-			showToast(toastStore, '🎉 GPT-4o-mini is here! 🎉', 'primary', false, undefined, {
+			showToast(toastStore, '🧠 GPT-4o-mini is here!', 'primary', false, undefined, {
 				label: 'Use as default',
 				response: () => {
 					$settingsStore.defaultModel = AiModel.Gpt4oMini;
 				}
 			});
+		}
+
+		if (!$hasSeenVisionPrompt) {
+			$hasSeenVisionPrompt = true;
+			showToast(toastStore, '🖼️ Vision is now supported for OpenAI models!', 'primary', false);
 		}
 	});
 

@@ -1,24 +1,29 @@
 import { writable, type Readable, type Writable, readable, get, derived } from 'svelte/store';
-import { localStorageStore } from '@skeletonlabs/skeleton';
+import { persistentStore } from './storeUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { EventSource } from './eventSource';
 import { ChatStorekeeper } from './chatStorekeeper';
-import type { Chat, ChatMessage, ClientSettings } from './shared';
+import type { Chat, ChatContent, ChatMessage, ClientSettings } from './shared';
 import type { AccountInfo } from '@azure/msal-browser';
 
-export const settingsStore: Writable<ClientSettings> = localStorageStore('settingsStore', {});
+export const settingsStore: Writable<ClientSettings> = await persistentStore('settingsStore', {});
 
-export const hasSeenProPrompt: Writable<boolean> = localStorageStore(
-	'slickgpt.hasSeenProPrompt',
+export const hasSeenProPrompt: Writable<boolean> = await persistentStore(
+	'slickgpt.hasSeenProPrompt', 
 	false
 );
 
-export const hasSeenGpt4oPrompt: Writable<boolean> = localStorageStore(
-	'slickgpt.hasSeenGpt4oPrompt',
+export const hasSeenGpt4oPrompt: Writable<boolean> = await persistentStore(
+	'slickgpt.hasSeenGpt4oPrompt', 
 	false
 );
 
-export const autoLogin: Writable<boolean> = localStorageStore('slickgpt.autoLogin', false);
+export const hasSeenVisionPrompt: Writable<boolean> = await persistentStore(
+	'slickgpt.hasSeenVisionPrompt', 
+	false
+);
+
+export const autoLogin: Writable<boolean> = await persistentStore('slickgpt.autoLogin', false);
 
 export const liveAnswerStore: Writable<ChatMessage> = writable({
 	role: 'assistant',
@@ -51,11 +56,11 @@ export const isPro = derived(account, ($account) => {
 		const subscriptionDate =
 			$account?.idTokenClaims &&
 			($account?.idTokenClaims['extension_PayProSubscriptionEndDate'] || null);
-	
+
 		if (subscriptionDate) {
 			const endDate = new Date(subscriptionDate as string);
 			const now = new Date();
-	
+
 			return endDate >= now;
 		}
 	}
@@ -66,6 +71,8 @@ export const isPro = derived(account, ($account) => {
 export const hasAcceptedTerms = writable(true);
 
 export const hasSubscriptionChanged = writable(false);
+
+export const attachments: Writable<ChatContent[]> = writable([]);
 
 /**
  * Custom chat store
@@ -87,7 +94,7 @@ export interface ChatStore extends Writable<{ [key: string]: Chat }> {
 	countMessagesInCurrentBranch(chat: Chat): number;
 }
 
-const _chatStore: Writable<{ [key: string]: Chat }> = localStorageStore('chatStore', {});
+const _chatStore: Writable<{ [key: string]: Chat }> = await persistentStore('chatStore', {});
 
 /**
  * Be careful when updating nested objects - they are overwritten, not merged!

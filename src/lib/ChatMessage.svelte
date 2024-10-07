@@ -2,7 +2,7 @@
 	import type { ChatMessage } from '$misc/shared';
 	import { createEventDispatcher } from 'svelte';
 	import { type ModalSettings, getModalStore } from '@skeletonlabs/skeleton';
-	import { renderMarkdown } from '$misc/markdownKatex';
+	import { renderMarkdown } from '$misc/markdownUtils';
 	import { XMark, PencilSquare } from '@inqling/svelte-icons/heroicon-24-solid';
 	import { chatStore } from '$misc/stores';
 	import { countTokens } from '$misc/openai';
@@ -78,8 +78,8 @@
 	</div>
 
 	<!-- Message Content -->
-	<div class="text-sm">
-		{@html renderMarkdown(message.content)}
+	<div class="text-sm markdown-content">
+		{@html renderMarkdown(message)}
 		<!-- {@html message.content} -->
 	</div>
 </div>

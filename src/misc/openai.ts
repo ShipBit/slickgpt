@@ -144,16 +144,67 @@ export const providers: AiProvider[] = [AiProvider.OpenAi, AiProvider.Mistral, A
 
 /**
  * see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander
+ * see https://platform.openai.com/docs/guides/vision/calculating-costs > Calculating costs
  */
 export function countTokens(message: ChatMessage): number {
-	let num_tokens = 4; // every message follows <im_start>{role/name}\n{content}<im_end>\n
-	for (const [key, value] of Object.entries(message)) {
-		if (key === 'name' || key === 'role' || key === 'content') {
-			const tokensCount = tokenizer.encode(value).length;
-			num_tokens += (key === 'name') ? tokensCount - 1 : tokensCount;
+	// Initial token count to account for the message structure
+	// <im_start>{role/name}\n{content}<im_end>\n
+	let num_tokens = 4;
+
+	// Process content, which can now be an array of ChatContent
+	if (Array.isArray(message.content)) {
+		for (const contentItem of message.content) {
+			if (contentItem.type === 'text' && contentItem.text) {
+				// Encoding the text content and adding the token count
+				num_tokens += tokenizer.encode(contentItem.text).length;
+			} else if (contentItem.type === 'image_url' && contentItem.image_url) {
+				const { width, height } = getImageDimensions(contentItem.image_url.url);
+				// Process image content based on detail level
+				if (contentItem.image_url.detail === 'low') {
+					// Low detail images have a fixed token cost of 85 tokens
+					num_tokens += 85;
+				} else if (contentItem.image_url.detail === 'high') {
+					// Scale image to fit within 2048 x 2048
+					const scaled = scaleImageToFit2048(width, height);
+					// Further scale image so shortest side is 768px
+					const finalScaled = scaleImageShortestSideTo768(scaled.width, scaled.height);
+					// Calculate the number of 512px tiles
+					const numTiles = Math.ceil(finalScaled.width / 512) * Math.ceil(finalScaled.height / 512);
+					// Calculate total token cost for the image
+					// Each 512px square costs 170 tokens, plus an additional base cost of 85 tokens
+					num_tokens += 170 * numTiles + 85;
+				}
+			}
 		}
+	} else if (typeof message.content === 'string') {
+		// Backward compatibility: if content is a string, encode it and add its token length
+		num_tokens += tokenizer.encode(message.content).length;
 	}
+
+	// If a name is present, it replaces the role. Otherwise, the role is processed.
+	num_tokens += message.name ? tokenizer.encode(message.name).length : tokenizer.encode(message.role || '').length;
+
 	return num_tokens;
+}
+
+function getImageDimensions(image_url: string): { width: number; height: number } {
+	const img = new Image();
+	img.src = image_url;
+	return { width: img.width, height: img.height };
+}
+
+function scaleImageToFit2048(width: number, height: number): { width: number; height: number } {
+	if (width > 2048 || height > 2048) {
+		const scale = 2048 / Math.max(width, height);
+		return { width: Math.round(width * scale), height: Math.round(height * scale) };
+	}
+	return { width, height };
+}
+
+function scaleImageShortestSideTo768(width: number, height: number): { width: number; height: number } {
+	const shortestSide = Math.min(width, height);
+	const scale = 768 / shortestSide;
+	return { width: Math.round(width * scale), height: Math.round(height * scale) };
 }
 
 export function modelExists(modelName: AiModel): boolean {
@@ -194,12 +245,12 @@ export function estimateChatCost(chat: Chat): ChatCost {
 
 export function getProviderForModel(model: AiModel): AiProvider {
 	if (model in models && models[model] && models[model].provider) {
-	  return models[model].provider;
+		return models[model].provider;
 	}
-	
+
 	// default
 	return AiProvider.OpenAi;
-  }
+}
 
 export function getDefaultModelForProvider(provider: AiProvider): AiModel {
 	return (Object.keys(models) as AiModel[]).find(key => models[key].provider === provider)!;

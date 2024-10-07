@@ -26,8 +26,18 @@ import {
 } from '$env/static/public';
 import { AuthService } from './authService';
 
+export interface ChatContent {
+	type: 'text' | 'image_url';
+	text?: string;
+	image_url?: {
+		url: string;
+		detail: 'low' | 'high';
+	};
+	fileName?: string;
+}
+
 export interface ChatMessage {
-	content: string;
+	content: string | ChatContent[];
 	role: 'system' | 'user' | 'assistant';
 	name?: string;
 	id?: string;
@@ -45,6 +55,7 @@ export interface Chat {
 
 	isImported?: boolean;
 	updateToken?: string;
+	hasUpdatedChatTitle?: boolean;
 }
 
 export interface ClientSettings {
@@ -125,8 +136,12 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		),
 		{
 			role: 'user',
-			content:
-				"Suggest a short title for this chat, summarising its content. Take the 'system' message into account and the first prompt from me and your first answer. The title should not be longer than 100 chars. Answer with just the title. Don't use punctuation in the title."
+			content: [
+				{
+					type: 'text',
+					text: "Suggest a short, relevant title for our conversation, summarizing the main topic of the conversation. Consider the 'system' message, my first message, and your first message. The title should be in the same language I used in my message. If I wrote German, the title suggestion should be in German. If I wrote English, the title suggestion should be in English. The title suggestion should never exceed 100 characters and should provide only the title in plain-text without special characters, punctuation or quotation marks."
+				}
+			]
 		} as ChatCompletionMessageParam
 	];
 
@@ -152,7 +167,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 				topP: 1,
 				stopSequences: []
 			},
-			model: models[AiModel.Gpt35Turbo].middlewareDeploymentName || AiModel.Gpt35Turbo,
+			model: models[AiModel.Gpt4oMini].middlewareDeploymentName || AiModel.Gpt4oMini,
 			stream: false
 		};
 	} else {
@@ -192,10 +207,10 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 
 	let result;
 	if (isUsingPro) {
-		result = await response.text();
+		result = (await response.text()).replace(/^[\'\"]|[\'\"]$/g, '').trim();
 	} else {
 		const res = await response.json();
-		const title = res.choices[0].message.content.replace(/(^['"])|(['"]$)/g, '').trim();
+		const title = res.choices[0].message.content.replace(/^[\'\"]|[\'\"]$/g, '').trim();
 		result = title;
 	}
 

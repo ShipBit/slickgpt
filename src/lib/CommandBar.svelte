@@ -3,6 +3,7 @@
 	import CommandPalette, { defineActions, createStoreMethods } from 'svelte-command-palette';
 	import { goto } from '$app/navigation';
 	import { chatStore } from '$misc/stores';
+	import { processChatContent } from '$misc/chatUtils';
 
 	const paletteMethods = createStoreMethods();
 
@@ -12,14 +13,15 @@
 	let key = 0;
 
 	$: {
+		// Sorting the chats by creation date, most recent first
 		sortedChats = Object.entries($chatStore).sort((a, b) => {
 			return new Date(b[1].created).getTime() - new Date(a[1].created).getTime();
 		});
+		// Mapping chat details to actions
 		chatActions = sortedChats.map(([slug, chat]) => {
-			const firstMessage =
-				chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].content || '' : '';
-			const secondMessage =
-				chat.messages.length > 1 ? chat.messages[chat.messages.length - 2].content || '' : '';
+			const processedContents = processChatContent(chat.messages);
+			const firstMessage = processedContents[0] || '';
+			const secondMessage = processedContents[1] || '';
 
 			return {
 				title: chat.title,
@@ -31,6 +33,7 @@
 				keywords: [firstMessage, secondMessage]
 			};
 		});
+
 		actions = defineActions(chatActions);
 		key++;
 	}

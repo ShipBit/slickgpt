@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { afterUpdate, onMount } from 'svelte';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
-	import { renderMarkdown } from '$misc/markdownKatex';
+	import { renderMarkdown } from '$misc/markdownUtils';
 	import { afterNavigate } from '$app/navigation';
 	import type { Chat } from '$misc/shared';
-	import { chatStore, isLoadingAnswerStore, liveAnswerStore } from '$misc/stores';
+	import { chatStore, isLoadingAnswerStore, liveAnswerStore, attachments } from '$misc/stores';
 	import ChatMessages from './ChatMessages.svelte';
 
 	export let slug: string;
@@ -47,12 +47,14 @@
 	afterNavigate(() => {
 		scrollToBottom();
 	});
+
+	$: if ($attachments.length > 0) {
+		scrollToBottom();
+	}
 </script>
 
 {#if chat}
-	<div
-		class="flex flex-col container justify-end h-full mx-auto px-4 md:px-8 gap-6"
-	>
+	<div class="flex flex-col container justify-end h-full mx-auto px-4 md:px-8 gap-6">
 		<slot name="additional-content-top" />
 
 		{#if chat.messages.length > 0 || $isLoadingAnswerStore}
@@ -64,7 +66,7 @@
 				{#if $isLoadingAnswerStore}
 					<div class="place-self-start">
 						<div class="p-5 rounded-2xl variant-ghost-tertiary rounded-tl-none">
-							{@html renderMarkdown($liveAnswerStore.content)}
+							{@html renderMarkdown($liveAnswerStore)}
 						</div>
 					</div>
 				{/if}

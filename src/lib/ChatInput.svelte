@@ -39,6 +39,7 @@
 	} from '$env/static/public';
 	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
 	import { uploadFiles } from '$misc/fileUtils';
+	import { handlePdfExtractionRequest } from '$misc/handleFiles';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -394,7 +395,8 @@
 	async function handleFileDrop(event: DragEvent) {
 		isDraggingFile = false;
 		if (event.dataTransfer?.files) {
-			await uploadFilesAndDebounce(event.dataTransfer.files);
+			await handlePdfExtractionRequest(event.dataTransfer.files[0]);
+			// await uploadFilesAndDebounce(event.dataTransfer.files);
 		}
 	}
 
@@ -458,7 +460,7 @@
 								>
 									<FileDropzone
 										name="files"
-										accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
+										accept="image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf"
 										multiple
 									>
 										<span>Drop images here</span>

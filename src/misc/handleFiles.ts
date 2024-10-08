@@ -1,10 +1,11 @@
-import { getDocument, OPS } from 'pdfjs-dist';
+import { getDocument, OPS, GlobalWorkerOptions } from 'pdfjs-dist';
 import { MAX_ATTACHMENTS_SIZE, readFileAsArrayBuffer } from './fileUtils'
 import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
+GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.mjs';
+
 async function loadPdf(arrayBuffer: ArrayBuffer) {
-    const pdf = await getDocument({ data: arrayBuffer }).promise;
-    return pdf;
+    return await getDocument({ data: arrayBuffer }).promise;
 }
 
 async function extractTextContent(page: PDFPageProxy) {
@@ -14,10 +15,7 @@ async function extractTextContent(page: PDFPageProxy) {
             return {
                 type: 'text',
                 content: item.str,
-                x: item.transform[4],
-                y: item.transform[5],
-                width: item.width,
-                height: item.height
+                position: { x: item.transform[4], y: item.transform[5] },
             };
         }
         return null;
@@ -30,20 +28,22 @@ async function extractImageData(page: PDFPageProxy) {
 
     for (let i = 0; i < operatorList.fnArray.length && images.length < MAX_ATTACHMENTS_SIZE; i++) {
         if (operatorList.fnArray[i] === OPS.paintImageXObject) {
-            const image = operatorList.argsArray[i][0];
-            const imageDictionary = await page.objs.get(image);
+            const imageDictionary = operatorList.argsArray[i][0];
+            const image = await page.objs.get(imageDictionary);
+            const base64Image = null; // convert imageDictionary to base64
             images.push({
                 type: 'image',
-                width: imageDictionary.width,
-                height: imageDictionary.height,
-                x: operatorList.argsArray[i][1],
-                y: operatorList.argsArray[i][2]
+                base64: base64Image,
+                position: { x: operatorList.argsArray[i][1], y: operatorList.argsArray[i][2] },
+                width: image.width,
+                height: image.height
             });
         }
     }
 
     return images;
 }
+
 
 async function extractPdfContent(arrayBuffer: ArrayBuffer) {
     try {
@@ -58,10 +58,11 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
             result = result.concat(textContent, imageData);
         }
 
-        return result;
+        // Convert result to string format
+        return JSON.stringify(result); // Return as a string
     } catch (error) {
         console.error('Error processing PDF:', error);
-        return [{ type: 'error', message: (error as Error).message }];
+        return JSON.stringify([{ type: 'error', message: (error as Error).message }]);
     }
 }
 
@@ -77,7 +78,9 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 //     }
 // }
 
-async function handlePdfExtractionRequest(file: File) {
+export async function handlePdfExtractionRequest(file: File) {
     const arrayBuffer = await readFileAsArrayBuffer(file);
-    return await extractPdfContent(arrayBuffer);
+    const content = await extractPdfContent(arrayBuffer);
+    console.log(content);
+    return null;
 }

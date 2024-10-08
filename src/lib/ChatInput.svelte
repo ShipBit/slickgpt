@@ -38,8 +38,7 @@
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
 	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
-	import { uploadFiles } from '$misc/fileUtils';
-	import { handlePdfExtractionRequest } from '$misc/handleFiles';
+	import { uploadFiles, handleFileExtractionRequest } from '$misc/fileUtils';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -395,8 +394,7 @@
 	async function handleFileDrop(event: DragEvent) {
 		isDraggingFile = false;
 		if (event.dataTransfer?.files) {
-			await handlePdfExtractionRequest(event.dataTransfer.files[0]);
-			// await uploadFilesAndDebounce(event.dataTransfer.files);
+			await uploadFilesAndDebounce(event.dataTransfer.files);
 		}
 	}
 

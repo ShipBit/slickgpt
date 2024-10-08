@@ -82,15 +82,19 @@ class IdbStorageService implements StorageService {
 
 	async migrateLocalStorageToIndexedDB() {
 		const keys = Object.keys(localStorage);
-		for (const key of keys) {
-			if (key.includes('mode')) continue; // skip theme settings
 
+		const authSubstrings = ['msal.', 'mode', 'shipbit']; // don't migrate these
+
+		for (const key of keys) {
 			const value = localStorage.getItem(key);
 			if (value) {
 				try {
-					const parsedValue = JSON.parse(value);
-					await this.setItem(key, parsedValue);
-					localStorage.removeItem(key);
+					const isAuthKey = authSubstrings.some(substring => key.includes(substring));
+					if (!isAuthKey) {
+						const parsedValue = JSON.parse(value);
+						await this.setItem(key, parsedValue);
+						localStorage.removeItem(key);
+					}
 				} catch (e) {
 					console.error(`Failed to migrate key "${key}"`, e);
 				}

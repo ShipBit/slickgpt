@@ -6,8 +6,8 @@ import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
 // This needs to be changed to a more precise way
 GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.mjs';
-
 export const MAX_ATTACHMENTS_SIZE = 10;
+const allowedFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
 
 export async function uploadFiles(
 	files: FileList,
@@ -25,8 +25,6 @@ export async function uploadFiles(
 		);
 		return [];
 	}
-
-	const allowedFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
 
 	const newAttachments = await Promise.all(
 		Array.from(files)
@@ -120,19 +118,33 @@ async function extractImageData(page: PDFPageProxy) {
 	for (let i = 0; i < operatorList.fnArray.length && images.length < MAX_ATTACHMENTS_SIZE; i++) {
 		if (operatorList.fnArray[i] === OPS.paintImageXObject) {
 			const imageDictionary = operatorList.argsArray[i][0];
-			const image = await page.objs.get(imageDictionary);
-			const name = image.name;
-			const base64Image = null; // convert image to base64
-			images.push({
-				type: 'image',
-				name: name,
-				base64: base64Image,
+			const imageData = await page.objs.get(imageDictionary);
 
-				// positon and image witdh-height same(?)
-				position: { x: operatorList.argsArray[i][1], y: operatorList.argsArray[i][2] },
-				width: image.width,
-				height: image.height
-			});
+			// Check if imageData has a bitmap property
+			if (imageData && imageData.bitmap instanceof ImageBitmap) {
+				const imageBitmap = imageData.bitmap;
+
+				// Create a canvas to draw the image
+				const canvas = document.createElement('canvas');
+				const context = canvas.getContext('2d');
+				canvas.width = imageBitmap.width;
+				canvas.height = imageBitmap.height;
+				context?.drawImage(imageBitmap, 0, 0, imageBitmap.width, imageBitmap.height);
+
+				// Convert the canvas to a base64 string
+				const base64Image = canvas.toDataURL();
+
+				images.push({
+					type: 'image',
+					name: imageDictionary.name, // Adjust if necessary
+					base64: base64Image,
+					position: { x: operatorList.argsArray[i][1], y: operatorList.argsArray[i][2] },
+					width: imageBitmap.width,
+					height: imageBitmap.height
+				});
+			} else {
+				console.warn('Image data is missing a valid bitmap:', imageData);
+			}
 		}
 	}
 
@@ -178,6 +190,8 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 	}
 }
 
+
+// Main function to handle all the file extensions
 export async function handleFileExtractionRequest(file: File) {
 	const arrayBuffer = await readFileAsArrayBuffer(file);
 

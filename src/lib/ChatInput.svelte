@@ -394,7 +394,8 @@
 	async function handleFileDrop(event: DragEvent) {
 		isDraggingFile = false;
 		if (event.dataTransfer?.files) {
-			await uploadFilesAndDebounce(event.dataTransfer.files);
+			console.log(await handleFileExtractionRequest(event.dataTransfer.files[0]));
+			// await uploadFilesAndDebounce(event.dataTransfer.files);
 		}
 	}
 

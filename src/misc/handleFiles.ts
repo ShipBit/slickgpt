@@ -15,7 +15,7 @@ async function extractTextContent(page: PDFPageProxy) {
             return {
                 type: 'text',
                 content: item.str,
-                position: { x: item.transform[4], y: item.transform[5] },
+                position: { x: item.transform[4], y: item.transform[5] }
             };
         }
         return null;
@@ -30,10 +30,14 @@ async function extractImageData(page: PDFPageProxy) {
         if (operatorList.fnArray[i] === OPS.paintImageXObject) {
             const imageDictionary = operatorList.argsArray[i][0];
             const image = await page.objs.get(imageDictionary);
-            const base64Image = null; // convert imageDictionary to base64
+            const name = image.name;
+            const base64Image = null; // convert image to base64
             images.push({
                 type: 'image',
+                name: name,
                 base64: base64Image,
+
+                // positon and image witdh-height same(?)
                 position: { x: operatorList.argsArray[i][1], y: operatorList.argsArray[i][2] },
                 width: image.width,
                 height: image.height
@@ -44,28 +48,44 @@ async function extractImageData(page: PDFPageProxy) {
     return images;
 }
 
-
 async function extractPdfContent(arrayBuffer: ArrayBuffer) {
     try {
         const pdfDocument = await loadPdf(arrayBuffer);
         const numPages = pdfDocument.numPages;
-        let result: any = [];
+        let textResults: any[] = [];
+        let imageResults: any[] = [];
 
         for (let i = 1; i <= numPages; i++) {
             const page = await pdfDocument.getPage(i);
+
             const textContent = await extractTextContent(page);
             const imageData = await extractImageData(page);
-            result = result.concat(textContent, imageData);
+
+            textResults = textResults.concat(textContent);
+
+            imageData.forEach((img, index) => {
+                textResults.push({
+                    type: 'imageData',
+                    content: `Image ${index + 1} at position (${img.position.x}, ${img.position.y})`,
+                    position: img.position
+                });
+            });
+
+            imageResults.push(...imageData.map(img => ({ ...img, label: img.name })));
         }
 
-        // Convert result to string format
+        // Create a cohesive JSON structure
+        const result = {
+            textContent: textResults,
+            images: imageResults
+        };
+
         return JSON.stringify(result); // Return as a string
     } catch (error) {
         console.error('Error processing PDF:', error);
         return JSON.stringify([{ type: 'error', message: (error as Error).message }]);
     }
 }
-
 
 // For later
 // async function handleFileExtractionRequest(file: File) {

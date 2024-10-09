@@ -9,7 +9,6 @@ GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.mjs'
 
 export const MAX_ATTACHMENTS_SIZE = 10;
 const permittedImageFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
-const images: ChatContent[] = [];
 
 // export async function uploadFiles(
 // 	files: FileList,
@@ -104,7 +103,8 @@ async function extractTextContent(page: PDFPageProxy) {
 		if ('str' in item) {
 			return {
 				type: 'text',
-				content: item.str,
+				// TODO: maybe add a flag to switch between precise (expensive) and default (cheap)?
+				content: item.str, //`${item.str} (x: ${item.transform[4]}, y: ${item.transform[5]})`,
 				position: { x: item.transform[4], y: item.transform[5] }
 			};
 		}
@@ -116,6 +116,7 @@ async function extractImageData(page: PDFPageProxy) {
 	const operatorList = await page.getOperatorList();
 	const { fnArray, argsArray } = operatorList;
 	const objs = page.objs;
+	const images: ChatContent[] = [];
 
 	for (let i = 0; i < fnArray.length && images.length < MAX_ATTACHMENTS_SIZE; i++) {
 		if (fnArray[i] === OPS.paintImageXObject) {
@@ -176,16 +177,16 @@ async function extractImageData(page: PDFPageProxy) {
 			}
 		}
 	}
+
+	return images;
 }
 
 async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 	try {
 		const pdfDocument = await loadPdf(arrayBuffer);
 		const numPages = pdfDocument.numPages;
-		let textResults: string[] = [];
-
-		// Clear images array for new pdf upload
-		images.length = 0;
+		let textResults: ChatContent[] = [];
+		let images: ChatContent[] = [];
 
 		for (let i = 1; i <= numPages; i++) {
 			const page = await pdfDocument.getPage(i);
@@ -193,8 +194,10 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 			const textContent = await extractTextContent(page);
 
 			if (images.length < MAX_ATTACHMENTS_SIZE) {
-				await extractImageData(page);
+				images = await extractImageData(page);
 			}
+
+			console.log(textContent);
 
 			const combinedContent = textContent.concat(images.map((img, index) => {
 				if (!img.imageData?.position) return null; // Filter out images with undefined positions
@@ -205,16 +208,26 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 				};
 			}).filter(item => item !== null));
 
-			// Sort combined content by y and then x position
-			combinedContent.sort((a, b) => a?.position?.y - b?.position?.y || a?.position?.x - b?.position?.x);
+			// Sort combined content by y and then x position, but only for images
+			combinedContent.sort((a, b) => {
+				if (a?.type === 'image' && b?.type === 'image') {
+					return a.position.y - b.position.y || a.position.x - b.position.x;
+				}
+				return 0; // Keep text content in its original order
+			});
 
-			// Join sorted content into textResults
-			textResults.push(...combinedContent.map(item => item!.content));
+			// Create a ChatContent object with type 'text'
+			const textContentObject: ChatContent = {
+				type: 'text',
+				text: combinedContent.map(item => item!.content).join(' ')
+			};
+
+			// Add the textContentObject to textResults
+			textResults.push(textContentObject);
 		}
 
 		const result = {
-			type: 'content',
-			text: textResults.join(' '),
+			textResults,
 			images
 		};
 
@@ -229,6 +242,8 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 	const results: ChatContent[] = [];
 	const remainingSlots = MAX_ATTACHMENTS_SIZE - uploadedCount;
 	const filesToUpload = Math.min(files.length, remainingSlots);
+
+	let itemsToNotCount = 0;
 
 	if (filesToUpload <= 0) {
 		showToast(
@@ -246,8 +261,14 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 			case 'application/pdf':
 				const pdfContent = await extractPdfContent(arrayBuffer);
 				if (pdfContent) {
-					console.log(pdfContent.text);
-					results.push(...pdfContent.images);
+					// proper way to handle pdf in background and display as file attachment
+					if (pdfContent.textResults && pdfContent.textResults.length > 0) {
+						results.push(...pdfContent.textResults);
+					}
+					if (pdfContent.images && pdfContent.images.length > 0) {
+						results.push(...pdfContent.images);
+						itemsToNotCount++;
+					}
 				}
 				break;
 			default:
@@ -263,16 +284,8 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 				break;
 		}
 	}));
-
-	showUploadResult(results.length, filesToUpload, toastStore);
-
-	if (results.length === 0) {
-		showToast(
-			toastStore,
-			`No files were processed. Maximum number of files (${MAX_ATTACHMENTS_SIZE}) may have been reached or unsupported file types were provided.`,
-			'warning'
-		);
-	}
+	
+	showUploadResult(results.length - itemsToNotCount, filesToUpload, toastStore);
 
 	return results;
 }

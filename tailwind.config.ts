@@ -35,7 +35,7 @@ const config = {
 				'4xl': '2rem',
 				'5xl': '2.25rem',
 				'6xl': '2.5rem'
-			}
+			},
 		}
 	},
 	plugins: [
@@ -46,7 +46,14 @@ const config = {
 				// Register each theme within this array:
 				preset: [{ name: 'skeleton', enhancements: true }]
 			}
-		})
+		}),
+		function({ addUtilities }) {
+            addUtilities({
+                '.overflow-wrap-anywhere': {
+                    'overflow-wrap': 'anywhere',
+                },
+            });
+        }
 	]
 } satisfies Config;
 

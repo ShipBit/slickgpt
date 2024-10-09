@@ -155,7 +155,7 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 	try {
 		const pdfDocument = await loadPdf(arrayBuffer);
 		const numPages = pdfDocument.numPages;
-		let textResults: any[] = [];
+		let textResults: string[] = [];
 		let imageResults: any[] = [];
 
 		for (let i = 1; i <= numPages; i++) {
@@ -164,23 +164,27 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 			const textContent = await extractTextContent(page);
 			const imageData = await extractImageData(page);
 
-			textResults = textResults.concat(textContent);
-
-			imageData.forEach((img, index) => {
-				textResults.push({
-					type: 'imageData',
-					content: `Image ${index + 1} at position (${img.position.x}, ${img.position.y})`,
-					position: img.position
-				});
+			// Concatenate text content into a single string with positions
+			textContent.forEach(item => {
+				textResults.push(`${item?.content} (position: ${item?.position.x}, ${item?.position.y})`);
 			});
 
-			imageResults.push(...imageData.map(img => ({ ...img, label: img.name })));
+			// Append image information to the text content
+			imageData.forEach((img, index) => {
+				textResults.push(`[Image ${index + 1} at position (${img.position.x}, ${img.position.y})]`);
+				imageResults.push({
+					type: img.type,
+					base64: img.base64,
+					width: img.width,
+					height: img.height
+				});
+			});
 		}
 
 		// Create a cohesive JSON structure
 		const result = {
-			textContent: textResults,
-			images: imageResults
+			textContent: textResults.join(' '), // Join all text content and image placeholders into a single string
+			images: imageResults // Array of image information
 		};
 
 		return JSON.stringify(result);

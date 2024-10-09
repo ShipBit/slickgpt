@@ -4,10 +4,11 @@ import type { ToastStore } from '@skeletonlabs/skeleton';
 import { getDocument, OPS, GlobalWorkerOptions } from 'pdfjs-dist';
 import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
-// This needs to be changed to a more precise way
+// TODO: is there a better way to do this?
 GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.mjs';
+
 export const MAX_ATTACHMENTS_SIZE = 10;
-const allowedFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
+const permittedImageFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
 const images: ChatContent[] = [];
 
 // export async function uploadFiles(
@@ -52,12 +53,8 @@ async function processFile(file: File): Promise<ChatContent> {
 
 			}
 		};
-	} catch (error: unknown) {
-		if (error instanceof Error) {
-			throw new Error(`Failed to process file: ${error.message}`);
-		} else {
-			throw new Error('Failed to process file: An unknown error occurred');
-		}
+	} catch (error) {
+		throw new Error(`Failed to process file: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
 	}
 }
 
@@ -117,9 +114,7 @@ async function extractTextContent(page: PDFPageProxy) {
 
 async function extractImageData(page: PDFPageProxy) {
 	const operatorList = await page.getOperatorList();
-
-	const fnArray = operatorList.fnArray;
-	const argsArray = operatorList.argsArray;
+	const { fnArray, argsArray } = operatorList;
 	const objs = page.objs;
 
 	for (let i = 0; i < fnArray.length && images.length < MAX_ATTACHMENTS_SIZE; i++) {
@@ -127,32 +122,55 @@ async function extractImageData(page: PDFPageProxy) {
 			const imageDictionary = argsArray[i][0];
 			const imageData = await objs.get(imageDictionary);
 
-			// Check if imageData has a bitmap property
-			if (imageData && imageData.bitmap instanceof ImageBitmap) {
+			if (imageData?.bitmap instanceof ImageBitmap) {
 				const imageBitmap = imageData.bitmap;
+				let base64Image: string | null = null;
 
-				// Create a canvas to draw the image
-				const canvas = document.createElement('canvas');
-				const context = canvas.getContext('2d');
-				canvas.width = imageBitmap.width;
-				canvas.height = imageBitmap.height;
-				context?.drawImage(imageBitmap, 0, 0, imageBitmap.width, imageBitmap.height);
+				if (typeof OffscreenCanvas !== 'undefined') {
+					// Use OffscreenCanvas for rendering
+					const offscreenCanvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
+					const context = offscreenCanvas.getContext('2d');
 
-				// Convert the canvas to a base64 string
-				const base64Image = canvas.toDataURL();
-
-				images.push({
-					type: 'image_url',
-					image_url: {
-						url: base64Image,
-						detail: 'high'
-					},
-					imageData: {
-						position: { x: argsArray[i][1], y: argsArray[i][2] },
-						width: imageBitmap.width,
-						height: imageBitmap.height
+					if (context) {
+						context.drawImage(imageBitmap, 0, 0, imageBitmap.width, imageBitmap.height);
+						// Transfer the image to a regular canvas to get the data URL
+						const canvas = document.createElement('canvas');
+						canvas.width = imageBitmap.width;
+						canvas.height = imageBitmap.height;
+						const mainContext = canvas.getContext('2d');
+						if (mainContext) {
+							mainContext.drawImage(offscreenCanvas, 0, 0);
+							base64Image = canvas.toDataURL();
+						}
 					}
-				});
+				} else {
+					// Fallback to regular canvas
+					const canvas = document.createElement('canvas');
+					const context = canvas.getContext('2d');
+					canvas.width = imageBitmap.width;
+					canvas.height = imageBitmap.height;
+					if (context) {
+						context.drawImage(imageBitmap, 0, 0, imageBitmap.width, imageBitmap.height);
+						base64Image = canvas.toDataURL();
+					}
+				}
+
+				if (base64Image) {
+					images.push({
+						type: 'image_url',
+						image_url: {
+							url: base64Image,
+							detail: 'high'
+						},
+						imageData: {
+							position: { x: argsArray[i][1], y: argsArray[i][2] },
+							width: imageBitmap.width,
+							height: imageBitmap.height
+						}
+					});
+				} else {
+					console.warn('Failed to convert image to base64');
+				}
 			} else {
 				console.warn('Image data is missing a valid bitmap:', imageData);
 			}
@@ -174,19 +192,24 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 
 			const textContent = await extractTextContent(page);
 
-			// Concatenate text content into a single string with positions
-			textContent.forEach(item => {
-				textResults.push(`${item?.content} (position: ${item?.position.x}, ${item?.position.y})`);
-			});
-
 			if (images.length < MAX_ATTACHMENTS_SIZE) {
 				await extractImageData(page);
 			}
 
-			images.forEach((img, index) => {
-				// imageData isn't undefined here
-				textResults.push(`[Image ${index + 1} at position (${img.imageData?.position?.x}, ${img.imageData?.position?.y})]`);
-			});
+			const combinedContent = textContent.concat(images.map((img, index) => {
+				if (!img.imageData?.position) return null; // Filter out images with undefined positions
+				return {
+					type: 'image',
+					content: `[Image ${index + 1} at position (${img.imageData.position.x}, ${img.imageData.position.y})]`,
+					position: img.imageData.position
+				};
+			}).filter(item => item !== null));
+
+			// Sort combined content by y and then x position
+			combinedContent.sort((a, b) => a?.position?.y - b?.position?.y || a?.position?.x - b?.position?.x);
+
+			// Join sorted content into textResults
+			textResults.push(...combinedContent.map(item => item!.content));
 		}
 
 		const result = {
@@ -210,35 +233,36 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 	if (filesToUpload <= 0) {
 		showToast(
 			toastStore,
-			`Maximum number of images (${MAX_ATTACHMENTS_SIZE}) already uploaded.`,
+			`Maximum number of files (${MAX_ATTACHMENTS_SIZE}) already uploaded.`,
 			'warning'
 		);
 		return [];
 	}
 
-	for (let i = 0; i < filesToUpload; i++) {
-		const file = files[i];
+	await Promise.all(Array.from(files).slice(0, filesToUpload).map(async (file) => {
 		const arrayBuffer = await readFileAsArrayBuffer(file);
 
-		if (file.type === 'application/pdf') {
-			const pdfContent = await extractPdfContent(arrayBuffer);
-			if (pdfContent) {
-				console.log(pdfContent.text)
-				pdfContent.images.forEach((item) => {
-					results.push(item);
-				})
-			}
-		} else if (allowedFormats.includes(file.type)) {
-			try {
-				const chatContent = await processFile(file);
-				results.push(chatContent);
-			} catch (error) {
-				// results.push({ type: 'error', message: 'Failed to process image file.' });
-			}
-		} else {
-			// results.push({ type: 'error', message: 'Unsupported file type' });
+		switch (file.type) {
+			case 'application/pdf':
+				const pdfContent = await extractPdfContent(arrayBuffer);
+				if (pdfContent) {
+					console.log(pdfContent.text);
+					results.push(...pdfContent.images);
+				}
+				break;
+			default:
+				if (permittedImageFormats.includes(file.type)) {
+					try {
+						const chatContent = await processFile(file);
+						results.push(chatContent);
+					} catch (error) {
+						// should never happen unless corrupted image
+						console.error(error);
+					}
+				}
+				break;
 		}
-	}
+	}));
 
 	showUploadResult(results.length, filesToUpload, toastStore);
 

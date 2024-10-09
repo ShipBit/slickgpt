@@ -134,19 +134,11 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		return Promise.resolve(chat.title);
 	}
 
-	function sanitizeContent(content: any): any {
-		if (Array.isArray(content)) {
-			return content.map(item => {
-				if (item.type === 'text') {
-					return item;
-				} else if (item.type === 'image_url') {
-					const { imageData, ...rest } = item;
-					return rest;
-				}
-				return item;
-			});
+	function sanitizeContent(content: string | ChatContent[]): ChatContent[] | string {
+		if (typeof content === 'string') {
+			return content;
 		}
-		return content;
+		return content.map(item => item.type === 'image_url' ? (({ imageData, ...rest }) => rest)(item) : item);
 	}
 
 	const filteredMessages = [

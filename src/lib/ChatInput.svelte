@@ -38,7 +38,7 @@
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
 	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
-	import { uploadFiles, handleFileExtractionRequest } from '$misc/fileUtils';
+	import { handleFileExtractionRequest } from '$misc/fileUtils';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -118,8 +118,8 @@
 		lastUserMessage = message;
 
 		const processContentItem = (contentItem: ChatContent) => {
-			if ('fileName' in contentItem) {
-				const { fileName, ...sanitizedContent } = contentItem;
+			if ('imageData' in contentItem) {
+				const { imageData, ...sanitizedContent } = contentItem;
 				return sanitizedContent;
 			}
 			return contentItem;
@@ -386,7 +386,7 @@
 	}
 
 	async function uploadFilesAndDebounce(files: FileList) {
-		const newAttachments = await uploadFiles(files, toastStore, $attachments.length);
+		const newAttachments = await handleFileExtractionRequest(files, toastStore, $attachments.length);
 		$attachments = [...$attachments, ...newAttachments];
 		shouldDebounce = true;
 	}
@@ -394,8 +394,7 @@
 	async function handleFileDrop(event: DragEvent) {
 		isDraggingFile = false;
 		if (event.dataTransfer?.files) {
-			console.log(await handleFileExtractionRequest(event.dataTransfer.files[0]));
-			// await uploadFilesAndDebounce(event.dataTransfer.files);
+			await uploadFilesAndDebounce(event.dataTransfer.files);
 		}
 	}
 

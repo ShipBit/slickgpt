@@ -33,7 +33,15 @@ export interface ChatContent {
 		url: string;
 		detail: 'low' | 'high';
 	};
-	fileName?: string;
+	imageData?: {
+		name?: string,
+		height?: number,
+		width?: number,
+		position?: {
+			x: any,
+			y: any
+		}
+	};
 }
 
 export interface ChatMessage {
@@ -126,12 +134,27 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		return Promise.resolve(chat.title);
 	}
 
+	function sanitizeContent(content: any): any {
+		if (Array.isArray(content)) {
+			return content.map(item => {
+				if (item.type === 'text') {
+					return item;
+				} else if (item.type === 'image_url') {
+					const { imageData, ...rest } = item;
+					return rest;
+				}
+				return item;
+			});
+		}
+		return content;
+	}
+
 	const filteredMessages = [
 		...messages.slice(0, chat.contextMessage?.content ? 3 : 2).map(
 			(m) =>
 				({
 					role: m.role,
-					content: m.content
+					content: sanitizeContent(m.content)
 				}) as ChatCompletionMessageParam
 		),
 		{

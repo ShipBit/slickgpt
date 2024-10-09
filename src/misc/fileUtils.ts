@@ -8,34 +8,35 @@ import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.mjs';
 export const MAX_ATTACHMENTS_SIZE = 10;
 const allowedFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
+const images: ChatContent[] = [];
 
-export async function uploadFiles(
-	files: FileList,
-	toastStore: ToastStore,
-	uploadedCount: number
-): Promise<ChatContent[]> {
-	const remainingSlots = MAX_ATTACHMENTS_SIZE - uploadedCount;
-	const filesToUpload = Math.min(files.length, remainingSlots);
+// export async function uploadFiles(
+// 	files: FileList,
+// 	toastStore: ToastStore,
+// 	uploadedCount: number
+// ): Promise<ChatContent[]> {
+// 	const remainingSlots = MAX_ATTACHMENTS_SIZE - uploadedCount;
+// 	const filesToUpload = Math.min(files.length, remainingSlots);
 
-	if (filesToUpload <= 0) {
-		showToast(
-			toastStore,
-			`Maximum number of images (${MAX_ATTACHMENTS_SIZE}) already uploaded.`,
-			'warning'
-		);
-		return [];
-	}
+// 	if (filesToUpload <= 0) {
+// 		showToast(
+// 			toastStore,
+// 			`Maximum number of images (${MAX_ATTACHMENTS_SIZE}) already uploaded.`,
+// 			'warning'
+// 		);
+// 		return [];
+// 	}
 
-	const newAttachments = await Promise.all(
-		Array.from(files)
-			.slice(0, filesToUpload)
-			.filter((file) => allowedFormats.includes(file.type))
-			.map(async (file) => await processFile(file))
-	);
+// 	const newAttachments = await Promise.all(
+// 		Array.from(files)
+// 			.slice(0, filesToUpload)
+// 			.filter((file) => allowedFormats.includes(file.type))
+// 			.map(async (file) => await processFile(file))
+// 	);
 
-	showUploadResult(newAttachments.length, filesToUpload, toastStore);
-	return newAttachments;
-}
+// 	showUploadResult(newAttachments.length, filesToUpload, toastStore);
+// 	return newAttachments;
+// }
 
 async function processFile(file: File): Promise<ChatContent> {
 	try {
@@ -46,7 +47,10 @@ async function processFile(file: File): Promise<ChatContent> {
 				url: dataUrl,
 				detail: 'high' // TODO: make this user configurable
 			},
-			fileName: file.name
+			imageData: {
+				name: file.name,
+
+			}
 		};
 	} catch (error: unknown) {
 		if (error instanceof Error) {
@@ -71,8 +75,8 @@ function showUploadResult(uploadedCount: number, totalCount: number, toastStore:
 		const skippedCount = totalCount - uploadedCount;
 		const message =
 			skippedCount > 0
-				? `Uploaded ${uploadedCount} out of ${totalCount} images. ${skippedCount} file(s) skipped (not images).`
-				: `Uploaded ${uploadedCount} out of ${totalCount} images. Maximum limit (${MAX_ATTACHMENTS_SIZE}) reached.`;
+				? `Uploaded ${uploadedCount} out of ${totalCount} files. ${skippedCount} file(s) skipped (not supported).`
+				: `Uploaded ${uploadedCount} out of ${totalCount} files. Maximum limit (${MAX_ATTACHMENTS_SIZE}) reached.`;
 		showToast(toastStore, message, 'warning');
 	}
 }
@@ -113,12 +117,15 @@ async function extractTextContent(page: PDFPageProxy) {
 
 async function extractImageData(page: PDFPageProxy) {
 	const operatorList = await page.getOperatorList();
-	const images = [];
 
-	for (let i = 0; i < operatorList.fnArray.length && images.length < MAX_ATTACHMENTS_SIZE; i++) {
-		if (operatorList.fnArray[i] === OPS.paintImageXObject) {
-			const imageDictionary = operatorList.argsArray[i][0];
-			const imageData = await page.objs.get(imageDictionary);
+	const fnArray = operatorList.fnArray;
+	const argsArray = operatorList.argsArray;
+	const objs = page.objs;
+
+	for (let i = 0; i < fnArray.length && images.length < MAX_ATTACHMENTS_SIZE; i++) {
+		if (fnArray[i] === OPS.paintImageXObject) {
+			const imageDictionary = argsArray[i][0];
+			const imageData = await objs.get(imageDictionary);
 
 			// Check if imageData has a bitmap property
 			if (imageData && imageData.bitmap instanceof ImageBitmap) {
@@ -135,20 +142,22 @@ async function extractImageData(page: PDFPageProxy) {
 				const base64Image = canvas.toDataURL();
 
 				images.push({
-					type: 'image',
-					name: imageDictionary.name, // Adjust if necessary
-					base64: base64Image,
-					position: { x: operatorList.argsArray[i][1], y: operatorList.argsArray[i][2] },
-					width: imageBitmap.width,
-					height: imageBitmap.height
+					type: 'image_url',
+					image_url: {
+						url: base64Image,
+						detail: 'high'
+					},
+					imageData: {
+						position: { x: argsArray[i][1], y: argsArray[i][2] },
+						width: imageBitmap.width,
+						height: imageBitmap.height
+					}
 				});
 			} else {
 				console.warn('Image data is missing a valid bitmap:', imageData);
 			}
 		}
 	}
-
-	return images;
 }
 
 async function extractPdfContent(arrayBuffer: ArrayBuffer) {
@@ -156,52 +165,90 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 		const pdfDocument = await loadPdf(arrayBuffer);
 		const numPages = pdfDocument.numPages;
 		let textResults: string[] = [];
-		let imageResults: any[] = [];
+
+		// Clear images array for new pdf upload
+		images.length = 0;
 
 		for (let i = 1; i <= numPages; i++) {
 			const page = await pdfDocument.getPage(i);
 
 			const textContent = await extractTextContent(page);
-			const imageData = await extractImageData(page);
 
 			// Concatenate text content into a single string with positions
 			textContent.forEach(item => {
 				textResults.push(`${item?.content} (position: ${item?.position.x}, ${item?.position.y})`);
 			});
 
-			// Append image information to the text content
-			imageData.forEach((img, index) => {
-				textResults.push(`[Image ${index + 1} at position (${img.position.x}, ${img.position.y})]`);
-				imageResults.push({
-					type: img.type,
-					base64: img.base64,
-					width: img.width,
-					height: img.height
-				});
+			if (images.length < MAX_ATTACHMENTS_SIZE) {
+				await extractImageData(page);
+			}
+
+			images.forEach((img, index) => {
+				// imageData isn't undefined here
+				textResults.push(`[Image ${index + 1} at position (${img.imageData?.position?.x}, ${img.imageData?.position?.y})]`);
 			});
 		}
 
-		// Create a cohesive JSON structure
 		const result = {
-			textContent: textResults.join(' '), // Join all text content and image placeholders into a single string
-			images: imageResults // Array of image information
+			type: 'content',
+			text: textResults.join(' '),
+			images
 		};
 
-		return JSON.stringify(result);
+		return result;
 	} catch (error) {
 		console.error('Error processing PDF:', error);
-		return JSON.stringify([{ type: 'error', message: (error as Error).message }]);
+		return null;
 	}
 }
 
+export async function handleFileExtractionRequest(files: FileList, toastStore: ToastStore, uploadedCount: number) {
+	const results: ChatContent[] = [];
+	const remainingSlots = MAX_ATTACHMENTS_SIZE - uploadedCount;
+	const filesToUpload = Math.min(files.length, remainingSlots);
 
-// Main function to handle all the file extensions
-export async function handleFileExtractionRequest(file: File) {
-	const arrayBuffer = await readFileAsArrayBuffer(file);
-
-	if (file.type === 'application/pdf') {
-		return await extractPdfContent(arrayBuffer);
-	} else {
-		return [{ type: 'error', message: 'Unsupported file type' }];
+	if (filesToUpload <= 0) {
+		showToast(
+			toastStore,
+			`Maximum number of images (${MAX_ATTACHMENTS_SIZE}) already uploaded.`,
+			'warning'
+		);
+		return [];
 	}
+
+	for (let i = 0; i < filesToUpload; i++) {
+		const file = files[i];
+		const arrayBuffer = await readFileAsArrayBuffer(file);
+
+		if (file.type === 'application/pdf') {
+			const pdfContent = await extractPdfContent(arrayBuffer);
+			if (pdfContent) {
+				console.log(pdfContent.text)
+				pdfContent.images.forEach((item) => {
+					results.push(item);
+				})
+			}
+		} else if (allowedFormats.includes(file.type)) {
+			try {
+				const chatContent = await processFile(file);
+				results.push(chatContent);
+			} catch (error) {
+				// results.push({ type: 'error', message: 'Failed to process image file.' });
+			}
+		} else {
+			// results.push({ type: 'error', message: 'Unsupported file type' });
+		}
+	}
+
+	showUploadResult(results.length, filesToUpload, toastStore);
+
+	if (results.length === 0) {
+		showToast(
+			toastStore,
+			`No files were processed. Maximum number of files (${MAX_ATTACHMENTS_SIZE}) may have been reached or unsupported file types were provided.`,
+			'warning'
+		);
+	}
+
+	return results;
 }

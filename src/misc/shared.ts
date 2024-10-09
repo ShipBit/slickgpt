@@ -33,15 +33,7 @@ export interface ChatContent {
 		url: string;
 		detail: 'low' | 'high';
 	};
-	imageData?: {
-		name?: string,
-		height?: number,
-		width?: number,
-		position?: {
-			x: any,
-			y: any
-		}
-	};
+	fileData?: FileData;
 }
 
 export interface ChatMessage {
@@ -84,6 +76,17 @@ export interface ChatCost {
 	costCompletion: number;
 	costTotal: number;
 	maxTokensForModel: number;
+}
+
+export interface FileData {
+	name?: string,
+	height?: number,
+	width?: number,
+	position?: {
+		x: any,
+		y: any
+	},
+	attachment?: boolean;
 }
 
 export function createNewChat(template?: {
@@ -138,7 +141,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		if (typeof content === 'string') {
 			return content;
 		}
-		return content.map(item => item.type === 'image_url' ? (({ imageData, ...rest }) => rest)(item) : item);
+		return content.map(item => item.type === 'image_url' ? (({ fileData: imageData, ...rest }) => rest)(item) : item);
 	}
 
 	const filteredMessages = [

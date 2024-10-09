@@ -8,6 +8,15 @@ export default defineConfig({
 		},
 	},
 	build: {
+		rollupOptions: {
+			output: {
+			  manualChunks(id) {
+				if (id.includes('pdfjs-dist')) {
+				  return 'pdfjs';
+				}
+			  }
+			}
+		},
 		target: "ES2022",
 	},
 	plugins: [sveltekit()]

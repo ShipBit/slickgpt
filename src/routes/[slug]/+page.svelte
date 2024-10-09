@@ -280,11 +280,11 @@
 			<div class="sticky mx-auto bottom-0">
 				<div class="flex flex-wrap z-10">
 					{#each $attachments as attachment, index}
-						{#if attachment.type === 'image_url'}
+						{#if attachment.type === 'image_url' && !attachment.fileData?.attachment}
 							<button
 								type="button"
 								class="btn btn-sm relative rounded-full"
-								aria-label="Remove attachment {attachment.fileName}"
+								aria-label="Remove attachment {attachment.fileData?.name}"
 								on:click={() => removeAttachment(index)}
 							>
 								<span class="absolute -top-2 right-0 p-0 bg-slate-600 opacity-80 rounded-full">
@@ -292,9 +292,24 @@
 								</span>
 								<img
 									src={attachment.image_url?.url}
-									alt={attachment.fileName}
+									alt={attachment.fileData?.name}
 									class="w-16 h-16 object-cover rounded"
 								/>
+							</button>
+						{/if}
+						{#if attachment.type === 'text' && attachment.fileData?.attachment}
+							<button
+								type="button"
+								class="btn btn-sm relative rounded-full"
+								aria-label="Remove attachment {attachment.fileData?.name}"
+								on:click={() => removeAttachment(index)}
+							>
+								<span class="absolute -top-2 right-0 p-0 bg-slate-600 opacity-80 rounded-full">
+									<XMark class="text-white w-5 h-5" />
+								</span>
+								<span class="w-16 h-16 flex items-center justify-center bg-gray-200 rounded">
+									{attachment.fileData?.name}
+								</span>
 							</button>
 						{/if}
 					{/each}

@@ -5,7 +5,7 @@ import { getDocument, OPS, GlobalWorkerOptions } from 'pdfjs-dist';
 import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
 // TODO: is there a better way to do this?
-GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.mjs';
+GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 export const MAX_ATTACHMENTS_SIZE = 10;
 const permittedImageFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
@@ -47,7 +47,7 @@ async function processFile(file: File): Promise<ChatContent> {
 				url: dataUrl,
 				detail: 'high' // TODO: make this user configurable
 			},
-			imageData: {
+			fileData: {
 				name: file.name,
 
 			}
@@ -66,13 +66,19 @@ function readFileAsDataURL(file: File): Promise<string> {
 	});
 }
 
-function showUploadResult(uploadedCount: number, totalCount: number, toastStore: ToastStore) {
-	if (uploadedCount !== totalCount) {
-		const skippedCount = totalCount - uploadedCount;
+function showUploadResult(uploadedItems: ChatContent[], totalCount: number, toastStore: ToastStore) {
+	const imageAttachments = uploadedItems.filter(item => item.type === 'image_url' && item.fileData?.attachment);
+	if (imageAttachments) {
+		showToast(toastStore, `Uploaded first ${imageAttachments.length} images (from PDF). Maximum limit (${MAX_ATTACHMENTS_SIZE}) reached`, 'warning');
+		return;
+	}
+
+	if (uploadedItems.length !== totalCount) {
+		const skippedCount = totalCount - uploadedItems.length;
 		const message =
 			skippedCount > 0
-				? `Uploaded ${uploadedCount} out of ${totalCount} files. ${skippedCount} file(s) skipped (not supported).`
-				: `Uploaded ${uploadedCount} out of ${totalCount} files. Maximum limit (${MAX_ATTACHMENTS_SIZE}) reached.`;
+				? `Uploaded ${uploadedItems.length} out of ${totalCount} images. ${skippedCount} image(s) skipped (not supported).`
+				: `Uploaded ${uploadedItems.length} out of ${totalCount} images. Maximum limit (${MAX_ATTACHMENTS_SIZE}) reached.`;
 		showToast(toastStore, message, 'warning');
 	}
 }
@@ -105,7 +111,7 @@ async function extractTextContent(page: PDFPageProxy) {
 				type: 'text',
 				// TODO: maybe add a flag to switch between precise (expensive) and default (cheap)?
 				content: item.str, //`${item.str} (x: ${item.transform[4]}, y: ${item.transform[5]})`,
-				position: { x: item.transform[4], y: item.transform[5] }
+				position: { x: item.transform[4], y: item.transform[5] },
 			};
 		}
 		return null;
@@ -163,10 +169,11 @@ async function extractImageData(page: PDFPageProxy) {
 							url: base64Image,
 							detail: 'high'
 						},
-						imageData: {
+						fileData: {
 							position: { x: argsArray[i][1], y: argsArray[i][2] },
 							width: imageBitmap.width,
-							height: imageBitmap.height
+							height: imageBitmap.height,
+							attachment: true
 						}
 					});
 				} else {
@@ -185,8 +192,8 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 	try {
 		const pdfDocument = await loadPdf(arrayBuffer);
 		const numPages = pdfDocument.numPages;
-		let textResults: ChatContent[] = [];
 		let images: ChatContent[] = [];
+		let combinedTextArray: string[] = [];
 
 		for (let i = 1; i <= numPages; i++) {
 			const page = await pdfDocument.getPage(i);
@@ -197,14 +204,12 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 				images = await extractImageData(page);
 			}
 
-			console.log(textContent);
-
 			const combinedContent = textContent.concat(images.map((img, index) => {
-				if (!img.imageData?.position) return null; // Filter out images with undefined positions
+				if (!img.fileData?.position) return null;
 				return {
 					type: 'image',
-					content: `[Image ${index + 1} at position (${img.imageData.position.x}, ${img.imageData.position.y})]`,
-					position: img.imageData.position
+					content: `[Image ${index + 1} at position (${img.fileData.position.x}, ${img.fileData.position.y})]`,
+					position: img.fileData.position
 				};
 			}).filter(item => item !== null));
 
@@ -213,24 +218,31 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 				if (a?.type === 'image' && b?.type === 'image') {
 					return a.position.y - b.position.y || a.position.x - b.position.x;
 				}
-				return 0; // Keep text content in its original order
+				return 0;
 			});
 
-			// Create a ChatContent object with type 'text'
-			const textContentObject: ChatContent = {
-				type: 'text',
-				text: combinedContent.map(item => item!.content).join(' ')
-			};
-
-			// Add the textContentObject to textResults
-			textResults.push(textContentObject);
+			// Collect all text content into a single array
+			combinedTextArray.push(...combinedContent.map(item => item!.content));
 		}
 
+		// Create a single ChatContent object with type 'text' for all pages
+		const textContentObject: ChatContent = {
+			type: 'text',
+			text: combinedTextArray.join(' '),
+			fileData: {
+				attachment: true
+			}
+		};
+
+		// Add the single textContentObject to textResults
+		const textResults: ChatContent[] = [textContentObject];
+
+		console.log(textResults);
 		const result = {
 			textResults,
 			images
 		};
-
+		
 		return result;
 	} catch (error) {
 		console.error('Error processing PDF:', error);
@@ -261,12 +273,8 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 			case 'application/pdf':
 				const pdfContent = await extractPdfContent(arrayBuffer);
 				if (pdfContent) {
-					// proper way to handle pdf in background and display as file attachment
-					if (pdfContent.textResults && pdfContent.textResults.length > 0) {
-						results.push(...pdfContent.textResults);
-					}
-					if (pdfContent.images && pdfContent.images.length > 0) {
-						results.push(...pdfContent.images);
+					if (pdfContent.textResults && pdfContent.images && pdfContent.textResults.length > 0 && pdfContent.images.length > 0) {
+						results.push(...pdfContent.textResults, ...pdfContent.images);
 						itemsToNotCount++;
 					}
 				}
@@ -284,8 +292,8 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 				break;
 		}
 	}));
-	
-	showUploadResult(results.length - itemsToNotCount, filesToUpload, toastStore);
+
+	showUploadResult(results, filesToUpload, toastStore);
 
 	return results;
 }

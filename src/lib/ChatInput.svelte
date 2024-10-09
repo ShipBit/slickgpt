@@ -117,7 +117,7 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		const processContentItem = ({ imageData, ...rest }: ChatContent) => rest;
+		const processContentItem = ({ fileData: imageData, ...rest }: ChatContent) => rest;
 
 		const processMessageContent = (message: ChatMessage) =>
 			Array.isArray(message.content)
@@ -340,7 +340,7 @@
 	}
 
 	async function handleInsertCode() {
-		input += '\n```\n\n```';
+		input += input.trim() ? '\n```\n\n```' : '```\n\n```';
 
 		// tick is required for the action to resize the textarea
 		await tick();

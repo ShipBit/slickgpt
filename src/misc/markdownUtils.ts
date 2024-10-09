@@ -76,10 +76,12 @@ function renderContentArray(contentArray: ChatContent[]): string {
     return contentArray.map(item => {
         switch (item.type) {
             case 'text':
+                if (item.fileData?.attachment)
+                    return item.text;
                 return item.text ? md.render(item.text) : '';
             case 'image_url':
                 if (item.image_url?.url) {
-                    const alt = item.fileName || 'Image';
+                    const alt = item.fileData?.name || 'Image';
                     return `<img src="${item.image_url.url}" alt="${alt}" class="w-3/5 h-auto my-2 rounded-lg shadow-md" />`;
                 }
                 return '';

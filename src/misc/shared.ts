@@ -86,7 +86,10 @@ export interface FileData {
 		x: any,
 		y: any
 	},
-	attachment?: boolean;
+	attachment?: {
+		quantity?: number,
+		fileAttached: boolean
+	}
 }
 
 export function createNewChat(template?: {

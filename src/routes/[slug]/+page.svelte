@@ -163,7 +163,16 @@
 	}
 
 	function removeAttachment(index: number) {
-		$attachments = $attachments.filter((_, i) => i !== index);
+		if ($attachments[index]?.fileData?.attachment?.quantity) {
+			// Determine the number of attachments to remove starting from the specified index
+			const quantityToDelete = $attachments[index].fileData.attachment.quantity;
+			// Filter out the attachments that fall within the range to be deleted
+			$attachments = $attachments.filter((_, i) => i < index || i > index + quantityToDelete);
+			// Log the quantity of attachments that were marked for deletion
+			console.log(quantityToDelete);
+		} else {
+			$attachments = $attachments.filter((_, i) => i !== index);
+		}
 		shouldDebounce = true;
 	}
 </script>

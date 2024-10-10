@@ -173,7 +173,9 @@ async function extractImageData(page: PDFPageProxy) {
 							position: { x: argsArray[i][1], y: argsArray[i][2] },
 							width: imageBitmap.width,
 							height: imageBitmap.height,
-							attachment: true
+							attachment: {
+								fileAttached: true
+							}
 						}
 					});
 				} else {
@@ -230,7 +232,10 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer) {
 			type: 'text',
 			text: combinedTextArray.join(' '),
 			fileData: {
-				attachment: true
+				attachment: {
+					quantity: images.length,
+					fileAttached: true
+				}
 			}
 		};
 

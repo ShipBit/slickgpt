@@ -130,6 +130,13 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		return Promise.resolve(chat.title);
 	}
 
+	
+	let token: string;
+	let url: string;
+	let body: any;
+	let headers: Record<string, string>;
+	const isUsingPro = get(isPro);
+
 	const messages =
 		chat.messages.length === 1
 			? chatStore.getCurrentMessageBranch(chat)
@@ -144,7 +151,12 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		if (typeof content === 'string') {
 			return content;
 		}
-		return content.map(item => item.type === 'image_url' ? (({ fileData: imageData, ...rest }) => rest)(item) : item);
+		return content.map(item => {
+			if (item.type === 'image_url' && (getProviderForModel(chat.settings.model) !== AiProvider.OpenAi|| isUsingPro)) {
+				return null;
+			}
+			return item.type === 'image_url' ? (({ fileData: imageData, ...rest }) => rest)(item) : item;
+		}).filter(item => item !== null); // Filter out null values
 	}
 
 	const filteredMessages = [
@@ -165,12 +177,6 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 			]
 		} as ChatCompletionMessageParam
 	];
-
-	let token: string;
-	let url: string;
-	let body: any;
-	let headers: Record<string, string>;
-	const isUsingPro = get(isPro);
 
 	if (isUsingPro) {
 		const authService = await AuthService.getInstance();

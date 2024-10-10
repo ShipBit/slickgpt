@@ -10,7 +10,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
-	type ChatContent,
+		type ChatContent,
 		type ChatCost,
 		type ChatMessage,
 		showModalComponent,
@@ -38,7 +38,7 @@
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
 	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
-	import { uploadFiles } from '$misc/fileUtils';
+	import { handleFileExtractionRequest } from '$misc/fileUtils';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -117,23 +117,14 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		const processContentItem = (contentItem: ChatContent) => {
-			if ('fileName' in contentItem) {
-				const { fileName, ...sanitizedContent } = contentItem;
-				return sanitizedContent;
-			}
-			return contentItem;
-		};
+		const processContentItem = ({ fileData: imageData, ...rest }: ChatContent) => rest;
 
-		const processMessageContent = (message: ChatMessage) => {
-			if (Array.isArray(message.content)) {
-				return message.content.map(processContentItem);
-			} else if (message.role === 'assistant' || message.role === 'system') {
-				return message.content;
-			}
-
-			return [{ type: 'text', text: message.content }];
-		};
+		const processMessageContent = (message: ChatMessage) =>
+			Array.isArray(message.content)
+				? message.content.map(processContentItem)
+				: message.role === 'assistant' || message.role === 'system'
+					? message.content
+					: [{ type: 'text', text: message.content }];
 
 		const messages = currentMessages?.map((message) => ({
 			role: message.role,
@@ -247,10 +238,11 @@
 				chat.hasUpdatedChatTitle !== true
 			) {
 				hasUpdatedChatTitle = true;
-				const title = await suggestChatTitle({
-					...chat,
-					messages: [...chat.messages, { role: 'user', content: input.trim() }]
-				}) || chat.title;
+				const title =
+					(await suggestChatTitle({
+						...chat,
+						messages: [...chat.messages, { role: 'user', content: input.trim() }]
+					})) || chat.title;
 				chatStore.updateChat(slug, { title, hasUpdatedChatTitle: true }); // Store the variable in the chat store
 			}
 		} catch (err) {
@@ -348,7 +340,7 @@
 	}
 
 	async function handleInsertCode() {
-		input += '\n```\n\n```';
+		input += input.trim() ? '\n```\n\n```' : '```\n\n```';
 
 		// tick is required for the action to resize the textarea
 		await tick();
@@ -386,7 +378,11 @@
 	}
 
 	async function uploadFilesAndDebounce(files: FileList) {
-		const newAttachments = await uploadFiles(files, toastStore, $attachments.length);
+		const newAttachments = await handleFileExtractionRequest(
+			files,
+			toastStore,
+			$attachments.length
+		);
 		$attachments = [...$attachments, ...newAttachments];
 		shouldDebounce = true;
 	}
@@ -398,11 +394,12 @@
 		}
 	}
 
-	async function handleFileChange(event: Event & { target: HTMLInputElement & EventTarget }) {
-		if (event?.target?.files) {
-			await uploadFilesAndDebounce(event.target.files);
+	async function handleFileChange(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files) {
+			await uploadFilesAndDebounce(input.files);
 			// Clear the file input after processing
-			event.target.value = '';
+			input.value = '';
 		}
 	}
 </script>
@@ -458,7 +455,7 @@
 								>
 									<FileDropzone
 										name="files"
-										accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
+										accept="image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf"
 										multiple
 									>
 										<span>Drop images here</span>

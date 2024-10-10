@@ -33,7 +33,7 @@ export interface ChatContent {
 		url: string;
 		detail: 'low' | 'high';
 	};
-	fileName?: string;
+	fileData?: FileData;
 }
 
 export interface ChatMessage {
@@ -78,6 +78,20 @@ export interface ChatCost {
 	maxTokensForModel: number;
 }
 
+export interface FileData {
+	name?: string,
+	height?: number,
+	width?: number,
+	position?: {
+		x: any,
+		y: any
+	},
+	attachment?: {
+		quantity?: number,
+		fileAttached: boolean
+	}
+}
+
 export function createNewChat(template?: {
 	context?: string | null;
 	title?: string;
@@ -116,6 +130,13 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		return Promise.resolve(chat.title);
 	}
 
+	
+	let token: string;
+	let url: string;
+	let body: any;
+	let headers: Record<string, string>;
+	const isUsingPro = get(isPro);
+
 	const messages =
 		chat.messages.length === 1
 			? chatStore.getCurrentMessageBranch(chat)
@@ -126,12 +147,24 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		return Promise.resolve(chat.title);
 	}
 
+	function sanitizeContent(content: string | ChatContent[]): ChatContent[] | string {
+		if (typeof content === 'string') {
+			return content;
+		}
+		return content.map(item => {
+			if (item.type === 'image_url' && (getProviderForModel(chat.settings.model) !== AiProvider.OpenAi|| isUsingPro)) {
+				return null;
+			}
+			return item.type === 'image_url' ? (({ fileData: imageData, ...rest }) => rest)(item) : item;
+		}).filter(item => item !== null); // Filter out null values
+	}
+
 	const filteredMessages = [
 		...messages.slice(0, chat.contextMessage?.content ? 3 : 2).map(
 			(m) =>
 				({
 					role: m.role,
-					content: m.content
+					content: sanitizeContent(m.content)
 				}) as ChatCompletionMessageParam
 		),
 		{
@@ -144,12 +177,6 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 			]
 		} as ChatCompletionMessageParam
 	];
-
-	let token: string;
-	let url: string;
-	let body: any;
-	let headers: Record<string, string>;
-	const isUsingPro = get(isPro);
 
 	if (isUsingPro) {
 		const authService = await AuthService.getInstance();

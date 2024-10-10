@@ -163,7 +163,16 @@
 	}
 
 	function removeAttachment(index: number) {
-		$attachments = $attachments.filter((_, i) => i !== index);
+		if ($attachments[index]?.fileData?.attachment?.quantity) {
+			// Determine the number of attachments to remove starting from the specified index
+			const quantityToDelete = $attachments[index].fileData.attachment.quantity;
+			// Filter out the attachments that fall within the range to be deleted
+			$attachments = $attachments.filter((_, i) => i < index || i > index + quantityToDelete);
+			// Log the quantity of attachments that were marked for deletion
+			console.log(quantityToDelete);
+		} else {
+			$attachments = $attachments.filter((_, i) => i !== index);
+		}
 		shouldDebounce = true;
 	}
 </script>
@@ -280,11 +289,11 @@
 			<div class="sticky mx-auto bottom-0">
 				<div class="flex flex-wrap z-10">
 					{#each $attachments as attachment, index}
-						{#if attachment.type === 'image_url'}
+						{#if attachment.type === 'image_url' && !attachment.fileData?.attachment?.fileAttached}
 							<button
 								type="button"
 								class="btn btn-sm relative rounded-full"
-								aria-label="Remove attachment {attachment.fileName}"
+								aria-label="Remove attachment {attachment.fileData?.name}"
 								on:click={() => removeAttachment(index)}
 							>
 								<span class="absolute -top-2 right-0 p-0 bg-slate-600 opacity-80 rounded-full">
@@ -292,9 +301,38 @@
 								</span>
 								<img
 									src={attachment.image_url?.url}
-									alt={attachment.fileName}
+									alt={attachment.fileData?.name}
 									class="w-16 h-16 object-cover rounded"
 								/>
+							</button>
+						{/if}
+						{#if attachment.type === 'text' && attachment.fileData?.attachment?.fileAttached}
+							<button
+								type="button"
+								class="btn btn-sm relative rounded-full"
+								aria-label="Remove attachment {attachment.fileData?.name}"
+								on:click={() => removeAttachment(index)}
+							>
+								<span class="absolute -top-2 right-0 p-0 bg-gray-700 opacity-90 rounded-full">
+									<XMark class="text-white w-5 h-5" />
+								</span>
+								<div
+									class="w-20 h-24 flex flex-col items-center justify-center bg-white rounded-md border border-gray-300 shadow-md"
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="w-8 h-8 mb-1 text-gray-600"
+										viewBox="0 0 24 24"
+										fill="currentColor"
+									>
+										<path
+											d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM13 3.5L18.5 9H13V3.5zM6 20V4h7v5h5v11H6z"
+										/>
+									</svg>
+									<span class="text-xs text-gray-800 truncate w-full text-center"
+										>{attachment.fileData?.name}</span
+									>
+								</div>
 							</button>
 						{/if}
 					{/each}

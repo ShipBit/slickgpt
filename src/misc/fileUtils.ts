@@ -267,18 +267,13 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 				if (permittedImageFormats.includes(file.type)) {
 					if (currentImageCount < MAX_ATTACHMENTS_SIZE) {
 						try {
-							console.log(`Processing image file: ${file.name}`);
 							currentImageCount++;
 							const chatContent = await processImageFile(file);
 							results.push(chatContent);
-							console.log(`Successfully processed image file: ${file.name}`);
 						} catch (error) {
-							console.error(`Error processing image file ${file.name}:`, error);
 							showToast(toastStore, `Failed to process image file: ${file.name}`, 'error');
 						}
 					}
-				} else {
-					console.warn(`Unsupported file type: ${file.type}`);
 				}
 				break;
 		}

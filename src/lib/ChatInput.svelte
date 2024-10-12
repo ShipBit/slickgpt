@@ -8,7 +8,12 @@
 		FileButton,
 		FileDropzone
 	} from '@skeletonlabs/skeleton';
-	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
+	import {
+		CodeBracket,
+		PaperAirplane,
+		CircleStack,
+		Plus
+	} from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
 		type ChatContent,
 		type ChatCost,
@@ -117,11 +122,17 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		const processContentItem = ({ fileData: imageData, ...rest }: ChatContent) => rest;
+		const processContentItem = ({ fileData: imageData, type, ...rest }: ChatContent) => {
+			// Filter out image_url if provider is not OpenAi
+			if (provider !== AiProvider.OpenAi && type === 'image_url') {
+				return null;
+			}
+			return { type, ...rest };
+		};
 
 		const processMessageContent = (message: ChatMessage) =>
 			Array.isArray(message.content)
-				? message.content.map(processContentItem)
+				? message.content.map(processContentItem).filter(Boolean)
 				: message.role === 'assistant' || message.role === 'system'
 					? message.content
 					: [{ type: 'text', text: message.content }];
@@ -381,7 +392,7 @@
 		const newAttachments = await handleFileExtractionRequest(
 			files,
 			toastStore,
-			$attachments.filter(attachment => attachment.type === 'image_url').length
+			$attachments.filter((attachment) => attachment.type === 'image_url').length
 		);
 		$attachments = [...$attachments, ...newAttachments];
 		shouldDebounce = true;
@@ -444,7 +455,7 @@
 								on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
 							/>
 							<!-- File drop zone overlay -->
-							{#if provider === AiProvider.OpenAi && isDraggingFile}
+							{#if isDraggingFile}
 								<div
 									class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
 									transition:fade={{ duration: 150 }}
@@ -455,10 +466,12 @@
 								>
 									<FileDropzone
 										name="files"
-										accept="image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf"
+										accept={provider === AiProvider.OpenAi
+											? 'image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf'
+											: 'application/pdf'}
 										multiple
 									>
-										<span>Drop images here</span>
+										<span>Drop files here</span>
 									</FileDropzone>
 								</div>
 							{/if}
@@ -492,30 +505,17 @@
 								<CodeBracket class="w-6 h-6" />
 							</button>
 							<!-- Image Upload button -->
-							{#if provider === AiProvider.OpenAi}
-								<FileButton
-									name="files"
-									button="btn-icon btn-sm"
-									accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
-									multiple
-									on:change={handleFileChange}
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="w-6 h-6"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-										/>
-									</svg>
-								</FileButton>
-							{/if}
+							<FileButton
+								name="files"
+								button="btn-icon btn-sm"
+								accept={provider === AiProvider.OpenAi
+									? 'image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf'
+									: 'application/pdf'}
+								multiple
+								on:change={handleFileChange}
+							>
+								<Plus class="w-6 h-6" />
+							</FileButton>
 						</div>
 					</div>
 				</form>

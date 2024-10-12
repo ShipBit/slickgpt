@@ -381,7 +381,7 @@
 		const newAttachments = await handleFileExtractionRequest(
 			files,
 			toastStore,
-			$attachments.length
+			$attachments.filter(attachment => attachment.type === 'image_url').length
 		);
 		$attachments = [...$attachments, ...newAttachments];
 		shouldDebounce = true;

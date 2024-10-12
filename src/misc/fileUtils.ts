@@ -1,7 +1,7 @@
 import type { ChatContent } from './shared';
 import { showToast } from './shared';
 import type { ToastStore } from '@skeletonlabs/skeleton';
-import { getDocument, OPS, GlobalWorkerOptions } from 'pdfjs-dist';
+import { getDocument, OPS, GlobalWorkerOptions, VerbosityLevel } from 'pdfjs-dist';
 import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -9,7 +9,7 @@ GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 export const MAX_ATTACHMENTS_SIZE = 10;
 const permittedImageFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
 
-async function processFile(file: File): Promise<ChatContent> {
+async function processImageFile(file: File): Promise<ChatContent> {
 	try {
 		const dataUrl = await readFileAsDataURL(file);
 		return {
@@ -37,19 +37,18 @@ function readFileAsDataURL(file: File): Promise<string> {
 }
 
 function showUploadResult(uploadedItems: ChatContent[], totalCount: number, toastStore: ToastStore) {
-	const imageAttachments = uploadedItems.filter(item => item.type === 'image_url' && item.fileData?.attachment);
-	if (imageAttachments.length > 0) {
-		showToast(toastStore, `Uploaded first ${imageAttachments.length} images (from PDF). Maximum limit (${MAX_ATTACHMENTS_SIZE}) reached`, 'warning');
-		return;
-	}
+	const pdfImageAttachments = uploadedItems.filter(item => item.type === 'image_url' && item.fileData?.attachment?.fileAttached);
+	const pdfImageCount = pdfImageAttachments.length;
 
-	if (uploadedItems.length !== totalCount) {
-		const skippedCount = totalCount - uploadedItems.length;
-		const message =
-			skippedCount > 0
-				? `Uploaded ${uploadedItems.length} out of ${totalCount} images. ${skippedCount} image(s) skipped (not supported).`
-				: `Uploaded ${uploadedItems.length} out of ${totalCount} images. Maximum limit (${MAX_ATTACHMENTS_SIZE}) reached.`;
-		showToast(toastStore, message, 'warning');
+	if (pdfImageCount > 0) {
+		showToast(toastStore,
+			`Uploaded ${pdfImageCount} images from PDF. ${pdfImageCount >= MAX_ATTACHMENTS_SIZE ? `Maximum limit (${MAX_ATTACHMENTS_SIZE}) of images reached.` : ''}`,
+			pdfImageCount >= MAX_ATTACHMENTS_SIZE ? 'warning' : 'success');
+	}
+	
+	const skippedCount = totalCount - uploadedItems.length;
+	if (skippedCount > 0) {
+		showToast(toastStore, `${skippedCount} files skipped (not supported or image limit reached).`, 'warning');
 	}
 }
 
@@ -70,7 +69,7 @@ export function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
 }
 
 async function loadPdf(arrayBuffer: ArrayBuffer) {
-	return await getDocument({ data: arrayBuffer }).promise;
+	return await getDocument({ data: arrayBuffer, verbosity: VerbosityLevel.ERRORS }).promise;
 }
 
 async function extractTextContent(page: PDFPageProxy) {
@@ -89,31 +88,33 @@ async function extractTextContent(page: PDFPageProxy) {
 }
 
 async function extractImageData(page: PDFPageProxy, imageSlots: number) {
-	// Use a Set to track unique base64 images
 	const uniqueImages = new Set<string>();
 
 	const operatorList = await page.getOperatorList();
 	const { fnArray, argsArray } = operatorList;
 	const objs = page.objs;
+	const commonObjs = page.commonObjs;
 	const images: ChatContent[] = [];
 
 	for (let i = 0; i < fnArray.length && images.length < imageSlots; i++) {
 		if (fnArray[i] === OPS.paintImageXObject) {
 			const imageDictionary = argsArray[i][0];
-			const imageData = await objs.get(imageDictionary);
 
-			if (imageData?.bitmap instanceof ImageBitmap) {
+			const imageData = imageDictionary.startsWith('g_')
+				? await new Promise(resolve => commonObjs.get(imageDictionary, resolve))
+				: await new Promise(resolve => objs.get(imageDictionary, resolve));
+
+			if (imageData && typeof imageData === 'object' && 'bitmap' in imageData && imageData.bitmap instanceof ImageBitmap) {
 				const imageBitmap = imageData.bitmap;
 				let base64Image: string | null = null;
 
+				// Use OffscreenCanvas if available for better performance
 				if (typeof OffscreenCanvas !== 'undefined') {
-					// Use OffscreenCanvas for rendering
 					const offscreenCanvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
 					const context = offscreenCanvas.getContext('2d');
-
 					if (context) {
 						context.drawImage(imageBitmap, 0, 0, imageBitmap.width, imageBitmap.height);
-						// Transfer the image to a regular canvas to get the data URL
+						// OffscreenCanvas does not support toDataURL, so we transfer to a regular canvas
 						const canvas = document.createElement('canvas');
 						canvas.width = imageBitmap.width;
 						canvas.height = imageBitmap.height;
@@ -124,7 +125,6 @@ async function extractImageData(page: PDFPageProxy, imageSlots: number) {
 						}
 					}
 				} else {
-					// Fallback to regular canvas
 					const canvas = document.createElement('canvas');
 					const context = canvas.getContext('2d');
 					canvas.width = imageBitmap.width;
@@ -135,9 +135,8 @@ async function extractImageData(page: PDFPageProxy, imageSlots: number) {
 					}
 				}
 
-				// Check if the image is already in the set of unique images
 				if (base64Image && !uniqueImages.has(base64Image)) {
-					uniqueImages.add(base64Image); // Add the image to the set
+					uniqueImages.add(base64Image);
 					images.push({
 						type: 'image_url',
 						image_url: {
@@ -178,7 +177,8 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer, imageSlots: number) {
 			const textContent = await extractTextContent(page);
 
 			if (images.length < imageSlots) {
-				images = await extractImageData(page, imageSlots);
+				const extractedImages = await extractImageData(page, imageSlots - images.length);
+				images.push(...extractedImages);
 			}
 
 			const combinedContent = textContent.concat(images.map((img, index) => {
@@ -198,11 +198,9 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer, imageSlots: number) {
 				return 0;
 			});
 
-			// Collect all text content into a single array
-			combinedTextArray.push(...combinedContent.map(item => item!.content));
+			combinedTextArray.push(`Page ${i}:`, ...combinedContent.map(item => item!.content));
 		}
 
-		// Create a single ChatContent object with type 'text' for all pages
 		const textContentObject: ChatContent = {
 			type: 'text',
 			text: combinedTextArray.join(' '),
@@ -214,10 +212,8 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer, imageSlots: number) {
 			}
 		};
 
-		// Add the single textContentObject to textResults
 		const textResults: ChatContent[] = [textContentObject];
 
-		console.log(textResults);
 		const result = {
 			textResults,
 			images
@@ -230,54 +226,65 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer, imageSlots: number) {
 	}
 }
 
-export async function handleFileExtractionRequest(files: FileList, toastStore: ToastStore, uploadedCount: number) {
+export async function handleFileExtractionRequest(files: FileList, toastStore: ToastStore, uploadedImageCount: number) {
 	const results: ChatContent[] = [];
-	const remainingSlots = MAX_ATTACHMENTS_SIZE - uploadedCount;
-	const filesToUpload = Math.min(files.length, remainingSlots);
+	let currentImageCount = uploadedImageCount;
+	const isImageFile = (file: File) => permittedImageFormats.includes(file.type);
 
-	if (filesToUpload <= 0) {
+	if (Array.from(files).some(isImageFile) && (uploadedImageCount >= MAX_ATTACHMENTS_SIZE)) {
 		showToast(
 			toastStore,
-			`Maximum number of files (${MAX_ATTACHMENTS_SIZE}) already uploaded.`,
+			'Image file(s) detected. You have reached the maximum limit for image uploads.',
 			'warning'
 		);
 		return [];
 	}
 
-	await Promise.all(Array.from(files).slice(0, filesToUpload).map(async (file) => {
+	await Promise.all(Array.from(files).map(async (file) => {
 		const arrayBuffer = await readFileAsArrayBuffer(file);
 
 		switch (file.type) {
 			case 'application/pdf':
-				// Increment with 1 as pdf isn't an image
-				const pdfContent = await extractPdfContent(arrayBuffer, remainingSlots - filesToUpload + 1);
+				// Only process images in PDF if the image limit hasn't been reached
+				const availableImageSlots = MAX_ATTACHMENTS_SIZE - currentImageCount;
+				const pdfContent = await extractPdfContent(arrayBuffer, availableImageSlots);
 				if (pdfContent) {
 					pdfContent.textResults.forEach(item => {
 						if (item.fileData) {
 							item.fileData.name = file.name;
 						}
 					});
-					if (pdfContent.images) {
+					if (pdfContent.textResults.length > 0) {
+						results.push(...pdfContent.textResults);
+					}
+					if (pdfContent.images.length > 0 && availableImageSlots > 0) {
+						currentImageCount += pdfContent.images.length;
 						results.push(...pdfContent.images);
 					}
-					results.push(...pdfContent.textResults);
 				}
 				break;
 			default:
 				if (permittedImageFormats.includes(file.type)) {
-					try {
-						const chatContent = await processFile(file);
-						results.push(chatContent);
-					} catch (error) {
-						// should never happen unless corrupted image
-						console.error(error);
+					if (currentImageCount < MAX_ATTACHMENTS_SIZE) {
+						try {
+							console.log(`Processing image file: ${file.name}`);
+							currentImageCount++;
+							const chatContent = await processImageFile(file);
+							results.push(chatContent);
+							console.log(`Successfully processed image file: ${file.name}`);
+						} catch (error) {
+							console.error(`Error processing image file ${file.name}:`, error);
+							showToast(toastStore, `Failed to process image file: ${file.name}`, 'error');
+						}
 					}
+				} else {
+					console.warn(`Unsupported file type: ${file.type}`);
 				}
 				break;
 		}
 	}));
 
-	showUploadResult(results, filesToUpload, toastStore);
+	showUploadResult(results, files.length, toastStore);
 
 	return results;
 }

@@ -7,7 +7,11 @@
 }
 
 .markdown-content :where(h1, h2, h3, h4, h5, h6) {
-    @apply mt-8 mb-4;
+    @apply mb-4;
+}
+
+.markdown-content :where(h1, h2, h3, h4, h5, h6):not(:first-child) {
+    @apply mt-8;
 }
 
 .markdown-content :where(ul, ol) {

@@ -176,12 +176,13 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer, imageSlots: number) {
 
 			const textContent = await extractTextContent(page);
 
+			let newImages: ChatContent[] = [];
 			if (images.length < imageSlots) {
-				const extractedImages = await extractImageData(page, imageSlots - images.length);
-				images.push(...extractedImages);
+				newImages = await extractImageData(page, imageSlots - images.length);
+				images.push(...newImages);
 			}
 
-			const combinedContent = textContent.concat(images.map((img, index) => {
+			const combinedContent = textContent.concat(newImages.map((img, index) => {
 				if (!img.fileData?.position) return null;
 				return {
 					type: 'image',
@@ -190,10 +191,14 @@ async function extractPdfContent(arrayBuffer: ArrayBuffer, imageSlots: number) {
 				};
 			}).filter(item => item !== null));
 
-			// Sort combined content by y and then x position, but only for images
+			// Sort combined content by y and then x position
 			combinedContent.sort((a, b) => {
 				if (a?.type === 'image' && b?.type === 'image') {
 					return a.position.y - b.position.y || a.position.x - b.position.x;
+				} else if (a?.type === 'image') {
+					return -1;
+				} else if (b?.type === 'image') {
+					return 1;
 				}
 				return 0;
 			});

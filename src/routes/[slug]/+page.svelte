@@ -161,6 +161,7 @@
 			showModalComponent(modalStore, 'SuggestTitleModal', { slug });
 		}
 	}
+
 	function removeAttachment(index: number) {
 		const attachment = $attachments[index]?.fileData?.attachment;
 		if (attachment?.quantity) {

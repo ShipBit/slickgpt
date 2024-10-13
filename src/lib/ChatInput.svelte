@@ -12,7 +12,8 @@
 		CodeBracket,
 		PaperAirplane,
 		CircleStack,
-		Plus
+		Plus,
+		Folder
 	} from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
 		type ChatContent,
@@ -35,7 +36,6 @@
 	import { AiProvider, countTokens, getProviderForModel, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
 	import { get } from 'svelte/store';
-	import { fade } from 'svelte/transition';
 	import {
 		PUBLIC_GROQ_API_URL,
 		PUBLIC_MIDDLEWARE_API_URL,
@@ -125,6 +125,7 @@
 		const processContentItem = ({ fileData: imageData, type, ...rest }: ChatContent) => {
 			// Filter out image_url if provider is not OpenAi
 			if (provider !== AiProvider.OpenAi && type === 'image_url') {
+				showToast(toastStore, 'Image URLs are not supported with this provider and have been removed.', 'warning');
 				return null;
 			}
 			return { type, ...rest };
@@ -363,8 +364,12 @@
 	export async function editMessage(message: ChatMessage) {
 		originalMessage = message;
 		input = Array.isArray(message.content)
-			? message.content.map((c) => (c.type === 'text' ? c.text : '')).join('\n')
+			? message.content.map((c) => (c.type === 'text' && !c.fileData?.attachment?.fileAttached ? c.text : '')).join('')
 			: message.content;
+
+		$attachments = Array.isArray(message.content)
+			? message.content.filter((c) => (c.type === 'image_url' || c.type === 'text') && c.fileData?.attachment?.fileAttached)
+			: [];
 		isEditMode = true;
 
 		// tick is required for the action to resize the textarea
@@ -376,6 +381,7 @@
 		isEditMode = false;
 		originalMessage = null;
 		input = '';
+		$attachments = [];
 
 		// tick is required for the action to resize the textarea
 		await tick();
@@ -441,41 +447,41 @@
 				<!-- Chat input form -->
 				<form use:focusTrap={!$isLoadingAnswerStore} on:submit|preventDefault={handleSubmit}>
 					<div class="grid grid-cols-[1fr_auto]">
-						<div class="relative flex flex-col">
-							<!-- Textarea for user input -->
-							<textarea
-								class="textarea overflow-hidden min-h-[42px] w-full"
-								rows="1"
-								placeholder="Enter to send, Shift+Enter for newline"
-								use:textareaAutosizeAction
-								on:keydown={handleKeyDown}
-								on:paste={handlePaste}
-								bind:value={input}
-								bind:this={textarea}
-								on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
-							/>
-							<!-- File drop zone overlay -->
-							{#if isDraggingFile}
-								<div
-									class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
-									transition:fade={{ duration: 150 }}
-									on:dragleave={(event) => (isDraggingFile = handleDragLeave(event))}
-									on:drop={handleFileDrop}
-									role="region"
-									aria-label="File drop area"
-								>
-									<FileDropzone
-										name="files"
-										accept={provider === AiProvider.OpenAi
-											? 'image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf'
-											: 'application/pdf'}
-										multiple
-									>
-										<span>Drop files here</span>
-									</FileDropzone>
-								</div>
-							{/if}
-						</div>
+						{#if !isDraggingFile}
+							<div class="relative flex flex-col">
+								<!-- Textarea for user input -->
+								<textarea
+									class="textarea overflow-hidden min-h-[42px] w-full"
+									rows="1"
+									placeholder="Enter to send, Shift+Enter for newline"
+									use:textareaAutosizeAction
+									on:keydown={handleKeyDown}
+									on:paste={handlePaste}
+									bind:value={input}
+									bind:this={textarea}
+									on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
+								/>
+							</div>
+						{/if}
+						<!-- File drop zone overlay -->
+						{#if isDraggingFile}
+							<FileDropzone
+								class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
+								on:dragleave={(event) => (isDraggingFile = handleDragLeave(event))}
+								on:drop={handleFileDrop}
+								on:change={handleFileChange}
+								role="region"
+								name="files"
+								accept={provider === AiProvider.OpenAi
+									? 'image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf'
+									: 'application/pdf'}
+								multiple
+							>
+								<svelte:fragment slot="lead"><Folder class="w-12 h-12" /></svelte:fragment>
+								<svelte:fragment slot="message">Drop files here to upload</svelte:fragment>
+								<svelte:fragment slot="meta">Supports images and PDFs</svelte:fragment>
+							</FileDropzone>
+						{/if}
 						<!-- Action buttons -->
 						<div class="flex items-center">
 							<!-- Token count button -->

@@ -77,18 +77,21 @@ function renderContentArray(contentArray: ChatContent[]): string {
         switch (item.type) {
             case 'text':
                 if (item.fileData?.attachment?.fileAttached)
-                    return `<div class="attachment-container border border-surface-300-600-token rounded-lg p-4 shadow-md bg-surface-50 dark:bg-surface-700">
-                        <div class="attachment-header flex items-center justify-between mb-2">
-                            <span class="attachment-icon bg-accent-500 text-white rounded-full p-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM13 3.5L18.5 9H13V3.5zM6 20V4h7v5h5v11H6z"/>
-                                </svg>
-                            </span>
-                            <span class="file-name font-semibold text-surface-900 dark:text-surface-50 truncate" title="${item.fileData.name}">
-                                ${item.fileData.name}
-                            </span>
-                        </div>
-                    </div>`;
+                    if (item.fileData?.attachment?.fileAttached) {
+                        const maxWidth = item.fileData.name && item.fileData.name.length > 20 ? 'max-w-xs' : 'max-w-sm';
+                        return `<div class="attachment-container border border-surface-300-600-token rounded-lg p-4 shadow-md bg-surface-50 dark:bg-surface-700 ${maxWidth}">
+                            <div class="attachment-header flex items-center justify-between mb-2">
+                                <span class="attachment-icon theme-icon rounded-full p-2 bg-surface-200 dark:bg-surface-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM13 3.5L18.5 9H13V3.5zM6 20V4h7v5h5v11H6z"/>
+                                    </svg>
+                                </span>
+                                <span class="file-name font-semibold text-surface-800 dark:text-surface-50 truncate" title="${item.fileData.name}">
+                                    ${item.fileData.name}
+                                </span>
+                            </div>
+                        </div>`;
+                    }
                 return item.text ? md.render(item.text) : '';
             case 'image_url':
                 if (item.image_url?.url && !item.fileData?.attachment?.fileAttached) {

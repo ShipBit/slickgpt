@@ -75,7 +75,8 @@ SlickGPT is a light-weight "use-your-own-API-key" (or optional: subscription-bas
 
 ## Feature Overview
 
-- **Fancy User Interface** <br> Interact with an elegant and cleanUI that makes chatting fun and explains a lot of the heavy stuff to users.
+- **Document Upload** <br> Extract text and images from PDF files. Supports text-based formats such as .py, .cs, .cpp, .c, .txt, and .csv files.
+- **Fancy User Interface** <br> Interact with an elegant and clean UI that makes chatting fun and explains a lot of the heavy stuff to users.
 - **Mobile first and fully responsive** <br> SlickGPT is always at your hand. Literally, on your phone.
 - **Local History** <br> Your chat history is stored in your browser's IndexedDb and never leaves your machine (until you actively decide to share chats).
 - **Delete and edit messages** <br> Just like you are used to from the OpenAI client.
@@ -95,6 +96,7 @@ SlickGPT currently supports these models:
   - GPT-3.5 Turbo
   - GPT-4 Turbo
   - GPT-4o
+  - GPT-4o Mini
 
 - Mistral:
 
@@ -132,7 +134,7 @@ Share chats with 3 clicks to collaborate and brainstorm ideas with your team or 
 
 ### Change advanced settings
 
-SlickGPT allows you to customize all parameters the OpenAI API offers to your liking. You can change the model, temperature, top_p, and frequency_penalty parameters to get the best results. You can also set the the chat context (or "system" message) to guide the AI model and shape its behaviour and answers and even use "stop sequences" to limit the answers you get.
+SlickGPT allows you to customize all parameters the OpenAI API offers to your liking. You can change the model, temperature, top_p, and frequency_penalty parameters to get the best results. You can also set the chat context (or "system" message) to guide the AI model and shape its behaviour and answers and even use "stop sequences" to limit the answers you get.
 
 <a href="static/docu/settings.png">
   <img src="static/docu/settings.png" alt="Settings" height="300">
@@ -168,23 +170,24 @@ SlickGPT offers a light and dark theme. You can switch between the two modes by 
 
 While ChatGPT offers a great conversational AI experience, it lacks some features many users desire.
 
-| Feature                      | SlickGPT | ChatGPT Plus            |
-| ---------------------------- | -------- | ----------------------- |
+| Feature                      | SlickGPT | ChatGPT Plus             |
+| ---------------------------- | -------- | ------------------------ |
 | Use different models         | ✅       | (✅ OpenAI models only) |
 | Chat history                 | ✅       | ✅                      |
 | Highlight / Format code      | ✅       | ✅                      |
 | Use Your Own API Key         | ✅       | ✅                      |
 | Edit and branch messages     | ✅       | ✅                      |
 | Stop generation              | ✅       | ✅                      |
-| Vision                       | ✅       | ✅
+| Vision                       | ✅       | ✅                      |
 | Share and continue chats     | ✅       | (✅) (can't import)     |
 | Host yourself / Run locally  | ✅       | ❌                      |
 | Set context / system message | ✅       | ❌                      |
 | Change model configuration   | ✅       | ❌                      |
 | No Login Required            | ✅       | ❌                      |
 | Token Cost Calculation       | ✅       | ❌                      |
+| File Uploads                 | ✅       | (✅ OpenAI models only) |
 | Mobile-first design          | ✅       | ❌                      |
-| Unlimited use subscription   | 5,99 €/m | 18,00 €/m               |
+| Unlimited use subscription   | 5,99 €/m | 18,00 €/m                |
 
 As you can see, SlickGPT includes several additional features that cater to a broad range of user needs, such as hosting the service yourself, using a local chat history, sharing chats, and customizing the chat configurations. Moreover, SlickGPT does not require a login, allowing for faster and more streamlined access. These added functionalities make SlickGPT a more versatile and convenient solution for users seeking an advanced ChatGPT experience.
 

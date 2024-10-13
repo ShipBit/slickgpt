@@ -368,7 +368,7 @@
 			: message.content;
 
 		$attachments = Array.isArray(message.content)
-			? message.content.filter((c) => (c.type === 'image_url' || c.type === 'text') && c.fileData?.attachment?.fileAttached)
+			? message.content.filter((c) => (c.type === 'image_url' || (c.type === 'text' && c.fileData?.attachment?.fileAttached)))
 			: [];
 		isEditMode = true;
 

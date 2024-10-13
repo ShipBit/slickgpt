@@ -8,7 +8,6 @@
 	} from '@skeletonlabs/skeleton';
 	import { chatStore, settingsStore, isPro } from '$misc/stores';
 	import {
-		AiModel,
 		AiProvider,
 		getDefaultModelForProvider,
 		getProviderForModel,
@@ -116,7 +115,7 @@
 							on:blur={() => (editApiKey = false)}
 						/>
 					</label>
-				{:else if currentProvider === AiProvider.Meta && (!$settingsStore.metaApiKey || editApiKey)}
+				{:else if (currentProvider === AiProvider.Meta || currentProvider === AiProvider.Google) && (!$settingsStore.groqApiKey || editApiKey)}
 					<label class="label">
 						<div class="flex justify-between space-x-12">
 							<span>Groq API key</span>
@@ -132,9 +131,9 @@
 						<input
 							required
 							class="input"
-							class:input-error={!$settingsStore.metaApiKey}
+							class:input-error={!$settingsStore.groqApiKey}
 							type="text"
-							bind:value={$settingsStore.metaApiKey}
+							bind:value={$settingsStore.groqApiKey}
 							on:blur={() => (editApiKey = false)}
 						/>
 					</label>
@@ -165,8 +164,8 @@
 						<span class="label"
 							>{currentProvider === AiProvider.Mistral
 								? 'Mistral'
-								: currentProvider === AiProvider.Meta
-									? 'Meta'
+								: currentProvider === AiProvider.Meta || AiProvider.Google
+									? 'Groq'
 									: 'OpenAI'} API key</span
 						>
 
@@ -174,8 +173,8 @@
 							<span>
 								{#if currentProvider === AiProvider.Mistral}
 									{maskString($settingsStore.mistralApiKey)}
-								{:else if currentProvider === AiProvider.Meta}
-									{maskString($settingsStore.metaApiKey)}
+								{:else if currentProvider === AiProvider.Meta || currentProvider === AiProvider.Google}
+									{maskString($settingsStore.groqApiKey)}
 								{:else}
 									{maskString($settingsStore.openAiApiKey)}
 								{/if}
@@ -193,7 +192,7 @@
 			{/if}
 
 			<!-- Model -->
-			{#if $isPro || (currentProvider === AiProvider.OpenAi && $settingsStore.openAiApiKey) || (currentProvider === AiProvider.Meta && $settingsStore.metaApiKey) || (currentProvider === AiProvider.Mistral && $settingsStore.mistralApiKey)}
+			{#if $isPro || (currentProvider === AiProvider.OpenAi && $settingsStore.openAiApiKey) || ((currentProvider === AiProvider.Meta || currentProvider === AiProvider.Google) && $settingsStore.groqApiKey) || (currentProvider === AiProvider.Mistral && $settingsStore.mistralApiKey)}
 				<div class="flex flex-col space-y-2">
 					<label class="label">
 						<div class="flex justify-between space-x-12">

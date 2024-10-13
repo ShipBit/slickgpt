@@ -61,7 +61,7 @@ export interface Chat {
 export interface ClientSettings {
 	openAiApiKey?: string;
 	mistralApiKey?: string;
-	metaApiKey?: string;
+	groqApiKey?: string;
 	hideLanguageHint?: boolean;
 	useTitleSuggestions?: boolean;
 	defaultModel?: AiModel;
@@ -179,7 +179,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 				url = PUBLIC_MISTRAL_API_URL;
 				break;
 			case AiProvider.Meta:
-				token = settings.metaApiKey!;
+				token = settings.groqApiKey!;
 				url = PUBLIC_GROQ_API_URL;
 				break;
 			default:

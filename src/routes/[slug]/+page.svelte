@@ -66,7 +66,7 @@
 	$: isMissingApiKey =
 		(provider === 'OpenAI' && !$settingsStore.openAiApiKey) ||
 		(provider === 'Mistral' && !$settingsStore.mistralApiKey) ||
-		(provider === 'Meta' && !$settingsStore.metaApiKey);
+		(provider === 'Meta' && !$settingsStore.groqApiKey);
 	let chatInput: ChatInput;
 
 	onMount(async () => {

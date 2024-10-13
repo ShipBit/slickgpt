@@ -79,17 +79,17 @@ export interface ChatCost {
 }
 
 export interface FileData {
-	name?: string,
-	height?: number,
-	width?: number,
+	name?: string;
 	position?: {
-		x: any,
-		y: any
-	},
+		x: number;
+		y: number;
+	};
+	width?: number;
+	height?: number;
 	attachment?: {
-		quantity?: number,
-		fileAttached: boolean
-	}
+		fileAttached: boolean;
+		quantity?: number;
+	};
 }
 
 export function createNewChat(template?: {
@@ -130,7 +130,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		return Promise.resolve(chat.title);
 	}
 
-	
+
 	let token: string;
 	let url: string;
 	let body: any;
@@ -147,12 +147,13 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		return Promise.resolve(chat.title);
 	}
 
+	// Should refactor this out
 	function sanitizeContent(content: string | ChatContent[]): ChatContent[] | string {
 		if (typeof content === 'string') {
 			return content;
 		}
 		return content.map(item => {
-			if (item.type === 'image_url' && (getProviderForModel(chat.settings.model) !== AiProvider.OpenAi|| isUsingPro)) {
+			if (item.type === 'image_url' && (getProviderForModel(chat.settings.model) !== AiProvider.OpenAi || isUsingPro)) {
 				return null;
 			}
 			return item.type === 'image_url' ? (({ fileData: imageData, ...rest }) => rest)(item) : item;
@@ -282,4 +283,38 @@ export function showToast(
 		action
 	};
 	toastStore.trigger(toast);
+}
+
+export async function readFileAsDataURL(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = (e) => resolve(e.target?.result as string);
+		reader.onerror = reject;
+		reader.readAsDataURL(file);
+	});
+}
+
+export function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+	return new Promise((resolve) => {
+		const reader = new FileReader();
+		reader.onload = event => {
+			const result = event.target?.result;
+			if (result instanceof ArrayBuffer) {
+				resolve(result);
+			} else {
+				resolve(new ArrayBuffer(0)); // Return an empty ArrayBuffer on error
+			}
+		};
+		reader.onerror = () => resolve(new ArrayBuffer(0)); // Handle error by returning an empty ArrayBuffer
+		reader.readAsArrayBuffer(file);
+	});
+}
+
+export function readFileAsText(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = (e) => resolve(e.target?.result as string);
+		reader.onerror = reject;
+		reader.readAsText(file);
+	});
 }

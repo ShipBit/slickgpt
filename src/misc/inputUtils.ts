@@ -1,4 +1,4 @@
-import { handleFileExtractionRequest } from './fileUtils';
+import { handleFileExtractionRequest } from './fileHandler';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import type { ChatContent } from './shared';
 

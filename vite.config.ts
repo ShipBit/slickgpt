@@ -10,14 +10,20 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			output: {
-			  manualChunks(id) {
-				if (id.includes('pdfjs-dist')) {
-				  return 'pdfjs';
+				manualChunks(id) {
+					if (id.includes('pdfjs-dist')) {
+						return 'pdfjs';
+					}
+					else if (id.includes('node_modules')) {
+						// Split third-party modules into separate chunks
+						const parts = id.split('node_modules/');
+						const moduleName = parts[1]?.split('/')[0];
+						return moduleName || 'unknown';
+					}
 				}
-			  }
 			}
 		},
-		target: "ES2022",
+		target: "ES2022"
 	},
 	plugins: [sveltekit()]
 });

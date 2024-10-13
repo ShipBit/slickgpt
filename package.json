@@ -58,6 +58,7 @@
 		"@floating-ui/dom": "^1.6.3",
 		"@inqling/svelte-icons": "4.1.2",
 		"@vercel/analytics": "^1.2.2",
+		"async-mutex": "^0.5.0",
 		"common-tags": "^1.8.2",
 		"firebase": "^10.11.0",
 		"highlight.js": "^11.9.0",

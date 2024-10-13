@@ -43,7 +43,7 @@
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
 	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
-	import { handleFileExtractionRequest } from '$misc/fileUtils';
+	import { handleFileExtractionRequest } from '$misc/fileHandler';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -472,14 +472,17 @@
 								on:change={handleFileChange}
 								role="region"
 								name="files"
-								accept={provider === AiProvider.OpenAi
-									? 'image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf'
-									: 'application/pdf'}
 								multiple
 							>
 								<svelte:fragment slot="lead"><Folder class="w-12 h-12" /></svelte:fragment>
-								<svelte:fragment slot="message">Drop files here to upload</svelte:fragment>
-								<svelte:fragment slot="meta">Supports images and PDFs</svelte:fragment>
+								<svelte:fragment slot="message">Drop files to upload</svelte:fragment>
+								<svelte:fragment slot="meta">
+									{#if provider === AiProvider.OpenAi}
+										Supports image files, PDF documents, and other textfile formats
+									{:else}
+										Supports PDF documents and other textfile formats
+									{/if}
+								</svelte:fragment>
 							</FileDropzone>
 						{/if}
 						<!-- Action buttons -->
@@ -515,8 +518,8 @@
 								name="files"
 								button="btn-icon btn-sm"
 								accept={provider === AiProvider.OpenAi
-									? 'image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf'
-									: 'application/pdf'}
+									? 'image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf,text/*,application/json,application/xml,.py,.cs,.js,.ts,.java,.cpp,.c,.html,.css,.txt,.json,.xml,.md,.csv,.log,.ini,.yaml,.yml,.sh,.bat,.conf,.config,.properties,.sql,.r,.go,.swift,.pl,.rb,.php,.asp,.aspx,.jsp,.vue,.jsx,.tsx'
+									: 'application/pdf,text/*,application/json,application/xml,.py,.cs,.js,.ts,.java,.cpp,.c,.html,.css,.txt,.json,.xml,.md,.csv,.log,.ini,.yaml,.yml,.sh,.bat,.conf,.config,.properties,.sql,.r,.go,.swift,.pl,.rb,.php,.asp,.aspx,.jsp,.vue,.jsx,.tsx'}
 								multiple
 								on:change={handleFileChange}
 							>

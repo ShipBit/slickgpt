@@ -33,8 +33,7 @@ export enum AiModel {
 	LlamaGuard38b = 'llama-guard-3-8b',
 	Llama32_90b_TextPreview = 'llama-3.2-90b-text-preview',
 	Llama32_1b_Preview = 'llama-3.2-1b-preview',
-	Llama32_11b_VisionPreview = 'llama-3.2-11b-vision-preview',
-	Mixtral_8x7b = 'mixtral-8x7b-32768'
+	Llama32_11b_VisionPreview = 'llama-3.2-11b-vision-preview'
 }
 
 export interface AiSettings {
@@ -121,11 +120,33 @@ export const models: Record<AiModel, AiModelStats> = {
 		provider: AiProvider.Meta,
 		maxTokens: 131072,
 		contextWindow: 131072,
-		costInput: 0.59,
-		costOutput: 0.79
+		costInput: 0.52,
+		costOutput: 0.75
 	},
 	[AiModel.Gemma2_9b]: {
 		provider: AiProvider.Google,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0,
+		costOutput: 0
+	},
+	[AiModel.Gemma7b]: {
+		provider: AiProvider.Google,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0.1,
+		costOutput: 0.1
+	},
+	[AiModel.Llama31_8b_Instant]: {
+		provider: AiProvider.Meta,
+		maxTokens: 131072,
+		contextWindow: 131072,
+		costInput: 0.09,
+		costOutput: 0.09
+	},
+
+	[AiModel.LlamaGuard38b]: {
+		provider: AiProvider.Meta,
 		maxTokens: 8192,
 		contextWindow: 8192,
 		costInput: 0.59,
@@ -135,31 +156,10 @@ export const models: Record<AiModel, AiModelStats> = {
 		provider: AiProvider.Meta,
 		maxTokens: 8192,
 		contextWindow: 8192,
-		costInput: 0.59,
-		costOutput: 0.79
-	},
-	[AiModel.Gemma7b]: {
-		provider: AiProvider.Google,
-		maxTokens: 8192,
-		contextWindow: 8192,
-		costInput: 0.59,
-		costOutput: 0.79
-	},
-	[AiModel.Llama31_8b_Instant]: {
-		provider: AiProvider.Meta,
-		maxTokens: 131072,
-		contextWindow: 131072,
-		costInput: 0.59,
-		costOutput: 0.79
+		costInput: 0.19,
+		costOutput: 0.19
 	},
 	[AiModel.Llama32_3b_Preview]: {
-		provider: AiProvider.Meta,
-		maxTokens: 8192,
-		contextWindow: 8192,
-		costInput: 0.59,
-		costOutput: 0.79
-	},
-	[AiModel.LlamaGuard38b]: {
 		provider: AiProvider.Meta,
 		maxTokens: 8192,
 		contextWindow: 8192,
@@ -184,15 +184,8 @@ export const models: Record<AiModel, AiModelStats> = {
 		provider: AiProvider.Meta,
 		maxTokens: 8192,
 		contextWindow: 8192,
-		costInput: 0.59,
-		costOutput: 0.79
-	},
-	[AiModel.Mixtral_8x7b]: {
-		provider: AiProvider.Mistral,
-		maxTokens: 32768,
-		contextWindow: 32768,
-		costInput: 0.59,
-		costOutput: 0.79
+		costInput: 0.19,
+		costOutput: 0.19 
 	},
 	// deprecated, only here for backwards compatibility
 	[AiModel.Gpt4TurboPreview]: {

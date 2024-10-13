@@ -164,7 +164,7 @@
 						<span class="label"
 							>{currentProvider === AiProvider.Mistral
 								? 'Mistral'
-								: currentProvider === AiProvider.Meta || AiProvider.Google
+								: currentProvider === AiProvider.Meta || currentProvider === AiProvider.Google
 									? 'Groq'
 									: 'OpenAI'} API key</span
 						>

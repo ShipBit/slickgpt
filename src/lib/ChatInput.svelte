@@ -102,26 +102,25 @@
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
 	async function handleSubmit() {
-		if (input.trim() === '' && $attachments.length === 0) return;
+		if (!input.trim() && !$attachments.length) return;
 
 		isLoadingAnswerStore.set(true);
 		inputCopy = input;
 
-		let parent: ChatMessage | null = null;
-		if (currentMessages && currentMessages.length > 0) {
-			parent = chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat);
-		}
+		const parent = currentMessages?.length
+			? chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat)
+			: null;
 
 		const processContent = (content: ChatContent[] | string, messageId?: string): ChatContent[] => {
 			if (typeof content === 'string') {
 				return [{ type: 'text', text: content }];
 			}
 
-			const hasUnsupportedImages = content.some(
+			const unsupportedImages = content.some(
 				({ type }) => provider !== AiProvider.OpenAi && type === 'image_url'
 			);
 
-			if (hasUnsupportedImages) {
+			if (unsupportedImages) {
 				showToast(
 					toastStore,
 					'Images are not supported with this provider and have been removed.',
@@ -142,21 +141,19 @@
 				.filter(Boolean) as ChatContent[];
 		};
 
-		// Ensure message content is in ChatContent format
 		message.content = processContent(message.content);
 
-		if (!isEditMode) {
-			chatStore.addMessageToChat(slug, message, parent || undefined);
-			track('ask');
-		} else if (originalMessage && originalMessage.id) {
+		if (isEditMode && originalMessage?.id) {
 			chatStore.addAsSibling(slug, originalMessage.id, message);
 			track('edit');
+		} else {
+			chatStore.addMessageToChat(slug, message, parent || undefined);
+			track('ask');
 		}
 
-		// message now has an id
 		lastUserMessage = message;
 
-		function processMessageContent(message: ChatMessage) {
+		const processMessageContent = (message: ChatMessage) => {
 			const content =
 				message.role === 'assistant' || message.role === 'system'
 					? message.content
@@ -168,30 +165,42 @@
 					: systemPromptContent;
 			}
 
-			return content;
-		}
+			const textContent = Array.isArray(content)
+				? content
+						.filter((c) => c.type === 'text')
+						.map((c) => c.text)
+						.join('\n')
+				: content;
 
-		function shouldAddSystemPrompt(): boolean {
-			const isContextEmpty = chat.contextMessage.content === '';
-			const hasAttachments = $attachments.length > 0;
+			return Array.isArray(content)
+				? [{ type: 'text', text: textContent }, ...content.filter((c) => c.type !== 'text')]
+				: content;
+		};
+
+		const shouldAddSystemPrompt = (): boolean => {
+			const isContextEmpty = !chat.contextMessage.content.trim();
+			const hasAttachments = Boolean($attachments.length);
 			const hasFileAttached = $attachments.some(
-				(attachment) => attachment.fileData?.attachment?.fileAttached
+				(attachment) => attachment?.fileData?.attachment?.fileAttached
 			);
 			const hasCurrentMessagesWithFiles = currentMessages?.some(
 				(msg) =>
 					Array.isArray(msg.content) &&
-					msg.content.some((content: ChatContent) => content.fileData?.attachment?.fileAttached)
+					msg.content.some((content: ChatContent) => content?.fileData?.attachment?.fileAttached)
 			);
 			const isSystemPromptMissing = !currentMessages?.some(
-				(msg) => msg.role === 'system' && msg.content === systemPromptContent
+				(msg) =>
+					msg.role === 'system' &&
+					typeof msg.content === 'string' &&
+					msg.content.includes(systemPromptContent)
 			);
 
 			return (
-				(!!isContextEmpty || !!hasAttachments) &&
-				(!!hasFileAttached || !!hasCurrentMessagesWithFiles) &&
+				(isContextEmpty || !!hasAttachments) &&
+				(hasFileAttached || !!hasCurrentMessagesWithFiles) &&
 				isSystemPromptMissing
 			);
-		}
+		};
 
 		const messages =
 			currentMessages?.map((message) => ({

@@ -98,6 +98,7 @@
 				<textarea
 					class="textarea"
 					rows="3"
+					on:keydown|stopPropagation
 					bind:value={context}
 					placeholder="You are a helpful assistant."
 				/>

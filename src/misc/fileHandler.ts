@@ -41,7 +41,7 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 	await Promise.all(Array.from(files).map(async (file) => {
 		switch (true) {
 			case file.type === 'application/pdf': {
-				const arrayBuffer = Buffer.from(await file.arrayBuffer());
+				const arrayBuffer = new Uint8Array(await file.arrayBuffer());
 				if (arrayBuffer.byteLength === 0) {
 					showToast(toastStore, `Failed to read file: ${file.name}`, 'error');
 					return;

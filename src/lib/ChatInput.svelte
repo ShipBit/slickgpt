@@ -531,7 +531,7 @@
 							<div class="relative flex flex-col">
 								<!-- Textarea for user input -->
 								<textarea
-									class="textarea overflow-hidden min-h-[42px] w-full"
+									class="textarea overflow-auto min-h-[42px] max-h-[45dvh] w-full"
 									rows="1"
 									placeholder="Enter to send, Shift+Enter for newline"
 									use:textareaAutosizeAction

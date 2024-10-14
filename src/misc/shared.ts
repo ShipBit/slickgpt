@@ -125,6 +125,18 @@ export function canSuggestTitle(chat: Chat) {
 	return chat.contextMessage?.content || chat.messages?.length > 0;
 }
 
+export function sanitizeContent(content: string | ChatContent[], model: AiModel): ChatContent[] | string {
+	if (typeof content === 'string') {
+		return content;
+	}
+	return content.map(item => {
+		if (item.type === 'image_url' && (getProviderForModel(model) !== AiProvider.OpenAi)) {
+			return null;
+		}
+		return item.type === 'image_url' ? (({ fileData: imageData, ...rest }) => rest)(item) : item;
+	}).filter(item => item !== null);
+}
+
 export async function suggestChatTitle(chat: Chat): Promise<string> {
 	if (!canSuggestTitle(chat)) {
 		return Promise.resolve(chat.title);
@@ -147,25 +159,12 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 		return Promise.resolve(chat.title);
 	}
 
-	// Should refactor this out
-	function sanitizeContent(content: string | ChatContent[]): ChatContent[] | string {
-		if (typeof content === 'string') {
-			return content;
-		}
-		return content.map(item => {
-			if (item.type === 'image_url' && (getProviderForModel(chat.settings.model) !== AiProvider.OpenAi || isUsingPro)) {
-				return null;
-			}
-			return item.type === 'image_url' ? (({ fileData: imageData, ...rest }) => rest)(item) : item;
-		}).filter(item => item !== null); // Filter out null values
-	}
-
 	const filteredMessages = [
 		...messages.slice(0, chat.contextMessage?.content ? 3 : 2).map(
 			(m) =>
 				({
 					role: m.role,
-					content: sanitizeContent(m.content)
+					content: sanitizeContent(m.content, chat.settings.model)
 				}) as ChatCompletionMessageParam
 		),
 		{
@@ -302,10 +301,11 @@ export function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
 			if (result instanceof ArrayBuffer) {
 				resolve(result);
 			} else {
-				resolve(new ArrayBuffer(0)); // Return an empty ArrayBuffer on error
+				resolve(new ArrayBuffer(0));
 			}
 		};
-		reader.onerror = () => resolve(new ArrayBuffer(0)); // Handle error by returning an empty ArrayBuffer
+		// Handle error by returning an empty ArrayBuffer
+		reader.onerror = () => resolve(new ArrayBuffer(0));
 		reader.readAsArrayBuffer(file);
 	});
 }

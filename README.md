@@ -62,6 +62,7 @@ We currently offer these models in SlickGPT Pro:
 - GPT-3.5 Turbo
 - GPT-4 Turbo
 - GPT-4o
+- GPT-4o Mini
 
 There are no paywalled extra features in SlickGPT for Pro users. We don't log any data - the only thing we know is how many tokens were spent. It's just a way to support the project, get rid of the hassle of managing your own API key and to pay a fixed price for unlimited AI usage.
 

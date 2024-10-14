@@ -111,6 +111,39 @@
 			parent = chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat);
 		}
 
+		const processContent = (content: ChatContent[] | string, messageId?: string): ChatContent[] => {
+			if (typeof content === 'string') {
+				return [{ type: 'text', text: content }];
+			}
+
+			const hasUnsupportedImages = content.some(
+				({ type }) => provider !== AiProvider.OpenAi && type === 'image_url'
+			);
+
+			if (hasUnsupportedImages) {
+				showToast(
+					toastStore,
+					'Images are not supported with this provider and have been removed.',
+					'warning'
+				);
+
+				if (messageId) {
+					chatStore.deleteMessage(slug, messageId);
+				}
+			}
+
+			return content
+				.map(({ type, fileData, ...rest }: ChatContent) =>
+					provider !== AiProvider.OpenAi && type === 'image_url'
+						? null
+						: { type, fileData, ...rest }
+				)
+				.filter(Boolean) as ChatContent[];
+		};
+
+		// Ensure message content is in ChatContent format
+		message.content = processContent(message.content);
+
 		if (!isEditMode) {
 			chatStore.addMessageToChat(slug, message, parent || undefined);
 			track('ask');
@@ -122,26 +155,16 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		const processContentItem = ({ fileData: imageData, type, ...rest }: ChatContent) => {
-			// Filter out image_url if provider is not OpenAi
-			if (provider !== AiProvider.OpenAi && type === 'image_url') {
-				showToast(toastStore, 'Image URLs are not supported with this provider and have been removed.', 'warning');
-				return null;
-			}
-			return { type, ...rest };
-		};
-
 		const processMessageContent = (message: ChatMessage) =>
-			Array.isArray(message.content)
-				? message.content.map(processContentItem).filter(Boolean)
-				: message.role === 'assistant' || message.role === 'system'
-					? message.content
-					: [{ type: 'text', text: message.content }];
+			message.role === 'assistant' || message.role === 'system'
+				? message.content
+				: processContent(message.content, message.id).map(({ fileData, ...rest }) => rest);
 
-		const messages = currentMessages?.map((message) => ({
-			role: message.role,
-			content: processMessageContent(message)
-		})) as ChatMessage[];
+		const messages =
+			currentMessages?.map((message) => ({
+				role: message.role,
+				content: processMessageContent(message)
+			})) ?? [];
 
 		let payload: any;
 		let token: string;
@@ -364,11 +387,16 @@
 	export async function editMessage(message: ChatMessage) {
 		originalMessage = message;
 		input = Array.isArray(message.content)
-			? message.content.map((c) => (c.type === 'text' && !c.fileData?.attachment?.fileAttached ? c.text : '')).join('')
+			? message.content
+					.map((c) => (c.type === 'text' && !c.fileData?.attachment?.fileAttached ? c.text : ''))
+					.join('')
 			: message.content;
 
 		$attachments = Array.isArray(message.content)
-			? message.content.filter((c) => (c.type === 'image_url' || (c.type === 'text' && c.fileData?.attachment?.fileAttached)))
+			? message.content.filter(
+					(c) =>
+						c.type === 'image_url' || (c.type === 'text' && c.fileData?.attachment?.fileAttached)
+				)
 			: [];
 		isEditMode = true;
 

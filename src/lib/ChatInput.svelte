@@ -502,7 +502,7 @@
 								name="files"
 								multiple
 							>
-								<svelte:fragment slot="lead"><Folder class="w-12 h-12" /></svelte:fragment>
+								<svelte:fragment slot="lead"><Folder class="w-10 h-10" /></svelte:fragment>
 								<svelte:fragment slot="message">Drop files to upload</svelte:fragment>
 								<svelte:fragment slot="meta">
 									{#if provider === AiProvider.OpenAi}

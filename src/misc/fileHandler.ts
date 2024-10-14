@@ -2,7 +2,7 @@ import { Mutex } from 'async-mutex';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { processImageFile, extractTextFileContent, isImageFile, isTextFile, MAX_ATTACHMENTS_SIZE } from './fileUtils';
 import { extractPdfContent } from './pdfUtils';
-import { readFileAsArrayBuffer, showToast, type ChatContent } from './shared';
+import { showToast, type ChatContent } from './shared';
 
 function showUploadResult(uploadedItems: ChatContent[], totalCount: number, toastStore: ToastStore) {
 	const pdfImageAttachments = uploadedItems.filter(item => item.type === 'image_url' && item.fileData?.attachment?.fileAttached);
@@ -39,14 +39,13 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 	}
 
 	await Promise.all(Array.from(files).map(async (file) => {
-		const arrayBuffer = await readFileAsArrayBuffer(file);
-		if (arrayBuffer.byteLength === 0) {
-			showToast(toastStore, `Failed to read file: ${file.name}`, 'error');
-			return;
-		}
-
 		switch (true) {
-			case file.type === 'application/pdf':
+			case file.type === 'application/pdf': {
+				const arrayBuffer = Buffer.from(await file.arrayBuffer());
+				if (arrayBuffer.byteLength === 0) {
+					showToast(toastStore, `Failed to read file: ${file.name}`, 'error');
+					return;
+				}
 				const pdfContent = await extractPdfContent(arrayBuffer, MAX_ATTACHMENTS_SIZE, toastStore);
 				if (pdfContent) {
 					pdfContent.textResults.forEach(item => {
@@ -55,9 +54,8 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 							item.text = `{BEGINNING OF ${file.name}}\n${item.text}\n{END OF ${file.name}}`;
 						}
 					});
-					if (pdfContent.textResults.length > 0) {
-						results.push(...pdfContent.textResults);
-					}
+					results.push(...pdfContent.textResults);
+
 					if (pdfContent.images.length > 0) {
 						await lock.runExclusive(() => {
 							const availableSlots = MAX_ATTACHMENTS_SIZE - currentImageCount;
@@ -68,6 +66,7 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 					}
 				}
 				break;
+			}
 			case isImageFile(file):
 				if (currentImageCount < MAX_ATTACHMENTS_SIZE) {
 					try {
@@ -81,11 +80,15 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 					}
 				}
 				break;
-			case isTextFile(file):
+			case (await isTextFile(file)):
 				try {
 					const textContent = await extractTextFileContent(file);
-					textContent.text = `{BEGINNING OF ${file.name}}\n${textContent.text}\n{END OF ${file.name}}`;
-					results.push(textContent);
+					if (textContent.text) {
+						textContent.text = `{BEGINNING OF ${file.name}}\n${textContent.text}\n{END OF ${file.name}}`;
+						results.push(textContent);
+					} else {
+						showToast(toastStore, `Text file is empty: ${file.name}`, 'warning');
+					}
 				} catch (error) {
 					showToast(toastStore, `Failed to process text file: ${file.name}`, 'error');
 				}

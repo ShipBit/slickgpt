@@ -44,6 +44,7 @@
 	} from '$env/static/public';
 	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
 	import { handleFileExtractionRequest } from '$misc/fileHandler';
+	import { permittedImageFormats, permittedDocumentTypes } from '$misc/fileUtils';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -51,7 +52,10 @@
 
 	let debounceTimer: number | undefined;
 	let input = '';
-	let inputCopy = '';
+	let lastUserInput = {
+		input: '',
+		attachments: [] as ChatContent[]
+	};
 	let textarea: HTMLTextAreaElement;
 	let messageTokens = 0;
 	let lastUserMessage: ChatMessage | null = null;
@@ -105,7 +109,7 @@
 		if (!input.trim() && !$attachments.length) return;
 
 		isLoadingAnswerStore.set(true);
-		inputCopy = input;
+		lastUserInput = { input, attachments: $attachments };
 
 		const parent = currentMessages?.length
 			? chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat)
@@ -333,26 +337,32 @@
 	}
 
 	function handleError(event: any) {
-		$eventSourceStore.reset();
-		$isLoadingAnswerStore = false;
+		try {
+			$eventSourceStore.reset();
+			$isLoadingAnswerStore = false;
 
-		// always true, check just for TypeScript
-		if (lastUserMessage?.id) {
-			chatStore.deleteMessage(slug, lastUserMessage.id);
+			// always true, check just for TypeScript
+			if (lastUserMessage?.id) {
+				chatStore.deleteMessage(slug, lastUserMessage.id);
+			}
+
+			console.error(event);
+
+			const data = JSON.parse(event.data);
+			const errorMessage = data.error?.message || 'An error occurred.';
+
+			showToast(toastStore, errorMessage, 'error');
+
+			if (errorMessage.includes('API key')) {
+				showModalComponent(modalStore, 'SettingsModal', { slug });
+			}
+
+			// Restore the last user input
+			({ input, attachments: $attachments } = lastUserInput);
+		} catch (parseError) {
+			console.error('Failed to parse error event data:', parseError);
+			showToast(toastStore, 'An error occurred while processing the error event.', 'error');
 		}
-
-		console.error(event);
-
-		const data = JSON.parse(event.data);
-
-		showToast(toastStore, data.message || 'An error occurred.', 'error');
-
-		if (data.message.includes('API key')) {
-			showModalComponent(modalStore, 'SettingsModal', { slug });
-		}
-
-		// restore last user prompt
-		input = inputCopy;
 	}
 
 	function addCompletionToChat(isAborted = false) {
@@ -548,9 +558,9 @@
 								<svelte:fragment slot="message">Drop files to upload</svelte:fragment>
 								<svelte:fragment slot="meta">
 									{#if provider === AiProvider.OpenAi}
-										Supports image files, PDF documents, and other textfile formats
+										Supports image files, PDF documents, and various text file formats
 									{:else}
-										Supports PDF documents and other textfile formats
+										Supports PDF documents and various text file formats
 									{/if}
 								</svelte:fragment>
 							</FileDropzone>
@@ -588,8 +598,8 @@
 								name="files"
 								button="btn-icon btn-sm"
 								accept={provider === AiProvider.OpenAi
-									? 'image/jpeg,image/jpg,image/gif,image/webp,image/png,application/pdf,text/*,application/json,application/xml,.py,.cs,.js,.ts,.java,.cpp,.c,.html,.css,.txt,.json,.xml,.md,.csv,.log,.ini,.yaml,.yml,.sh,.bat,.conf,.config,.properties,.sql,.r,.go,.swift,.pl,.rb,.php,.asp,.aspx,.jsp,.vue,.jsx,.tsx'
-									: 'application/pdf,text/*,application/json,application/xml,.py,.cs,.js,.ts,.java,.cpp,.c,.html,.css,.txt,.json,.xml,.md,.csv,.log,.ini,.yaml,.yml,.sh,.bat,.conf,.config,.properties,.sql,.r,.go,.swift,.pl,.rb,.php,.asp,.aspx,.jsp,.vue,.jsx,.tsx'}
+									? [...permittedImageFormats, ...permittedDocumentTypes].join(',')
+									: permittedDocumentTypes.join(',')}
 								multiple
 								on:change={handleFileChange}
 							>

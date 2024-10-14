@@ -293,23 +293,6 @@ export async function readFileAsDataURL(file: File): Promise<string> {
 	});
 }
 
-export function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
-	return new Promise((resolve) => {
-		const reader = new FileReader();
-		reader.onload = event => {
-			const result = event.target?.result;
-			if (result instanceof ArrayBuffer) {
-				resolve(result);
-			} else {
-				resolve(new ArrayBuffer(0));
-			}
-		};
-		// Handle error by returning an empty ArrayBuffer
-		reader.onerror = () => resolve(new ArrayBuffer(0));
-		reader.readAsArrayBuffer(file);
-	});
-}
-
 export function readFileAsText(file: File): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();

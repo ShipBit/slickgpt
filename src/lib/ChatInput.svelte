@@ -42,6 +42,7 @@
 		PUBLIC_MISTRAL_API_URL,
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
+	import { fly } from 'svelte/transition';
 	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
 	import { handleFileExtractionRequest } from '$misc/fileHandler';
 	import { permittedImageFormats, permittedDocumentTypes } from '$misc/fileUtils';
@@ -545,8 +546,8 @@
 						{/if}
 						<!-- File drop zone overlay -->
 						{#if isDraggingFile}
+						<div in:fly={{ y: 20, duration: 200 }}>
 							<FileDropzone
-								class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
 								on:dragleave={(event) => (isDraggingFile = handleDragLeave(event))}
 								on:drop={handleFileDrop}
 								on:change={handleFileChange}
@@ -564,6 +565,7 @@
 									{/if}
 								</svelte:fragment>
 							</FileDropzone>
+						</div>
 						{/if}
 						<!-- Action buttons -->
 						<div class="flex items-center">

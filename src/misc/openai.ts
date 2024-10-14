@@ -164,8 +164,11 @@ export function countTokens(message: ChatMessage): number {
 					if (contentItem.image_url) {
 						const detail = contentItem.image_url.detail;
 						const { width, height } = contentItem.fileData?.attachment
-							? { width: contentItem.fileData?.width ?? 0, height: contentItem.fileData?.height ?? 0 }
-							: getImageDimensions(contentItem.image_url.url);
+							? { 
+								width: contentItem.fileData?.width ?? getImageDimensions(contentItem.image_url.url).width, 
+								height: contentItem.fileData?.height ?? getImageDimensions(contentItem.image_url.url).height 
+							  }
+							: getImageDimensions(contentItem.image_url.url)
 
 						if (detail === 'low') {
 							num_tokens += 85;

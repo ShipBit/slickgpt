@@ -52,6 +52,7 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 					pdfContent.textResults.forEach(item => {
 						if (item.fileData) {
 							item.fileData.name = file.name;
+							item.text = `{BEGINNING OF ${file.name}}\n${item.text}\n{END OF ${file.name}}`;
 						}
 					});
 					if (pdfContent.textResults.length > 0) {
@@ -83,6 +84,7 @@ export async function handleFileExtractionRequest(files: FileList, toastStore: T
 			case isTextFile(file):
 				try {
 					const textContent = await extractTextFileContent(file);
+					textContent.text = `{BEGINNING OF ${file.name}}\n${textContent.text}\n{END OF ${file.name}}`;
 					results.push(textContent);
 				} catch (error) {
 					showToast(toastStore, `Failed to process text file: ${file.name}`, 'error');

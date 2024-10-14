@@ -62,6 +62,7 @@
 	let originalMessage: ChatMessage | null = null;
 	let isDraggingFile = false;
 
+	const systemPromptContent = `The user also provided you with a list of files and may ask questions about their content. Always consider the content of these files first to answer any questions the user asks.`;
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 
@@ -155,10 +156,42 @@
 		// message now has an id
 		lastUserMessage = message;
 
-		const processMessageContent = (message: ChatMessage) =>
-			message.role === 'assistant' || message.role === 'system'
-				? message.content
-				: processContent(message.content, message.id).map(({ fileData, ...rest }) => rest);
+		function processMessageContent(message: ChatMessage) {
+			const content =
+				message.role === 'assistant' || message.role === 'system'
+					? message.content
+					: processContent(message.content, message.id).map(({ fileData, ...rest }) => rest);
+
+			if (shouldAddSystemPrompt()) {
+				chat.contextMessage.content += chat.contextMessage.content
+					? `\n${systemPromptContent}`
+					: systemPromptContent;
+			}
+
+			return content;
+		}
+
+		function shouldAddSystemPrompt(): boolean {
+			const isContextEmpty = chat.contextMessage.content === '';
+			const hasAttachments = $attachments.length > 0;
+			const hasFileAttached = $attachments.some(
+				(attachment) => attachment.fileData?.attachment?.fileAttached
+			);
+			const hasCurrentMessagesWithFiles = currentMessages?.some(
+				(msg) =>
+					Array.isArray(msg.content) &&
+					msg.content.some((content: ChatContent) => content.fileData?.attachment?.fileAttached)
+			);
+			const isSystemPromptMissing = !currentMessages?.some(
+				(msg) => msg.role === 'system' && msg.content === systemPromptContent
+			);
+
+			return (
+				(!!isContextEmpty || !!hasAttachments) &&
+				(!!hasFileAttached || !!hasCurrentMessagesWithFiles) &&
+				isSystemPromptMissing
+			);
+		}
 
 		const messages =
 			currentMessages?.map((message) => ({

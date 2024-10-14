@@ -177,6 +177,7 @@ While ChatGPT offers a great conversational AI experience, it lacks some feature
 | Chat history                 | ✅       | ✅                      |
 | Highlight / Format code      | ✅       | ✅                      |
 | Use Your Own API Key         | ✅       | ✅                      |
+| File Uploads                 | ✅       | (✅ OpenAI models only) |
 | Edit and branch messages     | ✅       | ✅                      |
 | Stop generation              | ✅       | ✅                      |
 | Vision                       | ✅       | ✅                      |
@@ -186,7 +187,6 @@ While ChatGPT offers a great conversational AI experience, it lacks some feature
 | Change model configuration   | ✅       | ❌                      |
 | No Login Required            | ✅       | ❌                      |
 | Token Cost Calculation       | ✅       | ❌                      |
-| File Uploads                 | ✅       | (✅ OpenAI models only) |
 | Mobile-first design          | ✅       | ❌                      |
 | Unlimited use subscription   | 5,99 €/m | 18,00 €/m                |
 

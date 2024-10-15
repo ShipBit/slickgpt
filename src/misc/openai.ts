@@ -118,8 +118,8 @@ export const models: Record<AiModel, AiModelStats> = {
 	},
 	[AiModel.Llama31_70b]: {
 		provider: AiProvider.Meta,
-		maxTokens: 131072,
-		contextWindow: 131072,
+		maxTokens: 8192,
+		contextWindow: 128000,
 		costInput: 0.52,
 		costOutput: 0.75
 	},
@@ -139,8 +139,8 @@ export const models: Record<AiModel, AiModelStats> = {
 	},
 	[AiModel.Llama31_8b_Instant]: {
 		provider: AiProvider.Meta,
-		maxTokens: 131072,
-		contextWindow: 131072,
+		maxTokens: 8192,
+		contextWindow: 128000,
 		costInput: 0.09,
 		costOutput: 0.09
 	},

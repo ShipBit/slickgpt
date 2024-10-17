@@ -1,4 +1,4 @@
-import { uploadFiles } from './fileUtils';
+import { handleFileExtractionRequest } from './fileHandler';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import type { ChatContent } from './shared';
 
@@ -49,7 +49,7 @@ export async function pasteImage(
 		const dataTransfer = new DataTransfer();
 		imageFiles.forEach((file) => dataTransfer.items.add(file));
 		event.preventDefault();
-		return uploadFiles(dataTransfer.files, toastStore, uploadedCount);
+		return handleFileExtractionRequest(dataTransfer.files, toastStore, uploadedCount);
 	}
 	return [];
 }

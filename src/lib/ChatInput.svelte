@@ -8,9 +8,15 @@
 		FileButton,
 		FileDropzone
 	} from '@skeletonlabs/skeleton';
-	import { CodeBracket, PaperAirplane, CircleStack } from '@inqling/svelte-icons/heroicon-24-solid';
 	import {
-	type ChatContent,
+		CodeBracket,
+		PaperAirplane,
+		CircleStack,
+		Plus,
+		Folder
+	} from '@inqling/svelte-icons/heroicon-24-solid';
+	import {
+		type ChatContent,
 		type ChatCost,
 		type ChatMessage,
 		showModalComponent,
@@ -30,15 +36,16 @@
 	import { AiProvider, countTokens, getProviderForModel, models } from '$misc/openai';
 	import { AuthService } from '$misc/authService';
 	import { get } from 'svelte/store';
-	import { fade } from 'svelte/transition';
 	import {
 		PUBLIC_GROQ_API_URL,
 		PUBLIC_MIDDLEWARE_API_URL,
 		PUBLIC_MISTRAL_API_URL,
 		PUBLIC_OPENAI_API_URL
 	} from '$env/static/public';
+	import { fly } from 'svelte/transition';
 	import { handleDragEnter, handleDragLeave, pasteImage } from '$misc/inputUtils';
-	import { uploadFiles } from '$misc/fileUtils';
+	import { handleFileExtractionRequest } from '$misc/fileHandler';
+	import { permittedImageFormats, permittedDocumentTypes } from '$misc/fileUtils';
 
 	export let slug: string;
 	export let chatCost: ChatCost | null;
@@ -46,7 +53,10 @@
 
 	let debounceTimer: number | undefined;
 	let input = '';
-	let inputCopy = '';
+	let lastUserInput = {
+		input: '',
+		attachments: [] as ChatContent[]
+	};
 	let textarea: HTMLTextAreaElement;
 	let messageTokens = 0;
 	let lastUserMessage: ChatMessage | null = null;
@@ -57,6 +67,7 @@
 	let originalMessage: ChatMessage | null = null;
 	let isDraggingFile = false;
 
+	const systemPromptContent = `The user also provided you with a list of files and may ask questions about their content. Always consider the content of these files first to answer any questions the user asks.`;
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 
@@ -96,49 +107,111 @@
 	// $: showTokenWarning = maxTokensCompletion > tokensLeft;
 
 	async function handleSubmit() {
-		if (input.trim() === '' && $attachments.length === 0) return;
+		if (!input.trim() && !$attachments.length) return;
 
 		isLoadingAnswerStore.set(true);
-		inputCopy = input;
+		lastUserInput = { input, attachments: $attachments };
 
-		let parent: ChatMessage | null = null;
-		if (currentMessages && currentMessages.length > 0) {
-			parent = chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat);
-		}
+		const parent = currentMessages?.length
+			? chatStore.getMessageById(currentMessages[currentMessages.length - 1].id!, chat)
+			: null;
 
-		if (!isEditMode) {
-			chatStore.addMessageToChat(slug, message, parent || undefined);
-			track('ask');
-		} else if (originalMessage && originalMessage.id) {
+		const processContent = (content: ChatContent[] | string, messageId?: string): ChatContent[] => {
+			if (typeof content === 'string') {
+				return [{ type: 'text', text: content }];
+			}
+
+			const unsupportedImages = content.some(
+				({ type }) => provider !== AiProvider.OpenAi && type === 'image_url'
+			);
+
+			if (unsupportedImages) {
+				showToast(
+					toastStore,
+					'Images are not supported with this provider and have been removed.',
+					'warning'
+				);
+
+				if (messageId) {
+					chatStore.deleteMessage(slug, messageId);
+				}
+			}
+
+			return content
+				.map(({ type, fileData, ...rest }: ChatContent) =>
+					provider !== AiProvider.OpenAi && type === 'image_url'
+						? null
+						: { type, fileData, ...rest }
+				)
+				.filter(Boolean) as ChatContent[];
+		};
+
+		message.content = processContent(message.content);
+
+		if (isEditMode && originalMessage?.id) {
 			chatStore.addAsSibling(slug, originalMessage.id, message);
 			track('edit');
+		} else {
+			chatStore.addMessageToChat(slug, message, parent || undefined);
+			track('ask');
 		}
 
-		// message now has an id
 		lastUserMessage = message;
 
-		const processContentItem = (contentItem: ChatContent) => {
-			if ('fileName' in contentItem) {
-				const { fileName, ...sanitizedContent } = contentItem;
-				return sanitizedContent;
-			}
-			return contentItem;
-		};
-
 		const processMessageContent = (message: ChatMessage) => {
-			if (Array.isArray(message.content)) {
-				return message.content.map(processContentItem);
-			} else if (message.role === 'assistant' || message.role === 'system') {
-				return message.content;
+			const content =
+				message.role === 'assistant' || message.role === 'system'
+					? message.content
+					: processContent(message.content, message.id).map(({ fileData, ...rest }) => rest);
+
+			if (shouldAddSystemPrompt()) {
+				chat.contextMessage.content += chat.contextMessage.content
+					? `\n${systemPromptContent}`
+					: systemPromptContent;
 			}
 
-			return [{ type: 'text', text: message.content }];
+			const textContent = Array.isArray(content)
+				? content
+						.filter((c) => c.type === 'text')
+						.map((c) => c.text)
+						.join('\n')
+				: content;
+
+			return Array.isArray(content)
+				? [{ type: 'text', text: textContent }, ...content.filter((c) => c.type !== 'text')]
+				: content;
 		};
 
-		const messages = currentMessages?.map((message) => ({
-			role: message.role,
-			content: processMessageContent(message)
-		})) as ChatMessage[];
+		const shouldAddSystemPrompt = (): boolean => {
+			const isContextEmpty = !chat.contextMessage.content.trim();
+			const hasAttachments = Boolean($attachments.length);
+			const hasFileAttached = $attachments.some(
+				(attachment) => attachment?.fileData?.attachment?.fileAttached
+			);
+			const hasCurrentMessagesWithFiles = currentMessages?.some(
+				(msg) =>
+					Array.isArray(msg.content) &&
+					msg.content.some((content: ChatContent) => content?.fileData?.attachment?.fileAttached)
+			);
+			const isSystemPromptMissing = !currentMessages?.some(
+				(msg) =>
+					msg.role === 'system' &&
+					typeof msg.content === 'string' &&
+					msg.content.includes(systemPromptContent)
+			);
+
+			return (
+				(isContextEmpty || !!hasAttachments) &&
+				(hasFileAttached || !!hasCurrentMessagesWithFiles) &&
+				isSystemPromptMissing
+			);
+		};
+
+		const messages =
+			currentMessages?.map((message) => ({
+				role: message.role,
+				content: processMessageContent(message)
+			})) ?? [];
 
 		let payload: any;
 		let token: string;
@@ -247,10 +320,11 @@
 				chat.hasUpdatedChatTitle !== true
 			) {
 				hasUpdatedChatTitle = true;
-				const title = await suggestChatTitle({
-					...chat,
-					messages: [...chat.messages, { role: 'user', content: input.trim() }]
-				}) || chat.title;
+				const title =
+					(await suggestChatTitle({
+						...chat,
+						messages: [...chat.messages, { role: 'user', content: input.trim() }]
+					})) || chat.title;
 				chatStore.updateChat(slug, { title, hasUpdatedChatTitle: true }); // Store the variable in the chat store
 			}
 		} catch (err) {
@@ -264,26 +338,32 @@
 	}
 
 	function handleError(event: any) {
-		$eventSourceStore.reset();
-		$isLoadingAnswerStore = false;
+		try {
+			$eventSourceStore.reset();
+			$isLoadingAnswerStore = false;
 
-		// always true, check just for TypeScript
-		if (lastUserMessage?.id) {
-			chatStore.deleteMessage(slug, lastUserMessage.id);
+			// always true, check just for TypeScript
+			if (lastUserMessage?.id) {
+				chatStore.deleteMessage(slug, lastUserMessage.id);
+			}
+
+			console.error(event);
+
+			const data = JSON.parse(event.data);
+			const errorMessage = data.error?.message || 'An error occurred.';
+
+			showToast(toastStore, errorMessage, 'error');
+
+			if (errorMessage.includes('API key')) {
+				showModalComponent(modalStore, 'SettingsModal', { slug });
+			}
+
+			// Restore the last user input
+			({ input, attachments: $attachments } = lastUserInput);
+		} catch (parseError) {
+			console.error('Failed to parse error event data:', parseError);
+			showToast(toastStore, 'An error occurred while processing the error event.', 'error');
 		}
-
-		console.error(event);
-
-		const data = JSON.parse(event.data);
-
-		showToast(toastStore, data.message || 'An error occurred.', 'error');
-
-		if (data.message.includes('API key')) {
-			showModalComponent(modalStore, 'SettingsModal', { slug });
-		}
-
-		// restore last user prompt
-		input = inputCopy;
 	}
 
 	function addCompletionToChat(isAborted = false) {
@@ -348,7 +428,7 @@
 	}
 
 	async function handleInsertCode() {
-		input += '\n```\n\n```';
+		input += input.trim() ? '\n```\n\n```' : '```\n\n```';
 
 		// tick is required for the action to resize the textarea
 		await tick();
@@ -360,8 +440,17 @@
 	export async function editMessage(message: ChatMessage) {
 		originalMessage = message;
 		input = Array.isArray(message.content)
-			? message.content.map((c) => (c.type === 'text' ? c.text : '')).join('\n')
+			? message.content
+					.map((c) => (c.type === 'text' && !c.fileData?.attachment?.fileAttached ? c.text : ''))
+					.join('')
 			: message.content;
+
+		$attachments = Array.isArray(message.content)
+			? message.content.filter(
+					(c) =>
+						c.type === 'image_url' || (c.type === 'text' && c.fileData?.attachment?.fileAttached)
+				)
+			: [];
 		isEditMode = true;
 
 		// tick is required for the action to resize the textarea
@@ -373,6 +462,7 @@
 		isEditMode = false;
 		originalMessage = null;
 		input = '';
+		$attachments = [];
 
 		// tick is required for the action to resize the textarea
 		await tick();
@@ -386,7 +476,11 @@
 	}
 
 	async function uploadFilesAndDebounce(files: FileList) {
-		const newAttachments = await uploadFiles(files, toastStore, $attachments.length);
+		const newAttachments = await handleFileExtractionRequest(
+			files,
+			toastStore,
+			$attachments.filter((attachment) => attachment.type === 'image_url').length
+		);
 		$attachments = [...$attachments, ...newAttachments];
 		shouldDebounce = true;
 	}
@@ -398,11 +492,12 @@
 		}
 	}
 
-	async function handleFileChange(event: Event & { target: HTMLInputElement & EventTarget }) {
-		if (event?.target?.files) {
-			await uploadFilesAndDebounce(event.target.files);
+	async function handleFileChange(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files) {
+			await uploadFilesAndDebounce(input.files);
 			// Clear the file input after processing
-			event.target.value = '';
+			input.value = '';
 		}
 	}
 </script>
@@ -433,39 +528,45 @@
 				<!-- Chat input form -->
 				<form use:focusTrap={!$isLoadingAnswerStore} on:submit|preventDefault={handleSubmit}>
 					<div class="grid grid-cols-[1fr_auto]">
-						<div class="relative flex flex-col">
-							<!-- Textarea for user input -->
-							<textarea
-								class="textarea overflow-hidden min-h-[42px] w-full"
-								rows="1"
-								placeholder="Enter to send, Shift+Enter for newline"
-								use:textareaAutosizeAction
-								on:keydown={handleKeyDown}
-								on:paste={handlePaste}
-								bind:value={input}
-								bind:this={textarea}
-								on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
-							/>
-							<!-- File drop zone overlay -->
-							{#if provider === AiProvider.OpenAi && isDraggingFile}
-								<div
-									class="absolute inset-0 bg-primary-500/50 flex items-center justify-center text-white"
-									transition:fade={{ duration: 150 }}
-									on:dragleave={(event) => (isDraggingFile = handleDragLeave(event))}
-									on:drop={handleFileDrop}
-									role="region"
-									aria-label="File drop area"
-								>
-									<FileDropzone
-										name="files"
-										accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
-										multiple
-									>
-										<span>Drop images here</span>
-									</FileDropzone>
-								</div>
-							{/if}
+						{#if !isDraggingFile}
+							<div class="relative flex flex-col">
+								<!-- Textarea for user input -->
+								<textarea
+									class="textarea overflow-auto min-h-[42px] max-h-[45dvh] w-full"
+									rows="1"
+									placeholder="Enter to send, Shift+Enter for newline"
+									use:textareaAutosizeAction
+									on:keydown={handleKeyDown}
+									on:paste={handlePaste}
+									bind:value={input}
+									bind:this={textarea}
+									on:dragenter={(event) => (isDraggingFile = handleDragEnter(event))}
+								/>
+							</div>
+						{/if}
+						<!-- File drop zone overlay -->
+						{#if isDraggingFile}
+						<div in:fly={{ y: 20, duration: 200 }}>
+							<FileDropzone
+								on:dragleave={(event) => (isDraggingFile = handleDragLeave(event))}
+								on:drop={handleFileDrop}
+								on:change={handleFileChange}
+								role="region"
+								name="files"
+								multiple
+							>
+								<svelte:fragment slot="lead"><Folder class="w-10 h-10" /></svelte:fragment>
+								<svelte:fragment slot="message">Drop files to upload</svelte:fragment>
+								<svelte:fragment slot="meta">
+									{#if provider === AiProvider.OpenAi}
+										Supports image files, PDF documents, and various text file formats
+									{:else}
+										Supports PDF documents and various text file formats
+									{/if}
+								</svelte:fragment>
+							</FileDropzone>
 						</div>
+						{/if}
 						<!-- Action buttons -->
 						<div class="flex items-center">
 							<!-- Token count button -->
@@ -495,30 +596,17 @@
 								<CodeBracket class="w-6 h-6" />
 							</button>
 							<!-- Image Upload button -->
-							{#if provider === AiProvider.OpenAi}
-								<FileButton
-									name="files"
-									button="btn-icon btn-sm"
-									accept="image/jpeg,image/jpg,image/gif,image/webp,image/png"
-									multiple
-									on:change={handleFileChange}
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="w-6 h-6"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-										/>
-									</svg>
-								</FileButton>
-							{/if}
+							<FileButton
+								name="files"
+								button="btn-icon btn-sm"
+								accept={provider === AiProvider.OpenAi
+									? [...permittedImageFormats, ...permittedDocumentTypes].join(',')
+									: permittedDocumentTypes.join(',')}
+								multiple
+								on:change={handleFileChange}
+							>
+								<Plus class="w-6 h-6" />
+							</FileButton>
 						</div>
 					</div>
 				</form>

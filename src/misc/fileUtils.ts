@@ -1,75 +1,123 @@
 import type { ChatContent } from './shared';
-import { showToast } from './shared';
-import type { ToastStore } from '@skeletonlabs/skeleton';
+import { getFileDataURLWithDimensions, readFileAsText } from './shared';
 
-const MAX_ATTACHMENTS = 10;
+export const permittedImageFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
 
-export async function uploadFiles(
-	files: FileList,
-	toastStore: ToastStore,
-	uploadedCount: number
-): Promise<ChatContent[]> {
-	const remainingSlots = MAX_ATTACHMENTS - uploadedCount;
-	const filesToUpload = Math.min(files.length, remainingSlots);
+// most of the common plain text files (user can still upload plain text file as it's checked differently)
+export const permittedDocumentTypes = [
+	"application/pdf",
+	"application/json",
+	"application/xml",
+	"application/javascript",
+	"application/x-yaml",
+	"application/x-sh",
+	"application/x-bat",
+	"application/x-csh",
+	"application/x-perl",
+	"application/x-php",
+	"application/x-ruby",
+	"application/x-sql",
+	"application/x-java-source",
+	"application/x-c",
+	"application/x-c++",
+	"application/x-python",
+	"application/x-shellscript",
+	"application/x-markdown",
+	"application/x-latex",
+	"application/x-tex",
+	"application/x-ini",
+	"application/x-log",
+	"application/x-properties",
+	"application/x-yml",
+	"application/x-toml",
+	"application/x-csv",
+	"application/x-html",
+	"application/x-css",
+	"application/x-md",
+	"application/x-conf",
+	"application/x-config",
+	"application/x-r",
+	"application/x-go",
+	"application/x-swift",
+	"application/x-pl",
+	"application/x-rb",
+	"application/x-asp",
+	"application/x-aspx",
+	"application/x-jsp",
+	"application/x-vue",
+	"application/x-jsx",
+	"application/x-tsx",
+	"text/*"
+]
 
-	if (filesToUpload <= 0) {
-		showToast(
-			toastStore,
-			`Maximum number of images (${MAX_ATTACHMENTS}) already uploaded.`,
-			'warning'
-		);
-		return [];
-	}
+export const MAX_ATTACHMENTS_SIZE = 10;
 
-	const allowedFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
-
-	const newAttachments = await Promise.all(
-		Array.from(files)
-			.slice(0, filesToUpload)
-			.filter((file) => allowedFormats.includes(file.type))
-			.map(async (file) => await processFile(file))
-	);
-
-	showUploadResult(newAttachments.length, filesToUpload, toastStore);
-	return newAttachments;
-}
-
-async function processFile(file: File): Promise<ChatContent> {
+export async function processImageFile(file: File): Promise<ChatContent> {
 	try {
-		const dataUrl = await readFileAsDataURL(file);
+		const imageData = await getFileDataURLWithDimensions(file);
 		return {
 			type: 'image_url',
 			image_url: {
-				url: dataUrl,
+				url: imageData.dataUrl,
 				detail: 'high' // TODO: make this user configurable
 			},
-			fileName: file.name
+			fileData: {
+				name: file.name,
+				width: imageData.width,
+				height: imageData.height
+			}
 		};
-	} catch (error: unknown) {
-		if (error instanceof Error) {
-			throw new Error(`Failed to process file: ${error.message}`);
-		} else {
-			throw new Error('Failed to process file: An unknown error occurred');
+	} catch (error) {
+		throw new Error(`Failed to process file: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
+	}
+}
+
+export async function extractTextFileContent(file: File): Promise<ChatContent> {
+	try {
+		const textContent = await readFileAsText(file);
+		return {
+			type: 'text',
+			text: textContent,
+			fileData: {
+				name: file.name,
+				attachment: {
+					fileAttached: true
+				}
+			}
+		};
+	} catch (error) {
+		throw new Error(`Failed to process text file: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
+	}
+}
+
+export function isImageFile(file: File): boolean {
+	return permittedImageFormats.includes(file.type);
+}
+
+export async function isTextFile(file: File): Promise<boolean> {
+	return await isPlainTextFileContent(file);
+}
+
+// Function to check if a buffer contains only plain text
+const isPlainTextContent = (buffer: ArrayBuffer): boolean => {
+	const textDecoder = new TextDecoder('utf-8');
+	const text = textDecoder.decode(buffer);
+	for (let i = 0; i < text.length; i++) {
+		const charCode = text.charCodeAt(i);
+		if (charCode > 127 && (charCode < 0x80 || charCode > 0xBF)) {
+			return false; // Non-ASCII, non-UTF-8 character found
 		}
 	}
-}
+	return true;
+};
 
-function readFileAsDataURL(file: File): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = (e) => resolve(e.target?.result as string);
-		reader.onerror = reject;
-		reader.readAsDataURL(file);
-	});
-}
-
-function showUploadResult(uploadedCount: number, totalCount: number, toastStore: ToastStore) {
-	if (uploadedCount !== totalCount) {
-		const skippedCount = totalCount - uploadedCount;
-		const message =
-			skippedCount > 0
-				? `Uploaded ${uploadedCount} out of ${totalCount} images. ${skippedCount} file(s) skipped (not images).`
-				: `Uploaded ${uploadedCount} out of ${totalCount} images. Maximum limit (${MAX_ATTACHMENTS}) reached.`;
-		showToast(toastStore, message, 'warning');
+// Function to check if a file is plain text by analyzing its content
+const isPlainTextFileContent = async (file: File): Promise<boolean> => {
+	try {
+		const buffer = await file.arrayBuffer();
+		return isPlainTextContent(buffer);
+	} catch (error) {
+		console.error('Error reading file content:', error);
+		return false;
 	}
-}
+};

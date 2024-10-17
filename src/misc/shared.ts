@@ -33,7 +33,7 @@ export interface ChatContent {
 		url: string;
 		detail: 'low' | 'high';
 	};
-	fileName?: string;
+	fileData?: FileData;
 }
 
 export interface ChatMessage {
@@ -78,6 +78,20 @@ export interface ChatCost {
 	maxTokensForModel: number;
 }
 
+export interface FileData {
+	name?: string;
+	position?: {
+		x: number;
+		y: number;
+	};
+	width?: number;
+	height?: number;
+	attachment?: {
+		fileAttached: boolean;
+		quantity?: number;
+	};
+}
+
 export function createNewChat(template?: {
 	context?: string | null;
 	title?: string;
@@ -111,10 +125,29 @@ export function canSuggestTitle(chat: Chat) {
 	return chat.contextMessage?.content || chat.messages?.length > 0;
 }
 
+export function sanitizeContent(content: string | ChatContent[], model: AiModel): ChatContent[] | string {
+	if (typeof content === 'string') {
+		return content;
+	}
+	return content.map(item => {
+		if (item.type === 'image_url' && (getProviderForModel(model) !== AiProvider.OpenAi)) {
+			return null;
+		}
+		return item.type === 'image_url' ? (({ fileData: imageData, ...rest }) => rest)(item) : item;
+	}).filter(item => item !== null);
+}
+
 export async function suggestChatTitle(chat: Chat): Promise<string> {
 	if (!canSuggestTitle(chat)) {
 		return Promise.resolve(chat.title);
 	}
+
+
+	let token: string;
+	let url: string;
+	let body: any;
+	let headers: Record<string, string>;
+	const isUsingPro = get(isPro);
 
 	const messages =
 		chat.messages.length === 1
@@ -131,7 +164,7 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 			(m) =>
 				({
 					role: m.role,
-					content: m.content
+					content: sanitizeContent(m.content, chat.settings.model)
 				}) as ChatCompletionMessageParam
 		),
 		{
@@ -144,12 +177,6 @@ export async function suggestChatTitle(chat: Chat): Promise<string> {
 			]
 		} as ChatCompletionMessageParam
 	];
-
-	let token: string;
-	let url: string;
-	let body: any;
-	let headers: Record<string, string>;
-	const isUsingPro = get(isPro);
 
 	if (isUsingPro) {
 		const authService = await AuthService.getInstance();
@@ -255,4 +282,30 @@ export function showToast(
 		action
 	};
 	toastStore.trigger(toast);
+}
+
+export async function getFileDataURLWithDimensions(file: File): Promise<{ dataUrl: string; width: number; height: number }> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			const dataUrl = e.target?.result as string;
+			const image = new Image();
+			image.onload = () => {
+				resolve({ dataUrl, width: image.width, height: image.height });
+			};
+			image.onerror = reject;
+			image.src = dataUrl;
+		};
+		reader.onerror = reject;
+		reader.readAsDataURL(file);
+	});
+}
+
+export function readFileAsText(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = (e) => resolve(e.target?.result as string);
+		reader.onerror = reject;
+		reader.readAsText(file);
+	});
 }

@@ -64,7 +64,7 @@
 			</button>
 
 			<span class="text-xs text-slate-400">
-				This action will consume a few tokens. The cheap gpt-3.5-turbo model will be used.
+				This action will consume a few tokens. The cheap gpt-4o-mini model will be used.
 			</span>
 		{/if}
 

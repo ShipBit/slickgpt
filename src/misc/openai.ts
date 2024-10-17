@@ -154,26 +154,32 @@ export function countTokens(message: ChatMessage): number {
 	// Process content, which can now be an array of ChatContent
 	if (Array.isArray(message.content)) {
 		for (const contentItem of message.content) {
-			if (contentItem.type === 'text' && contentItem.text) {
-				// Encoding the text content and adding the token count
-				num_tokens += tokenizer.encode(contentItem.text).length;
-			} else if (contentItem.type === 'image_url' && contentItem.image_url) {
-				const { width, height } = getImageDimensions(contentItem.image_url.url);
-				// Process image content based on detail level
-				if (contentItem.image_url.detail === 'low') {
-					// Low detail images have a fixed token cost of 85 tokens
-					num_tokens += 85;
-				} else if (contentItem.image_url.detail === 'high') {
-					// Scale image to fit within 2048 x 2048
-					const scaled = scaleImageToFit2048(width, height);
-					// Further scale image so shortest side is 768px
-					const finalScaled = scaleImageShortestSideTo768(scaled.width, scaled.height);
-					// Calculate the number of 512px tiles
-					const numTiles = Math.ceil(finalScaled.width / 512) * Math.ceil(finalScaled.height / 512);
-					// Calculate total token cost for the image
-					// Each 512px square costs 170 tokens, plus an additional base cost of 85 tokens
-					num_tokens += 170 * numTiles + 85;
-				}
+			switch (contentItem.type) {
+				case 'text':
+					if (contentItem.text) {
+						num_tokens += tokenizer.encode(contentItem.text).length;
+					}
+					break;
+				case 'image_url':
+					if (contentItem.image_url) {
+						const detail = contentItem.image_url.detail;
+						const { width, height } = contentItem.fileData?.attachment
+							? { 
+								width: contentItem.fileData?.width ?? getImageDimensions(contentItem.image_url.url).width, 
+								height: contentItem.fileData?.height ?? getImageDimensions(contentItem.image_url.url).height 
+							  }
+							: getImageDimensions(contentItem.image_url.url)
+
+						if (detail === 'low') {
+							num_tokens += 85;
+						} else if (detail === 'high') {
+							const scaled = scaleImageToFit2048(width, height);
+							const finalScaled = scaleImageShortestSideTo768(scaled.width, scaled.height);
+							const numTiles = Math.ceil(finalScaled.width / 512) * Math.ceil(finalScaled.height / 512);
+							num_tokens += 170 * numTiles + 85;
+						}
+					}
+					break;
 			}
 		}
 	} else if (typeof message.content === 'string') {
@@ -190,7 +196,14 @@ export function countTokens(message: ChatMessage): number {
 function getImageDimensions(image_url: string): { width: number; height: number } {
 	const img = new Image();
 	img.src = image_url;
-	return { width: img.width, height: img.height };
+	
+	if (img.width === 0 || img.height === 0) {
+		// This function needs to be a promise to properly await the image loading process.
+		// However, due to the synchronous nature of the getImageDimensions function and its usage context,
+		// converting it to a promise would require significant refactoring of the calling code.
+		console.error(`This function isn't awaited properly. Returned 1 as height and width`);
+	}
+	return { width: img.width || 1, height: img.height || 1 };
 }
 
 function scaleImageToFit2048(width: number, height: number): { width: number; height: number } {

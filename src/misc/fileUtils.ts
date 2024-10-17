@@ -1,5 +1,5 @@
 import type { ChatContent } from './shared';
-import { readFileAsDataURL, readFileAsText } from './shared';
+import { getFileDataURLWithDimensions, readFileAsText } from './shared';
 
 export const permittedImageFormats = ['image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/png'];
 
@@ -54,15 +54,17 @@ export const MAX_ATTACHMENTS_SIZE = 10;
 
 export async function processImageFile(file: File): Promise<ChatContent> {
 	try {
-		const dataUrl = await readFileAsDataURL(file);
+		const imageData = await getFileDataURLWithDimensions(file);
 		return {
 			type: 'image_url',
 			image_url: {
-				url: dataUrl,
+				url: imageData.dataUrl,
 				detail: 'high' // TODO: make this user configurable
 			},
 			fileData: {
 				name: file.name,
+				width: imageData.width,
+				height: imageData.height
 			}
 		};
 	} catch (error) {

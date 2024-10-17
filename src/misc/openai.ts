@@ -196,7 +196,14 @@ export function countTokens(message: ChatMessage): number {
 function getImageDimensions(image_url: string): { width: number; height: number } {
 	const img = new Image();
 	img.src = image_url;
-	return { width: img.width, height: img.height };
+	
+	if (img.width === 0 || img.height === 0) {
+		// This function needs to be a promise to properly await the image loading process.
+		// However, due to the synchronous nature of the getImageDimensions function and its usage context,
+		// converting it to a promise would require significant refactoring of the calling code.
+		console.error(`This function isn't awaited properly. Returned 1 as height and width`);
+	}
+	return { width: img.width || 1, height: img.height || 1 };
 }
 
 function scaleImageToFit2048(width: number, height: number): { width: number; height: number } {

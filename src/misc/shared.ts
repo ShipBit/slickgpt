@@ -284,10 +284,18 @@ export function showToast(
 	toastStore.trigger(toast);
 }
 
-export async function readFileAsDataURL(file: File): Promise<string> {
+export async function getFileDataURLWithDimensions(file: File): Promise<{ dataUrl: string; width: number; height: number }> {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
-		reader.onload = (e) => resolve(e.target?.result as string);
+		reader.onload = (e) => {
+			const dataUrl = e.target?.result as string;
+			const image = new Image();
+			image.onload = () => {
+				resolve({ dataUrl, width: image.width, height: image.height });
+			};
+			image.onerror = reject;
+			image.src = dataUrl;
+		};
 		reader.onerror = reject;
 		reader.readAsDataURL(file);
 	});

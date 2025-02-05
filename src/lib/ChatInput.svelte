@@ -52,7 +52,6 @@
 	let lastUserMessage: ChatMessage | null = null;
 	let currentMessages: ChatMessage[] | null = null;
 
-	let hasUpdatedChatTitle = false;
 	let isEditMode = false;
 	let originalMessage: ChatMessage | null = null;
 	let isDraggingFile = false;
@@ -243,10 +242,9 @@
 
 			if (
 				$settingsStore.useTitleSuggestions &&
-				!hasUpdatedChatTitle &&
-				chat.hasUpdatedChatTitle !== true
+				chat.hasUpdatedChatTitle === false &&
+				input.trim()
 			) {
-				hasUpdatedChatTitle = true;
 				const title = await suggestChatTitle({
 					...chat,
 					messages: [...chat.messages, { role: 'user', content: input.trim() }]

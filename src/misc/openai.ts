@@ -8,7 +8,8 @@ const tokenizer = encodingForModel('gpt-4-turbo');
 export enum AiProvider {
 	OpenAi = 'OpenAI',
 	Mistral = 'Mistral',
-	Meta = 'Meta'
+	Meta = 'Meta',
+	Google = 'Google'
 }
 
 export enum AiModel {
@@ -22,7 +23,17 @@ export enum AiModel {
 	Gpt4TurboPreview = 'gpt-4-turbo-preview',
 	MistralLarge = 'mistral-large-latest',
 	Llama38b = 'llama3-8b-8192',
-	Llama370b = 'llama3-70b-8192'
+	Llama370b = 'llama3-70b-8192',
+	Llama31_70b = 'llama-3.1-70b-versatile',
+	Gemma2_9b = 'gemma2-9b-it',
+	Llama32_11b_TextPreview = 'llama-3.2-11b-text-preview',
+	Gemma7b = 'gemma-7b-it',
+	Llama31_8b_Instant = 'llama-3.1-8b-instant',
+	Llama32_3b_Preview = 'llama-3.2-3b-preview',
+	LlamaGuard38b = 'llama-guard-3-8b',
+	Llama32_90b_TextPreview = 'llama-3.2-90b-text-preview',
+	Llama32_1b_Preview = 'llama-3.2-1b-preview',
+	Llama32_11b_VisionPreview = 'llama-3.2-11b-vision-preview'
 }
 
 export interface AiSettings {
@@ -105,6 +116,77 @@ export const models: Record<AiModel, AiModelStats> = {
 		costOutput: 0.79,
 		middlewareDeploymentName: 'llama3-70b'
 	},
+	[AiModel.Llama31_70b]: {
+		provider: AiProvider.Meta,
+		maxTokens: 8192,
+		contextWindow: 128000,
+		costInput: 0.52,
+		costOutput: 0.75
+	},
+	[AiModel.Gemma2_9b]: {
+		provider: AiProvider.Google,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0,
+		costOutput: 0
+	},
+	[AiModel.Gemma7b]: {
+		provider: AiProvider.Google,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0.1,
+		costOutput: 0.1
+	},
+	[AiModel.Llama31_8b_Instant]: {
+		provider: AiProvider.Meta,
+		maxTokens: 8192,
+		contextWindow: 128000,
+		costInput: 0.09,
+		costOutput: 0.09
+	},
+
+	[AiModel.LlamaGuard38b]: {
+		provider: AiProvider.Meta,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0.59,
+		costOutput: 0.79
+	},
+	[AiModel.Llama32_11b_TextPreview]: {
+		provider: AiProvider.Meta,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0.19,
+		costOutput: 0.19
+	},
+	[AiModel.Llama32_3b_Preview]: {
+		provider: AiProvider.Meta,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0.59,
+		costOutput: 0.79
+	},
+	[AiModel.Llama32_90b_TextPreview]: {
+		provider: AiProvider.Meta,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0.59,
+		costOutput: 0.79
+	},
+	[AiModel.Llama32_1b_Preview]: {
+		provider: AiProvider.Meta,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0.59,
+		costOutput: 0.79
+	},
+	[AiModel.Llama32_11b_VisionPreview]: {
+		provider: AiProvider.Meta,
+		maxTokens: 8192,
+		contextWindow: 8192,
+		costInput: 0.19,
+		costOutput: 0.19 
+	},
 	// deprecated, only here for backwards compatibility
 	[AiModel.Gpt4TurboPreview]: {
 		provider: AiProvider.OpenAi,
@@ -140,7 +222,7 @@ export const models: Record<AiModel, AiModelStats> = {
 	}
 };
 
-export const providers: AiProvider[] = [AiProvider.OpenAi, AiProvider.Mistral, AiProvider.Meta];
+export const providers: AiProvider[] = [AiProvider.OpenAi, AiProvider.Mistral, AiProvider.Meta, AiProvider.Google];
 
 /**
  * see https://platform.openai.com/docs/guides/chat/introduction > Deep Dive Expander

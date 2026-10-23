@@ -1,5 +1,16 @@
 <a name="readme-top"></a>
 
+> [!IMPORTANT]
+> **SlickGPT has reached its end of life and is no longer maintained.**
+>
+> Thank you to everyone who used SlickGPT since March 2023, gave feedback, reported bugs and sent pull requests!
+>
+> - The hosted version at [slickgpt.app](https://www.slickgpt.app/) is offline. If you still have chats in your browser, open the site once more to export them as a JSON file.
+> - SlickGPT Pro is discontinued.
+> - The code stays here under the MIT license. Feel free to fork it and host it yourself.
+>
+> We now build [Wingman AI](https://www.wingman-ai.com), an AI companion you talk to while you play your favorite games. Check out what else we do at [ShipBit](https://www.shipbit.de).
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -22,8 +33,6 @@
 
   <p align="center">
     An awesome ChatGPT Client - with Superpowers!
-    <br />
-    <a href="https://www.slickgpt.app/"><strong>Try for yourself »</strong></a>
     <br />
     <br />
     <a href="https://platform.openai.com/account/api-keys">Get your Open AI API key</a>
@@ -53,7 +62,7 @@
   </ol>
 </details>
 
-## New: SlickGPT Pro (use without API key)
+## SlickGPT Pro (discontinued)
 
 SlickGPT now offers an optional "Pro" plan for a fixed price. If you choose this, you can use our Azure cloud infrastructure to access all the OpenAI models and settings without worrying about having your own API key or usage limits. Yes, it's unlimited usage.
 

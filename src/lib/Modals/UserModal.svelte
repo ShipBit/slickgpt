@@ -62,6 +62,11 @@
 				pro: true
 			},
 			{
+				name: 'mistral-large-latest',
+				free: 'your Mistral API key',
+				pro: 'soon'
+			},
+			{
 				name: 'llama3-8b',
 				free: 'free with your Groq API key',
 				pro: 'soon'
@@ -72,8 +77,18 @@
 				pro: 'soon'
 			},
 			{
-				name: 'mistral-large-latest',
-				free: 'your Mistral API key',
+				name: 'llama-3.1-70b-versatile',
+				free: 'free with your Groq API key',
+				pro: 'soon'
+			},
+			{
+				name: 'gemma2-9b-it',
+				free: 'free with your Groq API key',
+				pro: 'soon'
+			},
+			{
+				name: 'gemma-7b-it',
+				free: 'free with your Groq API key',
 				pro: 'soon'
 			}
 		],

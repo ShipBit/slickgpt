@@ -169,7 +169,11 @@
 					url = PUBLIC_MISTRAL_API_URL;
 					break;
 				case AiProvider.Meta:
-					token = $settingsStore.metaApiKey!;
+					token = $settingsStore.groqApiKey!;
+					url = PUBLIC_GROQ_API_URL;
+					break;
+				case AiProvider.Google:
+					token = $settingsStore.groqApiKey!;
 					url = PUBLIC_GROQ_API_URL;
 					break;
 				default:
